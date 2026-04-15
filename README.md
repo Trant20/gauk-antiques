@@ -25,3 +25,4 @@ Cloudflare Pages. Connected to main branch. CF_PAGES env var switches adapter to
 
 ## Session Log
 - Session 1: Scaffold — Astro 6, Tailwind v4, Node/Cloudflare dual adapter, pushed to GitHub
+- Session 2: Supabase client connected and verified, R2 bucket created (gauk-antiques-images), wrangler project name fixed
