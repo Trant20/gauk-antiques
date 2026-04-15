@@ -1,21 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro'
-import { supabase } from '../lib/supabase'
-
-const { data, error } = await supabase
-  .from('sites')
-  .select('name, domain')
-  .eq('id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
-  .single()
+import ImageUpload from '../components/ImageUpload.astro'
 ---
-<Layout title="GAUK Antiques">
-  <main class="p-8">
-    <h1 class="text-2xl font-bold mb-4">GAUK Antiques</h1>
-    {error && (
-      <p class="text-red-400">Supabase error: {error.message}</p>
-    )}
-    {data && (
-      <p class="text-green-400">Connected: {data.name} — {data.domain}</p>
-    )}
+<Layout title="GAUK Antiques — Identify & Value Your Antiques">
+  <main class="min-h-screen bg-neutral-950 text-neutral-100">
+    <header class="border-b border-neutral-800 px-8 py-4">
+      <h1 class="text-lg font-semibold tracking-wide">GAUK <span class="text-amber-500">Antiques</span></h1>
+    </header>
+    <ImageUpload />
   </main>
 </Layout>

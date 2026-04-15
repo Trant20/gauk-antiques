@@ -1,0 +1,120 @@
+---
+---
+<div class="max-w-lg mx-auto p-8">
+  <h2 class="text-xl font-bold mb-6">Identify an Antique</h2>
+
+  <div id="drop-zone" class="border-2 border-dashed border-neutral-600 rounded-xl p-12 text-center cursor-pointer hover:border-amber-500 transition-colors">
+    <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden" />
+    <p class="text-neutral-400 mb-4">Drop an image here or</p>
+    <div class="flex gap-3 justify-center">
+      <button id="browse-btn" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">
+        Browse Files
+      </button>
+      <button id="camera-btn" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-sm font-medium transition-colors">
+        Use Camera
+      </button>
+    </div>
+  </div>
+
+  <div id="preview" class="hidden mt-6">
+    <img id="preview-img" src="" alt="Preview" class="w-full rounded-xl object-cover max-h-80" />
+    <button id="identify-btn" class="mt-4 w-full py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-colors">
+      Identify This Item
+    </button>
+  </div>
+
+  <div id="status" class="mt-4 text-sm text-neutral-400"></div>
+</div>
+
+<script>
+  const fileInput = document.getElementById('file-input') as HTMLInputElement
+  const browseBtn = document.getElementById('browse-btn')
+  const cameraBtn = document.getElementById('camera-btn')
+  const dropZone = document.getElementById('drop-zone')
+  const preview = document.getElementById('preview')
+  const previewImg = document.getElementById('preview-img') as HTMLImageElement
+  const identifyBtn = document.getElementById('identify-btn')
+  const status = document.getElementById('status')
+
+  let selectedFile: File | null = null
+
+  browseBtn?.addEventListener('click', () => {
+    fileInput.removeAttribute('capture')
+    fileInput.click()
+  })
+
+  cameraBtn?.addEventListener('click', () => {
+    fileInput.setAttribute('capture', 'environment')
+    fileInput.click()
+  })
+
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files?.[0]
+    if (file) handleFile(file)
+  })
+
+  dropZone?.addEventListener('dragover', (e) => {
+    e.preventDefault()
+    dropZone.classList.add('border-amber-500')
+  })
+
+  dropZone?.addEventListener('dragleave', () => {
+    dropZone.classList.remove('border-amber-500')
+  })
+
+  dropZone?.addEventListener('drop', (e) => {
+    e.preventDefault()
+    dropZone.classList.remove('border-amber-500')
+    const file = e.dataTransfer?.files?.[0]
+    if (file) handleFile(file)
+  })
+
+  function handleFile(file: File) {
+    selectedFile = file
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      if (previewImg && e.target?.result) {
+        previewImg.src = e.target.result as string
+        preview?.classList.remove('hidden')
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  identifyBtn?.addEventListener('click', async () => {
+    if (!selectedFile) return
+
+    status!.textContent = 'Uploading image...'
+    identifyBtn.setAttribute('disabled', 'true')
+
+    try {
+      const res = await fetch('/api/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          contentType: selectedFile.type
+        })
+      })
+
+      const { url, key, error } = await res.json()
+
+      if (error) throw new Error(error)
+
+      status!.textContent = 'Uploading to storage...'
+
+      await fetch(url, {
+        method: 'PUT',
+        body: selectedFile,
+        headers: { 'Content-Type': selectedFile.type }
+      })
+
+      status!.textContent = 'Image uploaded. Identifying...'
+      console.log('Uploaded to R2 with key:', key)
+
+    } catch (err: any) {
+      status!.textContent = 'Error: ' + err.message
+      identifyBtn.removeAttribute('disabled')
+    }
+  })
+</script>
