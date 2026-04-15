@@ -4,7 +4,7 @@
   <h2 class="text-xl font-bold mb-6">Identify an Antique</h2>
 
   <div id="drop-zone" class="border-2 border-dashed border-neutral-600 rounded-xl p-12 text-center cursor-pointer hover:border-amber-500 transition-colors">
-    <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden" />
+    <input type="file" id="file-input" accept="image/*" class="hidden" />
     <p class="text-neutral-400 mb-4">Drop an image here or</p>
     <div class="flex gap-3 justify-center">
       <button id="browse-btn" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">
@@ -88,29 +88,20 @@
     identifyBtn.setAttribute('disabled', 'true')
 
     try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+
       const res = await fetch('/api/upload-url', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: selectedFile.name,
-          contentType: selectedFile.type
-        })
+        body: formData
       })
 
-      const { url, key, error } = await res.json()
+      const data = await res.json()
 
-      if (error) throw new Error(error)
+      if (data.error) throw new Error(data.error)
 
-      status!.textContent = 'Uploading to storage...'
-
-      await fetch(url, {
-        method: 'PUT',
-        body: selectedFile,
-        headers: { 'Content-Type': selectedFile.type }
-      })
-
-      status!.textContent = 'Image uploaded. Identifying...'
-      console.log('Uploaded to R2 with key:', key)
+      status!.textContent = 'Image uploaded. Key: ' + data.key
+      console.log('Uploaded to R2 with key:', data.key)
 
     } catch (err: any) {
       status!.textContent = 'Error: ' + err.message
