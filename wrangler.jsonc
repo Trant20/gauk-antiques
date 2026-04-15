@@ -1,13 +1,19 @@
 {
-	"compatibility_date": "2026-04-15",
-	"compatibility_flags": ["global_fetch_strictly_public"],
-	"name": "antiquesid",
-	"main": "@astrojs/cloudflare/entrypoints/server",
-	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
-	},
-	"observability": {
-		"enabled": true
-	}
+  "compatibility_date": "2026-04-15",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "name": "gauk-antiques",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "r2_buckets": [
+    {
+      "bucket_name": "gauk-antiques-images",
+      "binding": "gauk_antiques_images"
+    }
+  ]
 }

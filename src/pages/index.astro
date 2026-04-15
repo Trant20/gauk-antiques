@@ -1,11 +1,21 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import Layout from '../layouts/Layout.astro'
+import { supabase } from '../lib/supabase'
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const { data, error } = await supabase
+  .from('sites')
+  .select('name, domain')
+  .eq('id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
+  .single()
 ---
-
-<Layout>
-	<Welcome />
+<Layout title="GAUK Antiques">
+  <main class="p-8">
+    <h1 class="text-2xl font-bold mb-4">GAUK Antiques</h1>
+    {error && (
+      <p class="text-red-400">Supabase error: {error.message}</p>
+    )}
+    {data && (
+      <p class="text-green-400">Connected: {data.name} — {data.domain}</p>
+    )}
+  </main>
 </Layout>

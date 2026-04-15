@@ -15,6 +15,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^13.1.10",
     "@astrojs/node": "^10.0.5",
+    "@supabase/supabase-js": "^2.103.2",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.1.7",
     "tailwindcss": "^4.2.2",
