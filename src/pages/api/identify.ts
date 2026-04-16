@@ -2,6 +2,17 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  const chunkSize = 8192
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize)
+    binary += String.fromCharCode(...chunk)
+  }
+  return btoa(binary)
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { key } = await request.json()
@@ -24,7 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const arrayBuffer = await object.arrayBuffer()
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    const base64 = arrayBufferToBase64(arrayBuffer)
     const contentType = object.httpMetadata?.contentType || 'image/jpeg'
 
     const client = new Anthropic({
