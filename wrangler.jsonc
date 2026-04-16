@@ -10,6 +10,12 @@
   "observability": {
     "enabled": true
   },
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "ab48551db9db438f976cdb269db57a5e"
+    }
+  ],
   "r2_buckets": [
     {
       "bucket_name": "gauk-antiques-images",
