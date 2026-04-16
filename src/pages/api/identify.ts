@@ -38,9 +38,16 @@ export const POST: APIRoute = async ({ request }) => {
     const base64 = arrayBufferToBase64(arrayBuffer)
     const contentType = object.httpMetadata?.contentType || 'image/jpeg'
 
-    const client = new Anthropic({
-      apiKey: (env as any).ANTHROPIC_API_KEY
-    })
+    const apiKey = (env as any).ANTHROPIC_API_KEY || import.meta.env.ANTHROPIC_API_KEY
+
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'Anthropic API key not configured' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    const client = new Anthropic({ apiKey })
 
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
