@@ -1,5 +1,4 @@
 ---
-import '../styles/global.css'
 const { title } = Astro.props
 ---
 <!doctype html>
@@ -8,8 +7,75 @@ const { title } = Astro.props
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Prata&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg:       #0D0B09;
+        --surface:  #131109;
+        --card:     #17150F;
+        --lift:     #1E1C14;
+        --border:   #28251A;
+        --borderHi: #38342A;
+        --text:     #D8CEBC;
+        --textDim:  #8A8070;
+        --textMute: #4A4438;
+        --gold:     #A8895A;
+        --goldHi:   #C4A870;
+        --goldLo:   #6A5530;
+        --display:  'Playfair Display', Didot, Georgia, serif;
+        --body:     'Prata', Georgia, serif;
+        --radius:   2px;
+      }
+
+      [data-theme="light"] {
+        --bg:       #F5F0E8;
+        --surface:  #EDE8DC;
+        --card:     #E8E0D0;
+        --lift:     #DDD5C2;
+        --border:   #C8BFA8;
+        --borderHi: #A89880;
+        --text:     #1A1710;
+        --textDim:  #5A5040;
+        --textMute: #8A8070;
+        --gold:     #8A6830;
+        --goldHi:   #A8853A;
+        --goldLo:   #C4A870;
+      }
+
+      html { background: var(--bg); transition: background .3s, color .3s; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Prata', Georgia, serif;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+      }
+
+      .grain {
+        position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .035;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        background-size: 180px;
+      }
+
+      @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+      .a0 { animation: fadeUp .75s cubic-bezier(.22,1,.36,1) both; }
+      .a1 { animation: fadeUp .75s .1s cubic-bezier(.22,1,.36,1) both; }
+      .a2 { animation: fadeUp .75s .2s cubic-bezier(.22,1,.36,1) both; }
+      .a3 { animation: fadeUp .75s .3s cubic-bezier(.22,1,.36,1) both; }
+    </style>
+    <slot name="head" />
   </head>
-  <body class="bg-neutral-950 text-neutral-100 min-h-screen">
+  <body>
+    <div class="grain"></div>
     <slot />
+    <script>
+      const saved = localStorage.getItem('theme')
+      const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+      document.documentElement.setAttribute('data-theme', saved || preferred)
+    </script>
   </body>
 </html>
