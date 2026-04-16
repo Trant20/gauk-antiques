@@ -30,7 +30,7 @@ const firstWords = words.slice(0, -1).join(' ')
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 20px 40px;
-      background: linear-gradient(to bottom, rgba(13,11,9,.9), transparent);
+      background: linear-gradient(to bottom, rgba(13,11,9,.85), transparent);
     }
     .site-logo {
       font-family: 'Prata', Georgia, serif;
@@ -51,77 +51,53 @@ const firstWords = words.slice(0, -1).join(' ')
       color: var(--textDim); transition: border-color .2s, color .2s;
     }
     .theme-toggle:hover { border-color: var(--borderHi); color: var(--text); }
+
+    /* ─── HERO ─── */
     .hero {
-      position: relative; width: 100%; height: 100vh; min-height: 600px;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      position: relative; width: 100%; min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow: hidden; padding: 100px 24px 80px;
     }
     .hero-bg {
       position: absolute; inset: 0;
       background-size: cover; background-position: center;
-      filter: brightness(.45);
     }
     .hero-overlay {
       position: absolute; inset: 0;
-      background: linear-gradient(to bottom, rgba(13,11,9,.3) 0%, rgba(13,11,9,.6) 60%, rgba(13,11,9,1) 100%);
+      background: rgba(13,11,9,.62);
     }
     .hero-content {
       position: relative; z-index: 2;
-      text-align: center; padding: 0 24px; max-width: 680px;
+      width: 100%; max-width: 520px;
+      display: flex; flex-direction: column; align-items: center; gap: 0;
+    }
+    .hero-headline {
+      text-align: center; margin-bottom: 32px;
     }
     .hero-eyebrow {
       font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
-      color: var(--gold); margin-bottom: 24px;
+      font-size: 9px; letter-spacing: 5px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 16px;
     }
     .hero-h1 {
       font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: clamp(42px, 7vw, 80px); font-weight: 400; line-height: 1.1;
-      color: var(--text); margin-bottom: 24px;
+      font-size: clamp(36px, 6vw, 64px); font-weight: 400; line-height: 1.1;
+      color: var(--text);
     }
     .hero-h1 em { font-style: italic; color: var(--goldHi); }
-    .hero-sub {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 15px; line-height: 1.8; color: var(--textDim);
-      max-width: 480px; margin: 0 auto 40px;
+
+    /* ─── UPLOAD PANEL ─── */
+    .upload-panel {
+      width: 100%;
+      background: rgba(13,11,9,.82);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      padding: 32px;
     }
-    .hero-cta {
-      display: inline-block; padding: 16px 48px;
-      border: 1px solid var(--goldLo);
-      font-family: 'Prata', Georgia, serif;
-      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--text); text-decoration: none;
-      transition: border-color .25s, background .25s;
-    }
-    .hero-cta:hover { border-color: var(--goldHi); background: rgba(168,137,90,.08); }
-    .hero-scroll {
-      position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
-      z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px;
-    }
-    .hero-scroll-text {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--textMute);
-    }
-    .hero-scroll-line {
-      width: 1px; height: 40px;
-      background: linear-gradient(to bottom, var(--borderHi), transparent);
-      animation: scrollLine 2s ease-in-out infinite;
-    }
-    @keyframes scrollLine { 0%,100% { opacity:.3; } 50% { opacity:1; } }
-    .upload-section { max-width: 480px; margin: 0 auto; padding: 80px 24px 120px; }
-    .upload-heading { text-align: center; margin-bottom: 48px; }
-    .upload-heading .eyebrow {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--textMute); margin-bottom: 16px;
-    }
-    .upload-heading h2 {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 28px; font-weight: 400; color: var(--text); line-height: 1.3;
-    }
-    .upload-heading h2 em { font-style: italic; color: var(--goldHi); }
-    .upload-zone-wrap { position: relative; margin-bottom: 20px; }
+    .upload-zone-wrap { position: relative; margin-bottom: 16px; }
     .corner {
-      position: absolute; width: 20px; height: 20px; z-index: 2;
+      position: absolute; width: 18px; height: 18px; z-index: 2;
       transition: border-color .25s;
     }
     .corner.tl { top:0; left:0; border-top: 1px solid var(--borderHi); border-left: 1px solid var(--borderHi); }
@@ -130,30 +106,33 @@ const firstWords = words.slice(0, -1).join(' ')
     .corner.br { bottom:0; right:0; border-bottom: 1px solid var(--borderHi); border-right: 1px solid var(--borderHi); }
     .corner.active { border-color: var(--goldHi) !important; }
     .upload-zone {
-      width: 100%; aspect-ratio: 1/1; background: var(--surface);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer; overflow: hidden; margin: 2px; position: relative; transition: background .2s;
+      width: 100%; aspect-ratio: 4/3;
+      background: rgba(255,255,255,.03);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer; overflow: hidden;
+      margin: 2px; position: relative; transition: background .2s;
     }
-    .upload-zone:hover { background: var(--lift); }
+    .upload-zone:hover { background: rgba(255,255,255,.05); }
     .upload-zone img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
-    .upload-placeholder { text-align: center; padding: 32px; }
+    .upload-placeholder { text-align: center; padding: 24px; }
     .upload-icon {
-      width: 48px; height: 48px; border-radius: 50%;
+      width: 44px; height: 44px; border-radius: 50%;
       border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px; opacity: .5;
+      margin: 0 auto 16px; opacity: .5;
     }
     .upload-prompt {
       font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 17px; font-weight: 400; color: var(--textDim); margin-bottom: 8px;
+      font-size: 16px; font-weight: 400; color: var(--textDim); margin-bottom: 6px;
     }
     .upload-hint {
       font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--textMute);
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--textMute);
     }
-    .upload-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 40px; }
+    .upload-actions { display: flex; flex-direction: column; gap: 8px; }
     .btn-primary {
-      width: 100%; padding: 17px; background: var(--text); border: none;
+      width: 100%; padding: 15px; background: var(--text); border: none;
       font-family: 'Prata', Georgia, serif; font-size: 11px;
       letter-spacing: 3px; text-transform: uppercase;
       color: var(--bg); cursor: pointer; transition: opacity .2s;
@@ -161,7 +140,7 @@ const firstWords = words.slice(0, -1).join(' ')
     .btn-primary:hover { opacity: .9; }
     .btn-primary:disabled { opacity: .4; cursor: default; }
     .btn-ghost {
-      width: 100%; padding: 17px; background: transparent; border: 1px solid var(--border);
+      width: 100%; padding: 15px; background: transparent; border: 1px solid var(--border);
       font-family: 'Prata', Georgia, serif; font-size: 11px;
       letter-spacing: 2px; text-transform: uppercase;
       color: var(--textDim); cursor: pointer; transition: border-color .25s, color .25s;
@@ -169,14 +148,23 @@ const firstWords = words.slice(0, -1).join(' ')
     .btn-ghost:hover { border-color: var(--borderHi); color: var(--text); }
     .status-text {
       font-family: 'Prata', Georgia, serif;
-      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--gold); text-align: center; min-height: 20px; margin-bottom: 16px;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); text-align: center; min-height: 18px; margin-top: 12px;
     }
-    .result-card {
-      display: none; border: 1px solid var(--border);
-      background: var(--card); padding: 32px; margin-top: 40px;
+
+    /* ─── RESULT ─── */
+    .result-section {
+      position: relative; z-index: 2;
+      width: 100%; max-width: 520px;
+      margin-top: 2px;
+      background: rgba(13,11,9,.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 32px;
+      display: none;
     }
-    .result-card.visible { display: block; }
+    .result-section.visible { display: block; }
     .result-eyebrow {
       font-family: 'Prata', Georgia, serif;
       font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
@@ -189,62 +177,66 @@ const firstWords = words.slice(0, -1).join(' ')
     }
     .result-title {
       font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 24px; font-weight: 400; color: var(--text); margin-bottom: 16px; line-height: 1.3;
+      font-size: 22px; font-weight: 400; color: var(--text); margin-bottom: 14px; line-height: 1.3;
     }
     .result-desc {
       font-family: 'Prata', Georgia, serif;
-      font-size: 14px; line-height: 1.9; color: var(--textDim); margin-bottom: 24px;
+      font-size: 13px; line-height: 1.9; color: var(--textDim); margin-bottom: 20px;
     }
-    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
     .result-field-label {
+      font-family: 'Prata', Georgia, serif;
+      font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--textMute); margin-bottom: 4px;
+    }
+    .result-field-value {
+      font-family: 'Playfair Display', Didot, Georgia, serif;
+      font-size: 14px; color: var(--text);
+    }
+    .result-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+    .result-value-label {
       font-family: 'Prata', Georgia, serif;
       font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
       color: var(--textMute); margin-bottom: 6px;
     }
-    .result-field-value {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 15px; color: var(--text);
-    }
-    .result-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
-    .result-value-label {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--textMute); margin-bottom: 8px;
-    }
     .result-value {
       font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 32px; font-weight: 400; color: var(--goldHi);
+      font-size: 28px; font-weight: 400; color: var(--goldHi);
     }
     .save-note {
-      display: none; margin-top: 12px;
+      display: none; margin-top: 10px;
       font-family: 'Prata', Georgia, serif;
       font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
     }
     .save-note.visible { display: block; }
+
+    /* ─── HOW ─── */
     .how-section {
-      max-width: 480px; margin: 0 auto; padding: 0 24px 120px;
+      padding: 64px 24px 100px; max-width: 520px; margin: 0 auto;
       border-top: 1px solid var(--border);
     }
     .how-heading {
       font-family: 'Prata', Georgia, serif;
       font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--textMute); padding: 40px 0 32px; text-align: center;
+      color: var(--textMute); margin-bottom: 32px; text-align: center;
     }
-    .how-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; text-align: center; }
+    .how-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; }
     .how-item { padding: 0 12px; }
     .how-item:not(:last-child) { border-right: 1px solid var(--border); }
     .how-number {
       font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 28px; color: var(--goldLo); margin-bottom: 12px;
+      font-size: 26px; color: var(--goldLo); margin-bottom: 10px;
     }
     .how-title {
       font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 14px; color: var(--text); margin-bottom: 8px;
+      font-size: 13px; color: var(--text); margin-bottom: 6px;
     }
     .how-body {
       font-family: 'Prata', Georgia, serif;
-      font-size: 11px; line-height: 1.7; color: var(--textMute);
+      font-size: 10px; line-height: 1.7; color: var(--textMute);
     }
+
+    /* ─── BOTTOM NAV ─── */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
       background: rgba(13,11,9,.93); backdrop-filter: blur(20px);
@@ -252,7 +244,7 @@ const firstWords = words.slice(0, -1).join(' ')
     }
     .nav-tab {
       flex: 1; padding: 12px 0 10px; background: none; border: none; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
       color: var(--textMute); text-decoration: none;
       font-family: 'Prata', Georgia, serif;
       font-size: 9px; letter-spacing: 2px; text-transform: uppercase; transition: color .2s;
@@ -283,77 +275,68 @@ const firstWords = words.slice(0, -1).join(' ')
     <div class="hero-bg" style={`background-image: url('${heroImage}')`}></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <div class="hero-eyebrow a0">AI Antique Identification</div>
-      <h1 class="hero-h1 a1">{firstWords} <em>{lastWord}</em></h1>
-      <p class="hero-sub a2">{heroSubtext}</p>
-      <a href="#identify" class="hero-cta a3">Begin Appraisal</a>
-    </div>
-    <div class="hero-scroll">
-      <div class="hero-scroll-line"></div>
-      <div class="hero-scroll-text">Scroll</div>
-    </div>
-  </section>
-
-  <section class="upload-section" id="identify">
-    <div class="upload-heading">
-      <div class="eyebrow">Identify & Value</div>
-      <h2>Photograph your <em>piece</em></h2>
-    </div>
-    <div class="upload-zone-wrap">
-      <div class="corner tl"></div>
-      <div class="corner tr"></div>
-      <div class="corner bl"></div>
-      <div class="corner br"></div>
-      <div class="upload-zone" id="upload-zone">
-        <input type="file" id="file-input" accept="image/*" style="display:none" />
-        <img id="preview-img" style="display:none" alt="Preview" />
-        <div class="upload-placeholder" id="upload-placeholder">
-          <div class="upload-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-              <rect x="3" y="3" width="18" height="18" rx="0"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
+      <div class="hero-headline a0">
+        <div class="hero-eyebrow">AI Antique Identification</div>
+        <h1 class="hero-h1">{firstWords} <em>{lastWord}</em></h1>
+      </div>
+      <div class="upload-panel a1">
+        <div class="upload-zone-wrap">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="file-input" accept="image/*" style="display:none" />
+            <img id="preview-img" style="display:none" alt="Preview" />
+            <div class="upload-placeholder" id="upload-placeholder">
+              <div class="upload-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                  <rect x="3" y="3" width="18" height="18" rx="0"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+              <div class="upload-prompt">Place your item here</div>
+              <div class="upload-hint">Tap to photograph or upload</div>
+            </div>
           </div>
-          <div class="upload-prompt">Place your item here</div>
-          <div class="upload-hint">Tap to photograph or upload</div>
         </div>
+        <div class="upload-actions">
+          <button class="btn-primary" id="identify-btn" disabled>Identify This Item</button>
+          <button class="btn-ghost" id="camera-btn">Use Camera</button>
+        </div>
+        <div class="status-text" id="status"></div>
       </div>
-    </div>
-    <div class="upload-actions">
-      <button class="btn-primary" id="identify-btn" disabled>Identify This Item</button>
-      <button class="btn-ghost" id="camera-btn">Use Camera</button>
-    </div>
-    <div class="status-text" id="status"></div>
-    <div class="result-card" id="result-card">
-      <div class="result-eyebrow">
-        <span id="result-category"></span>
-        <span class="result-confidence" id="result-confidence"></span>
+      <div class="result-section" id="result-section">
+        <div class="result-eyebrow">
+          <span id="result-category"></span>
+          <span class="result-confidence" id="result-confidence"></span>
+        </div>
+        <div class="result-title" id="result-title"></div>
+        <div class="result-desc" id="result-desc"></div>
+        <div class="result-grid">
+          <div>
+            <div class="result-field-label">Period</div>
+            <div class="result-field-value" id="result-period"></div>
+          </div>
+          <div>
+            <div class="result-field-label">Origin</div>
+            <div class="result-field-value" id="result-origin"></div>
+          </div>
+          <div>
+            <div class="result-field-label">Maker</div>
+            <div class="result-field-value" id="result-maker"></div>
+          </div>
+          <div>
+            <div class="result-field-label">Condition</div>
+            <div class="result-field-value" id="result-condition"></div>
+          </div>
+        </div>
+        <div class="result-divider"></div>
+        <div class="result-value-label">Estimated Value</div>
+        <div class="result-value" id="result-value"></div>
+        <div class="save-note" id="save-note">Saved to your library</div>
       </div>
-      <div class="result-title" id="result-title"></div>
-      <div class="result-desc" id="result-desc"></div>
-      <div class="result-grid">
-        <div>
-          <div class="result-field-label">Period</div>
-          <div class="result-field-value" id="result-period"></div>
-        </div>
-        <div>
-          <div class="result-field-label">Origin</div>
-          <div class="result-field-value" id="result-origin"></div>
-        </div>
-        <div>
-          <div class="result-field-label">Maker</div>
-          <div class="result-field-value" id="result-maker"></div>
-        </div>
-        <div>
-          <div class="result-field-label">Condition</div>
-          <div class="result-field-value" id="result-condition"></div>
-        </div>
-      </div>
-      <div class="result-divider"></div>
-      <div class="result-value-label">Estimated Value</div>
-      <div class="result-value" id="result-value"></div>
-      <div class="save-note" id="save-note">Saved to your library</div>
     </div>
   </section>
 
@@ -380,7 +363,7 @@ const firstWords = words.slice(0, -1).join(' ')
 
   <nav class="bottom-nav">
     <a href="/" class="nav-tab active">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
         <rect x="3" y="3" width="18" height="18" rx="0"/>
         <circle cx="8.5" cy="8.5" r="1.5"/>
         <polyline points="21 15 16 10 5 21"/>
@@ -388,14 +371,14 @@ const firstWords = words.slice(0, -1).join(' ')
       Identify
     </a>
     <a href="/library" class="nav-tab">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
       </svg>
       Library
     </a>
     <a href="/auth/signin" class="nav-tab" id="account-tab">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
         <circle cx="12" cy="7" r="4"/>
       </svg>
@@ -438,7 +421,7 @@ const firstWords = words.slice(0, -1).join(' ')
   const cameraBtn = document.getElementById('camera-btn') as HTMLButtonElement
   const corners = document.querySelectorAll('.corner')
   const status = document.getElementById('status') as HTMLElement
-  const resultCard = document.getElementById('result-card') as HTMLElement
+  const resultSection = document.getElementById('result-section') as HTMLElement
   const saveNote = document.getElementById('save-note') as HTMLElement
 
   let selectedFile: File | null = null
@@ -464,7 +447,7 @@ const firstWords = words.slice(0, -1).join(' ')
     previewImg.style.display = 'block'
     placeholder.style.display = 'none'
     identifyBtn.removeAttribute('disabled')
-    resultCard.classList.remove('visible')
+    resultSection.classList.remove('visible')
     corners.forEach(c => c.classList.add('active'))
   }
 
@@ -499,7 +482,7 @@ const firstWords = words.slice(0, -1).join(' ')
       document.getElementById('result-condition')!.textContent = r.condition
       document.getElementById('result-value')!.textContent =
         '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString()
-      resultCard.classList.add('visible')
+      resultSection.classList.add('visible')
       if (user_id && identifyData.id) saveNote.classList.add('visible')
     } catch (err: any) {
       status.textContent = err.message
