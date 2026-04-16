@@ -4,9 +4,41 @@ import ImageUpload from '../components/ImageUpload.astro'
 ---
 <Layout title="GAUK Antiques — Identify & Value Your Antiques">
   <main class="min-h-screen bg-neutral-950 text-neutral-100">
-    <header class="border-b border-neutral-800 px-8 py-4">
+    <header class="border-b border-neutral-800 px-8 py-4 flex items-center justify-between">
       <h1 class="text-lg font-semibold tracking-wide">GAUK <span class="text-amber-500">Antiques</span></h1>
+      <nav id="auth-nav" class="text-sm">
+        <a href="/auth/signin" id="signin-link" class="text-neutral-400 hover:text-amber-500 transition-colors mr-4">Sign in</a>
+        <a href="/auth/signup" id="signup-link" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 rounded-lg transition-colors">Create account</a>
+      </nav>
     </header>
     <ImageUpload />
   </main>
 </Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (session) {
+    const nav = document.getElementById('auth-nav')
+    if (nav) {
+      nav.innerHTML = `
+        <span class="text-neutral-400 mr-4">${session.user.email}</span>
+        <a href="/library" class="text-neutral-400 hover:text-amber-500 transition-colors mr-4">My Library</a>
+        <button id="signout-btn" class="text-neutral-400 hover:text-amber-500 transition-colors">Sign out</button>
+      `
+      document.getElementById('signout-btn')?.addEventListener('click', async () => {
+        await supabase.auth.signOut()
+        window.location.reload()
+      })
+    }
+  }
+
+  window.__supabaseSession = session
+</script>
