@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { env } from 'cloudflare:workers'
+import { getRequestContext } from '@astrojs/cloudflare'
 import Anthropic from '@anthropic-ai/sdk'
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -24,6 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
       })
     }
 
+    const { env } = getRequestContext()
     const bucket = (env as any).gauk_antiques_images
     const object = await bucket.get(key)
 
@@ -38,7 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
     const base64 = arrayBufferToBase64(arrayBuffer)
     const contentType = object.httpMetadata?.contentType || 'image/jpeg'
 
-    const apiKey = (env as any).ANTHROPIC_API_KEY || import.meta.env.ANTHROPIC_API_KEY
+    const apiKey = (env as any).ANTHROPIC_API_KEY
 
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'Anthropic API key not configured' }), {

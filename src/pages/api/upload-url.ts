@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { env } from 'cloudflare:workers'
+import { getRequestContext } from '@astrojs/cloudflare'
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -13,7 +13,7 @@ export const POST: APIRoute = async ({ request }) => {
       })
     }
 
-    const key = `uploads/${crypto.randomUUID()}-${file.name}`
+    const { env } = getRequestContext()
     const bucket = (env as any).gauk_antiques_images
 
     if (!bucket) {
@@ -23,6 +23,7 @@ export const POST: APIRoute = async ({ request }) => {
       })
     }
 
+    const key = `uploads/${crypto.randomUUID()}-${file.name}`
     const arrayBuffer = await file.arrayBuffer()
 
     await bucket.put(key, arrayBuffer, {
