@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro'
+import { env } from 'cloudflare:workers'
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -13,7 +14,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     const key = `uploads/${crypto.randomUUID()}-${file.name}`
-    const bucket = (locals as any).runtime?.env?.gauk_antiques_images
+    const bucket = (env as any).gauk_antiques_images
 
     if (!bucket) {
       return new Response(JSON.stringify({ error: 'R2 binding not available' }), {
