@@ -24,6 +24,39 @@
   </div>
 
   <div id="status" class="mt-4 text-sm text-neutral-400"></div>
+
+  <div id="result" class="hidden mt-8 p-6 bg-neutral-900 rounded-xl border border-neutral-700">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h3 id="result-category" class="text-amber-500 text-sm font-medium uppercase tracking-wider"></h3>
+        <h2 id="result-subcategory" class="text-xl font-bold mt-1"></h2>
+      </div>
+      <span id="result-confidence" class="text-xs px-2 py-1 rounded-full bg-neutral-800 text-neutral-400"></span>
+    </div>
+    <p id="result-description" class="text-neutral-300 text-sm leading-relaxed mb-4"></p>
+    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+      <div>
+        <span class="text-neutral-500">Period</span>
+        <p id="result-period" class="text-neutral-200 font-medium"></p>
+      </div>
+      <div>
+        <span class="text-neutral-500">Origin</span>
+        <p id="result-origin" class="text-neutral-200 font-medium"></p>
+      </div>
+      <div>
+        <span class="text-neutral-500">Maker</span>
+        <p id="result-maker" class="text-neutral-200 font-medium"></p>
+      </div>
+      <div>
+        <span class="text-neutral-500">Condition</span>
+        <p id="result-condition" class="text-neutral-200 font-medium"></p>
+      </div>
+    </div>
+    <div class="border-t border-neutral-700 pt-4">
+      <span class="text-neutral-500 text-sm">Estimated Value</span>
+      <p id="result-value" class="text-2xl font-bold text-amber-500 mt-1"></p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -35,6 +68,7 @@
   const previewImg = document.getElementById('preview-img') as HTMLImageElement
   const identifyBtn = document.getElementById('identify-btn')
   const status = document.getElementById('status')
+  const result = document.getElementById('result')
 
   let selectedFile: File | null = null
 
@@ -71,6 +105,7 @@
 
   function handleFile(file: File) {
     selectedFile = file
+    result?.classList.add('hidden')
     const reader = new FileReader()
     reader.onload = (e) => {
       if (previewImg && e.target?.result) {
@@ -86,25 +121,50 @@
 
     status!.textContent = 'Uploading image...'
     identifyBtn.setAttribute('disabled', 'true')
+    result?.classList.add('hidden')
 
     try {
       const formData = new FormData()
       formData.append('file', selectedFile)
 
-      const res = await fetch('/api/upload-url', {
+      const uploadRes = await fetch('/api/upload-url', {
         method: 'POST',
         body: formData
       })
 
-      const data = await res.json()
+      const uploadData = await uploadRes.json()
+      if (uploadData.error) throw new Error(uploadData.error)
 
-      if (data.error) throw new Error(data.error)
+      status!.textContent = 'Identifying with Claude Vision...'
 
-      status!.textContent = 'Image uploaded. Key: ' + data.key
-      console.log('Uploaded to R2 with key:', data.key)
+      const identifyRes = await fetch('/api/identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: uploadData.key })
+      })
+
+      const identifyData = await identifyRes.json()
+      if (identifyData.error) throw new Error(identifyData.error)
+
+      const r = identifyData.result
+      status!.textContent = ''
+
+      document.getElementById('result-category')!.textContent = r.category
+      document.getElementById('result-subcategory')!.textContent = r.subcategory
+      document.getElementById('result-description')!.textContent = r.description
+      document.getElementById('result-period')!.textContent = r.period || 'Unknown'
+      document.getElementById('result-origin')!.textContent = r.country_of_origin || 'Unknown'
+      document.getElementById('result-maker')!.textContent = r.maker || 'Unknown'
+      document.getElementById('result-condition')!.textContent = r.condition
+      document.getElementById('result-confidence')!.textContent = r.confidence + ' confidence'
+      document.getElementById('result-value')!.textContent =
+        '£' + r.value_range_low.toLocaleString() + ' – £' + r.value_range_high.toLocaleString()
+
+      result?.classList.remove('hidden')
 
     } catch (err: any) {
       status!.textContent = 'Error: ' + err.message
+    } finally {
       identifyBtn.removeAttribute('disabled')
     }
   })
