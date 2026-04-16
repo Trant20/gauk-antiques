@@ -1,35 +1,28 @@
 import type { APIRoute } from 'astro'
-import { getRequestContext } from '@astrojs/cloudflare'
+import { env } from 'cloudflare:workers'
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-
     if (!file) {
       return new Response(JSON.stringify({ error: 'No file provided' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
     }
-
-    const { env } = getRequestContext()
     const bucket = (env as any).gauk_antiques_images
-
     if (!bucket) {
       return new Response(JSON.stringify({ error: 'R2 binding not available' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
     }
-
     const key = `uploads/${crypto.randomUUID()}-${file.name}`
     const arrayBuffer = await file.arrayBuffer()
-
     await bucket.put(key, arrayBuffer, {
       httpMetadata: { contentType: file.type }
     })
-
     return new Response(JSON.stringify({ key }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { getRequestContext } from '@astrojs/cloudflare'
+import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -16,40 +16,24 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { key } = await request.json()
-
     if (!key) {
       return new Response(JSON.stringify({ error: 'No image key provided' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
     }
-
-    const { env } = getRequestContext()
     const bucket = (env as any).gauk_antiques_images
     const object = await bucket.get(key)
-
     if (!object) {
       return new Response(JSON.stringify({ error: 'Image not found in R2' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
       })
     }
-
     const arrayBuffer = await object.arrayBuffer()
     const base64 = arrayBufferToBase64(arrayBuffer)
     const contentType = object.httpMetadata?.contentType || 'image/jpeg'
-
-    const apiKey = (env as any).ANTHROPIC_API_KEY
-
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Anthropic API key not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-
-    const client = new Anthropic({ apiKey })
-
+    const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
       max_tokens: 1024,
@@ -66,13 +50,11 @@ The JSON must follow this structure exactly:
   "condition": "Excellent | Good | Fair | Poor",
   "condition_notes": "string describing any damage or wear",
   "description": "string (2-3 sentences describing the item)",
-  "value_range_low": number (GBP),
-  "value_range_high": number (GBP),
+  "value_range_low": number,
+  "value_range_high": number,
   "confidence": "High | Medium | Low",
   "confidence_notes": "string explaining confidence level",
-  "category_specific": {
-    "note": "Include fields relevant to the category. For Pottery: maker_mark, pattern, firing_type. For Jewellery: metal, stones, hallmarks, weight_estimate. For Furniture: wood_type, style, provenance. For Silverware: hallmarks, weight_estimate, assay_office. For Art: medium, subject, signed. Omit irrelevant fields."
-  }
+  "category_specific": {}
 }`,
       messages: [
         {
@@ -80,30 +62,20 @@ The JSON must follow this structure exactly:
           content: [
             {
               type: 'image',
-              source: {
-                type: 'base64',
-                media_type: contentType as any,
-                data: base64
-              }
+              source: { type: 'base64', media_type: contentType as any, data: base64 }
             },
-            {
-              type: 'text',
-              text: 'Please identify and value this antique. Return only the JSON object.'
-            }
+            { type: 'text', text: 'Please identify and value this antique. Return only the JSON object.' }
           ]
         }
       ]
     })
-
     const raw = response.content[0].type === 'text' ? response.content[0].text : ''
     const clean = raw.replace(/```json|```/g, '').trim()
     const result = JSON.parse(clean)
-
     return new Response(JSON.stringify({ result }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     })
-
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
