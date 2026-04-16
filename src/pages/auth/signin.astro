@@ -1,0 +1,72 @@
+---
+import Layout from '../../layouts/Layout.astro'
+---
+<Layout title="Sign In — GAUK Antiques">
+  <main class="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-8">
+    <div class="w-full max-w-md">
+      <div class="mb-8">
+        <h1 class="text-lg font-semibold tracking-wide">GAUK <span class="text-amber-500">Antiques</span></h1>
+      </div>
+      <h2 class="text-2xl font-bold mb-2">Sign in</h2>
+      <p class="text-neutral-400 text-sm mb-8">Access your identification history and saved valuations.</p>
+
+      <div id="error-msg" class="hidden mb-4 p-3 bg-red-950 border border-red-800 rounded-lg text-red-400 text-sm"></div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm text-neutral-400 mb-1">Email</label>
+          <input id="email" type="email" class="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100 focus:outline-none focus:border-amber-500 transition-colors" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="block text-sm text-neutral-400 mb-1">Password</label>
+          <input id="password" type="password" class="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100 focus:outline-none focus:border-amber-500 transition-colors" placeholder="Your password" />
+        </div>
+        <button id="signin-btn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-colors">
+          Sign In
+        </button>
+      </div>
+
+      <p class="mt-6 text-center text-sm text-neutral-400">
+        No account yet? <a href="/auth/signup" class="text-amber-500 hover:text-amber-400">Create one</a>
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  const btn = document.getElementById('signin-btn')
+  const errorMsg = document.getElementById('error-msg')
+
+  btn?.addEventListener('click', async () => {
+    const email = (document.getElementById('email') as HTMLInputElement).value
+    const password = (document.getElementById('password') as HTMLInputElement).value
+
+    if (!email || !password) {
+      errorMsg!.textContent = 'Please fill in all fields'
+      errorMsg!.classList.remove('hidden')
+      return
+    }
+
+    btn.setAttribute('disabled', 'true')
+    btn.textContent = 'Signing in...'
+    errorMsg!.classList.add('hidden')
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      errorMsg!.textContent = error.message
+      errorMsg!.classList.remove('hidden')
+      btn.removeAttribute('disabled')
+      btn.textContent = 'Sign In'
+    } else {
+      window.location.href = '/'
+    }
+  })
+</script>
