@@ -1,0 +1,85 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+<Layout title="My Library — GAUK Antiques">
+  <main class="min-h-screen bg-neutral-950 text-neutral-100">
+    <header class="border-b border-neutral-800 px-8 py-4 flex items-center justify-between">
+      <h1 class="text-lg font-semibold tracking-wide">GAUK <span class="text-amber-500">Antiques</span></h1>
+      <nav class="text-sm flex items-center gap-4">
+        <a href="/" class="text-neutral-400 hover:text-amber-500 transition-colors">Identify</a>
+        <button id="signout-btn" class="text-neutral-400 hover:text-amber-500 transition-colors">Sign out</button>
+      </nav>
+    </header>
+    <div class="max-w-4xl mx-auto p-8">
+      <h2 class="text-2xl font-bold mb-2">My Library</h2>
+      <p class="text-neutral-400 text-sm mb-8">Your identification history.</p>
+      <div id="auth-gate" class="hidden text-center py-16">
+        <p class="text-neutral-400 mb-4">Sign in to view your library</p>
+        <a href="/auth/signin" class="px-6 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-colors">Sign In</a>
+      </div>
+      <div id="loading" class="text-neutral-400 text-sm">Loading...</div>
+      <div id="empty" class="hidden text-center py-16">
+        <p class="text-neutral-400 mb-4">No identifications yet</p>
+        <a href="/" class="px-6 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-colors">Identify your first item</a>
+      </div>
+      <div id="grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  const loading = document.getElementById('loading')
+  const empty = document.getElementById('empty')
+  const grid = document.getElementById('grid')
+  const authGate = document.getElementById('auth-gate')
+
+  document.getElementById('signout-btn')?.addEventListener('click', async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  })
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    loading!.classList.add('hidden')
+    authGate!.classList.remove('hidden')
+  } else {
+    const { data, error } = await supabase
+      .from('identifications')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+
+    loading!.classList.add('hidden')
+
+    if (error || !data || data.length === 0) {
+      empty!.classList.remove('hidden')
+    } else {
+      grid!.classList.remove('hidden')
+      grid!.innerHTML = data.map(item => {
+        const r = item.result_json
+        return `
+          <div class="bg-neutral-900 border border-neutral-700 rounded-xl p-5 hover:border-amber-600 transition-colors">
+            <div class="flex items-start justify-between mb-3">
+              <span class="text-amber-500 text-xs font-medium uppercase tracking-wider">${r.category || 'Unknown'}</span>
+              <span class="text-xs text-neutral-500">${new Date(item.created_at).toLocaleDateString('en-GB')}</span>
+            </div>
+            <h3 class="font-bold mb-2">${r.subcategory || 'Item'}</h3>
+            <p class="text-neutral-400 text-xs leading-relaxed mb-3 line-clamp-2">${r.description || ''}</p>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-neutral-500">${r.maker || 'Unknown maker'}</span>
+              <span class="text-amber-500 font-semibold">£${(r.value_range_low || 0).toLocaleString()} – £${(r.value_range_high || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        `
+      }).join('')
+    }
+  }
+</script>
