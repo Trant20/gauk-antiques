@@ -56,10 +56,18 @@
       <span class="text-neutral-500 text-sm">Estimated Value</span>
       <p id="result-value" class="text-2xl font-bold text-amber-500 mt-1"></p>
     </div>
+    <div id="save-note" class="hidden mt-3 text-xs text-green-400">Saved to your library</div>
   </div>
 </div>
 
 <script>
+  import { createClient } from '@supabase/supabase-js'
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
   const fileInput = document.getElementById('file-input') as HTMLInputElement
   const browseBtn = document.getElementById('browse-btn')
   const cameraBtn = document.getElementById('camera-btn')
@@ -69,6 +77,7 @@
   const identifyBtn = document.getElementById('identify-btn')
   const status = document.getElementById('status')
   const result = document.getElementById('result')
+  const saveNote = document.getElementById('save-note')
 
   let selectedFile: File | null = null
 
@@ -137,10 +146,13 @@
 
       status!.textContent = 'Identifying with Claude Vision...'
 
+      const { data: { session } } = await supabase.auth.getSession()
+      const user_id = session?.user?.id || null
+
       const identifyRes = await fetch('/api/identify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: uploadData.key })
+        body: JSON.stringify({ key: uploadData.key, user_id })
       })
 
       const identifyData = await identifyRes.json()
@@ -161,6 +173,10 @@
         '£' + r.value_range_low.toLocaleString() + ' – £' + r.value_range_high.toLocaleString()
 
       result?.classList.remove('hidden')
+
+      if (user_id && identifyData.id) {
+        saveNote?.classList.remove('hidden')
+      }
 
     } catch (err: any) {
       status!.textContent = 'Error: ' + err.message
