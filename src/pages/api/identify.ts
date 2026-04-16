@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
@@ -15,25 +16,31 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { key } = await request.json()
+    const { key, user_id } = await request.json()
+
     if (!key) {
       return new Response(JSON.stringify({ error: 'No image key provided' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
     }
+
     const bucket = (env as any).gauk_antiques_images
     const object = await bucket.get(key)
+
     if (!object) {
       return new Response(JSON.stringify({ error: 'Image not found in R2' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
       })
     }
+
     const arrayBuffer = await object.arrayBuffer()
     const base64 = arrayBufferToBase64(arrayBuffer)
     const contentType = object.httpMetadata?.contentType || 'image/jpeg'
+
     const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
+
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
       max_tokens: 1024,
@@ -69,13 +76,42 @@ The JSON must follow this structure exactly:
         }
       ]
     })
+
     const raw = response.content[0].type === 'text' ? response.content[0].text : ''
     const clean = raw.replace(/```json|```/g, '').trim()
     const result = JSON.parse(clean)
-    return new Response(JSON.stringify({ result }), {
+
+    const supabase = createClient(
+      (env as any).PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL,
+      (env as any).SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+
+    const { data: record, error: dbError } = await supabase
+      .from('identifications')
+      .insert({
+        site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744',
+        user_id: user_id || null,
+        image_key: key,
+        result_json: result,
+        category: result.category,
+        maker: result.maker,
+        period: result.period,
+        value_range_low: result.value_range_low,
+        value_range_high: result.value_range_high,
+        confidence: result.confidence
+      })
+      .select()
+      .single()
+
+    if (dbError) {
+      console.error('DB write error:', dbError)
+    }
+
+    return new Response(JSON.stringify({ result, id: record?.id || null }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     })
+
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
