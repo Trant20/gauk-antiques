@@ -17,7 +17,17 @@ const { data: settings } = await supabase
 const cfg: Record<string, string> = {}
 settings?.forEach(r => { cfg[r.key] = r.value })
 
-const heroImage = cfg.hero_image_url || ''
+const { data: heroImages } = await supabase
+  .from('hero_images')
+  .select('image_url')
+  .eq('site_id', SITE_ID)
+  .eq('active', true)
+  .order('sort_order', { ascending: true })
+
+const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000)
+const imagePool = heroImages && heroImages.length > 0 ? heroImages : [{ image_url: '' }]
+const heroImage = imagePool[dayOfYear % imagePool.length].image_url
+const heroOverlay = parseFloat(cfg.hero_overlay || '62') / 100
 const heroHeadline = cfg.hero_headline || 'What is it worth?'
 const heroSubtext = cfg.hero_subtext || 'Upload a photograph. Our AI identifies your antique and returns a professional valuation in seconds.'
 const words = heroHeadline.split(' ')
