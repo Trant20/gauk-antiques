@@ -65,7 +65,6 @@ const firstWords = words.slice(0, -1).join(' ')
     }
     .hero-overlay {
       position: absolute; inset: 0;
-      background: rgba(13,11,9,.62);
     }
     .hero-content {
       position: relative; z-index: 2;
@@ -273,7 +272,7 @@ const firstWords = words.slice(0, -1).join(' ')
 
   <section class="hero">
     <div class="hero-bg" style={`background-image: url('${heroImage}')`}></div>
-    <div class="hero-overlay"></div>
+    <div class="hero-overlay" style={`background: rgba(13,11,9,${heroOverlay})`}></div>
     <div class="hero-content">
       <div class="hero-headline a0">
         <div class="hero-eyebrow">AI Antique Identification</div>
