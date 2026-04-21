@@ -667,8 +667,29 @@ const firstWords = words.slice(0, -1).join(' ')
       document.getElementById('result-category')!.textContent = r.category
       document.getElementById('result-confidence')!.textContent = r.confidence
       document.getElementById('result-title')!.textContent = r.subcategory
-      document.getElementById('result-desc')!.textContent = r.description
       document.getElementById('result-condition')!.textContent = r.condition
+
+      const notesEl = document.getElementById('result-notes') as HTMLElement
+      const notes = [r.condition_notes, r.confidence_notes].filter(Boolean).join(' ')
+      if (notesEl && notes) notesEl.textContent = notes
+
+      const typedText = document.getElementById('typed-text') as HTMLElement
+      const typedCursor = document.getElementById('typed-cursor') as HTMLElement
+      if (typedText && typedCursor) {
+        const desc = r.description || ''
+        let ti = 0
+        typedText.textContent = ''
+        typedCursor.style.display = 'inline-block'
+        function typeChar() {
+          if (ti < desc.length) {
+            typedText.textContent += desc[ti]; ti++
+            setTimeout(typeChar, 22)
+          } else {
+            typedCursor.style.display = 'none'
+          }
+        }
+        setTimeout(typeChar, 400)
+      }
       document.getElementById('result-value')!.textContent =
         '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString()
 
