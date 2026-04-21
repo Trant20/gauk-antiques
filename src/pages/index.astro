@@ -517,6 +517,13 @@ const firstWords = words.slice(0, -1).join(' ')
       document.getElementById('result-value')!.textContent =
         '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString()
       resultSection.classList.add('visible')
+      if (identifyData.id) {
+        const link = document.createElement('a')
+        link.href = '/valuation/' + identifyData.id
+        link.style.cssText = 'display:block;margin-top:16px;width:100%;padding:14px;background:var(--text);border:none;font-family:Prata,Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--bg);text-align:center;text-decoration:none;'
+        link.textContent = 'View Full Valuation'
+        resultSection.appendChild(link)
+      }
       if (user_id && identifyData.id) saveNote.classList.add('visible')
     } catch (err: any) {
       status.textContent = err.message
