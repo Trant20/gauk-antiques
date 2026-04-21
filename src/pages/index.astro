@@ -633,7 +633,7 @@ const firstWords = words.slice(0, -1).join(' ')
     previewImg.style.display = 'block'
     placeholder.style.display = 'none'
     identifyBtn.removeAttribute('disabled')
-    resultSection.classList.remove('visible')
+    const ro = document.getElementById('result-outer') as HTMLElement; if (ro) ro.style.display = 'none'
     corners.forEach(c => c.classList.add('active'))
   }
 
