@@ -36,7 +36,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     const arrayBuffer = await object.arrayBuffer()
     const base64 = arrayBufferToBase64(arrayBuffer)
-    const contentType = object.httpMetadata?.contentType || 'image/jpeg'
+    const rawContentType = object.httpMetadata?.contentType || 'image/jpeg'
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    const contentType = allowed.includes(rawContentType) ? rawContentType : 'image/jpeg'
 
     const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
 
