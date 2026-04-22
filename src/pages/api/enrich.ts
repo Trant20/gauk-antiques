@@ -66,6 +66,14 @@ Return this exact structure:
   ],
   "price_peak": { "year": integer, "value": integer },
   "price_context": "One sentence — what drove price movement for this maker or category over this period.",
+  "desirability_index": [
+    { "name": "comparable pattern, maker or style name", "score": integer 0-100, "this_piece": false },
+    { "name": "comparable pattern, maker or style name", "score": integer 0-100, "this_piece": false },
+    { "name": "name of this piece pattern or type", "score": integer 0-100, "this_piece": true },
+    { "name": "comparable pattern, maker or style name", "score": integer 0-100, "this_piece": false },
+    { "name": "comparable pattern, maker or style name", "score": integer 0-100, "this_piece": false }
+  ],
+  "desirability_context": "One sentence explaining what the index measures and why these comparisons matter.",
   "condition_score": integer 0-100 derived from the condition field,
   "desirability_score": integer 0-100 based on maker, period, category and rarity
 }
