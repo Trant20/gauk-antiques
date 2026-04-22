@@ -387,7 +387,7 @@ const firstWords = words.slice(0, -1).join(' ')
     .save-note.visible { display: block; }
 
     /* ─── HOW ─── */
-    .how-section {
+    .how-section { overflow-x: hidden;
       padding: 64px 24px 100px; max-width: 520px; margin: 0 auto;
       border-top: 1px solid var(--border);
     }
@@ -396,7 +396,8 @@ const firstWords = words.slice(0, -1).join(' ')
       font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
       color: var(--textMute); margin-bottom: 32px; text-align: center;
     }
-    .how-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; }
+    .how-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; width: 100%; }
+    @media (max-width: 480px) { .how-grid { grid-template-columns: 1fr; } .how-item:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 24px; } }
     .how-item { padding: 0 12px; }
     .how-item:not(:last-child) { border-right: 1px solid var(--border); }
     .how-number {
