@@ -191,10 +191,21 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .action-btn.primary { background: #1C1810; border-color: #1C1810; color: #EFE7D9; }
 
   /* LOADING STATE */
-  .enrich-loading { padding: 32px 20px; text-align: center; }
-  .enrich-loading-text { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
-  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
-  .enrich-loading-text { animation: pulse 1.8s ease-in-out infinite; }
+  .enrich-loading { padding: 32px 20px 40px; }
+  .enrich-loading-stage { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; text-align: center; margin-bottom: 20px; min-height: 16px; }
+  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .enrich-loading-stage { animation: pulse 2s ease-in-out infinite; }
+  .enrich-progress-wrap { height: 2px; background: #DDD0BF; margin-bottom: 20px; overflow: hidden; }
+  .enrich-progress-bar { height: 100%; background: linear-gradient(90deg, #C8A060, #7A5C20); width: 0%; transition: width .6s ease; }
+  .enrich-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .enrich-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #E6DCCB; opacity: .4; transition: opacity .4s; }
+  .enrich-step.active { opacity: 1; }
+  .enrich-step.done { opacity: .7; }
+  .enrich-step-dot { width: 6px; height: 6px; border-radius: 50%; background: #C4B49E; flex-shrink: 0; transition: background .4s; }
+  .enrich-step.active .enrich-step-dot { background: #7A5C20; }
+  .enrich-step.done .enrich-step-dot { background: #2A7060; }
+  .enrich-step-text { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #5C5040; }
+  .enrich-disclaimer { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; line-height: 1.8; text-align: center; border-top: 1px solid #C4B49E; padding-top: 16px; }
 </style>
 
 <div class="card-wrap">
@@ -595,7 +606,18 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       </>
     ) : (
       <div class="enrich-loading" id="enrich-loading">
-        <div class="enrich-loading-text">Generating full report...</div>
+        <div class="enrich-loading-stage" id="enrich-stage">Consulting auction records</div>
+        <div class="enrich-progress-wrap">
+          <div class="enrich-progress-bar" id="enrich-progress"></div>
+        </div>
+        <div class="enrich-steps">
+          <div class="enrich-step active" id="step-0"><div class="enrich-step-dot"></div><div class="enrich-step-text">Researching maker &amp; provenance</div></div>
+          <div class="enrich-step" id="step-1"><div class="enrich-step-dot"></div><div class="enrich-step-text">Analysing auction &amp; comparable sales</div></div>
+          <div class="enrich-step" id="step-2"><div class="enrich-step-dot"></div><div class="enrich-step-text">Building market value history</div></div>
+          <div class="enrich-step" id="step-3"><div class="enrich-step-dot"></div><div class="enrich-step-text">Compiling expert notes &amp; options</div></div>
+          <div class="enrich-step" id="step-4"><div class="enrich-step-dot"></div><div class="enrich-step-text">Preparing your full report</div></div>
+        </div>
+        <div class="enrich-disclaimer">Full reports draw on multiple data sources &mdash;<br>this typically takes 10&ndash;15 seconds or more when busy.</div>
       </div>
     )}
   </div>
@@ -683,6 +705,41 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   })
 
   if (!hasEnrichment) {
+    // Progress animation
+    const stages = [
+      'Consulting auction records',
+      'Researching maker history',
+      'Analysing comparable sales',
+      'Building market value data',
+      'Compiling expert notes',
+      'Preparing your full report',
+    ]
+    const progressEl = document.getElementById('enrich-progress')
+    const stageEl = document.getElementById('enrich-stage')
+    const steps = [0,1,2,3,4].map(i => document.getElementById('step-' + i))
+
+    let currentStep = 0
+    const totalDuration = 14000
+    const stepDuration = totalDuration / stages.length
+
+    function advanceStep() {
+      if (!progressEl || !stageEl) return
+      const pct = Math.min(85, Math.round((currentStep / (stages.length - 1)) * 85))
+      progressEl.style.width = pct + '%'
+      stageEl.textContent = stages[currentStep]
+      steps.forEach((s, i) => {
+        if (!s) return
+        s.classList.remove('active', 'done')
+        if (i < currentStep) s.classList.add('done')
+        else if (i === currentStep) s.classList.add('active')
+      })
+      if (currentStep < stages.length - 1) {
+        currentStep++
+        setTimeout(advanceStep, stepDuration)
+      }
+    }
+    setTimeout(advanceStep, 600)
+
     fetch('/api/enrich', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -690,11 +747,15 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     })
     .then(r => r.json())
     .then(data => {
-      if (data.enrichment) window.location.reload()
+      if (data.enrichment) {
+        if (progressEl) progressEl.style.width = '100%'
+        if (stageEl) stageEl.textContent = 'Report ready'
+        setTimeout(() => window.location.reload(), 400)
+      }
     })
     .catch(err => {
       const loading = document.getElementById('enrich-loading')
-      if (loading) loading.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:12px;color:#8A7A66;padding:20px;text-align:center">Report generation unavailable</div>'
+      if (loading) loading.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:12px;color:#8A7A66;padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>'
     })
   }
 </script>
