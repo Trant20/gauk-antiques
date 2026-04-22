@@ -318,6 +318,78 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <div id="enrichment-container">
     {enrichment ? (
       <>
+        {enrichment.price_history && enrichment.price_history.length > 0 && (() => {
+          const prices = enrichment.price_history
+          const values = prices.map((p: any) => p.value)
+          const minVal = Math.min(...values)
+          const maxVal = Math.max(...values)
+          const chartW = 480
+          const chartH = 160
+          const padL = 48
+          const padR = 16
+          const padT = 12
+          const padB = 32
+          const plotW = chartW - padL - padR
+          const plotH = chartH - padT - padB
+          const toX = (i: number) => padL + (i / (prices.length - 1)) * plotW
+          const toY = (v: number) => padT + plotH - ((v - minVal) / (maxVal - minVal || 1)) * plotH
+          const points = prices.map((p: any, i: number) => `${toX(i)},${toY(p.value)}`).join(' ')
+          const areaPoints = `${padL},${padT + plotH} ${points} ${toX(prices.length-1)},${padT + plotH}`
+          const peakY = enrichment.price_peak ? toY(enrichment.price_peak.value) : padT
+          return (
+            <div class="section">
+              <div class="section-head">
+                <div class="cap">Market Value 2010–2024</div>
+                <div class="section-head-line"></div>
+              </div>
+              {enrichment.price_context && (
+                <p style="font-family:'Prata',Georgia,serif;font-size:14px;color:#5C5040;margin-bottom:16px;line-height:1.7">{enrichment.price_context}</p>
+              )}
+              <svg width="100%" viewBox={`0 0 ${chartW} ${chartH}`} style="display:block;overflow:visible">
+                <defs>
+                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#A07830" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="#A07830" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                {enrichment.price_peak && (
+                  <line x1={padL} y1={peakY} x2={chartW - padR} y2={peakY}
+                    stroke="#A07830" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+                )}
+                <polygon points={areaPoints} fill="url(#areaGrad)"/>
+                <polyline points={points} fill="none" stroke="#7A5C20" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+                {prices.map((p: any, i: number) => (
+                  <circle cx={toX(i)} cy={toY(p.value)} r="3" fill="#7A5C20"/>
+                ))}
+                {[minVal, Math.round((minVal+maxVal)/2), maxVal].map((v, i) => (
+                  <text x={padL - 6} y={toY(v) + 4} text-anchor="end"
+                    font-family="Prata, Georgia, serif" font-size="9" fill="#8A7A66">
+                    £{v >= 1000 ? `${Math.round(v/1000)}k` : v}
+                  </text>
+                ))}
+                {prices.filter((_: any, i: number) => i % 2 === 0).map((p: any, i: number) => {
+                  const origIdx = i * 2
+                  return (
+                    <text x={toX(origIdx)} y={chartH - 4} text-anchor="middle"
+                      font-family="Prata, Georgia, serif" font-size="9" fill="#8A7A66">
+                      {p.year}
+                    </text>
+                  )
+                })}
+              </svg>
+              {enrichment.price_peak && (
+                <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                  <div style="width:16px;border-top:1px dashed #A07830"></div>
+                  <span style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8A7A66">
+                    Peak £{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})
+                  </span>
+                </div>
+              )}
+              <p style="font-family:'Prata',Georgia,serif;font-size:10px;color:#8A7A66;margin-top:12px;font-style:italic">AI-estimated market trend · not verified auction data</p>
+            </div>
+          )
+        })()}
+
         {(enrichment.maker_detail || enrichment.manufacturer_detail) && (
           <div class="section">
             <div class="section-head">
