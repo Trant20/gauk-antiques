@@ -43,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
     const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
 
     const response = await client.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: `You are a senior antiques appraiser with 40 years of experience across all categories. Analyse the image and return ONLY a valid JSON object — no markdown, no explanation, just the JSON.
 
