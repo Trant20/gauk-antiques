@@ -22,10 +22,13 @@ const enrichment = item.enrichment_json || null
 const imageUrl = `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.image_key}`
 const conditionScore = enrichment?.condition_score || (r.condition === 'Mint' ? 98 : r.condition === 'Excellent' ? 88 : r.condition === 'Good' ? 72 : r.condition === 'Fair' ? 50 : 30)
 const desirabilityScore = enrichment?.desirability_score || 70
+const rarityScore = r.rarity_score || 65
+const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium' ? 72 : 45
 const circumference = 2 * Math.PI * 34
 const conditionOffset = circumference - (circumference * conditionScore / 100)
 const desirabilityOffset = circumference - (circumference * desirabilityScore / 100)
-const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium' ? 72 : 45
+const rarityOffset = circumference - (circumference * rarityScore / 100)
+const confidenceOffset = circumference - (circumference * confidenceScore / 100)
 const confCircumference = 2 * Math.PI * 20
 const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -81,7 +84,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .id-val { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; line-height: 1.5; flex: 1; }
 
   /* GAUGES */
-  .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .gauges { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
   .gauge { text-align: center; }
   .gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
   .gauge-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
@@ -264,10 +267,37 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         </svg>
         <div class="gauge-label">Desirability</div>
       </div>
+      <div class="gauge">
+        <svg width="82" height="82" viewBox="0 0 82 82">
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#C46028" stroke-width="4"
+            stroke-dasharray={circumference} stroke-dashoffset={rarityOffset} stroke-linecap="round"/>
+          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
+            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
+            transform="rotate(90 41 41)">{rarityScore}</text>
+        </svg>
+        <div class="gauge-label">Rarity</div>
+      </div>
+      <div class="gauge">
+        <svg width="82" height="82" viewBox="0 0 82 82">
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#2A4A7C" stroke-width="4"
+            stroke-dasharray={circumference} stroke-dashoffset={confidenceOffset} stroke-linecap="round"/>
+          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
+            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
+            transform="rotate(90 41 41)">{confidenceScore}</text>
+        </svg>
+        <div class="gauge-label">Confidence</div>
+      </div>
     </div>
     <div class="condition-grade">
       <span class="condition-grade-label">Grade</span>
-      <span class="condition-grade-val">{r.condition === 'Mint' ? 'Mint — A+' : r.condition === 'Excellent' ? 'Excellent — A' : r.condition === 'Good' ? 'Very Good — B+' : r.condition === 'Fair' ? 'Fair — C' : 'Poor — D'}</span>
+      <div style="display:flex;align-items:center;gap:16px;flex:1;margin-left:20px;">
+        <div style="flex:1;height:3px;background:#DDD0BF;border-radius:2px;overflow:hidden;">
+          <div style={`width:${conditionScore}%;height:100%;background:linear-gradient(90deg,#C8A060,#7A5C20);border-radius:2px;`}></div>
+        </div>
+        <span class="condition-grade-val">{r.condition === 'Mint' ? 'Mint — A+' : r.condition === 'Excellent' ? 'Excellent — A' : r.condition === 'Good' ? 'Very Good — B+' : r.condition === 'Fair' ? 'Fair — C' : 'Poor — D'}</span>
+      </div>
     </div>
     {r.condition_notes && (
       <div class="check-list">
