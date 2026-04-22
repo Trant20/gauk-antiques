@@ -525,12 +525,12 @@ const firstWords = words.slice(0, -1).join(' ')
         <div class="result-id-val" id="result-condition"></div>
       </div>
     </div>
-    <div class="result-value-block">
-      <div class="result-value-label">Estimated Value</div>
-      <div class="result-value" id="result-value"></div>
-    </div>
     <div class="result-blur-gate">
       <div class="result-blur-content" id="blur-content">
+        <div class="result-value-block">
+          <div class="result-value-label">Estimated Value</div>
+          <div class="result-value" id="result-value"></div>
+        </div>
         <div class="result-notes-preview">
           <div class="result-notes-label">Appraiser Notes</div>
           <div class="result-notes-text" id="result-notes"></div>
@@ -538,10 +538,8 @@ const firstWords = words.slice(0, -1).join(' ')
       </div>
       <div class="result-blur-overlay" id="blur-overlay">
         <div class="result-gate-headline">Your valuation is ready</div>
-        <div class="result-gate-sub">Create a free account to unlock the full report.</div>
+        <div class="result-gate-sub">Register free to unlock the value estimate and full report. No payment required.</div>
         <a href="/auth/signup" class="result-gate-register">Register Free</a>
-        <div class="result-gate-or">or</div>
-        <a href="#" class="result-gate-pay">Full Certificate — £29.99</a>
       </div>
     </div>
     <div class="result-view-report" id="result-view-report" style="display:none; padding: 16px 20px;">
