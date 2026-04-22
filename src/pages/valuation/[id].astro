@@ -22,7 +22,7 @@ const enrichment = item.enrichment_json || null
 const imageUrl = `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.image_key}`
 const conditionScore = enrichment?.condition_score || (r.condition === 'Mint' ? 98 : r.condition === 'Excellent' ? 88 : r.condition === 'Good' ? 72 : r.condition === 'Fair' ? 50 : 30)
 const desirabilityScore = enrichment?.desirability_score || 70
-const circumference = 2 * Math.PI * 28
+const circumference = 2 * Math.PI * 34
 const conditionOffset = circumference - (circumference * conditionScore / 100)
 const desirabilityOffset = circumference - (circumference * desirabilityScore / 100)
 const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium' ? 72 : 45
@@ -77,7 +77,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   /* ID TABLE */
   .id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
   .id-row:last-child { border-bottom: none; }
-  .id-key { width: 100px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
+  .id-key { width: 120px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
   .id-val { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; line-height: 1.5; flex: 1; }
 
   /* GAUGES */
@@ -86,6 +86,19 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
   .gauge-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
   .gauge-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; color: #1C1810; margin-bottom: 4px; }
+
+  /* CONDITION CHECKLIST */
+  .condition-grade {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 14px 0; border-bottom: 1px solid #C4B49E; margin-bottom: 16px;
+  }
+  .condition-grade-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
+  .condition-grade-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; color: #1C1810; font-style: italic; }
+  .check-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .check-item { display: flex; gap: 10px; align-items: flex-start; }
+  .check-icon { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.5; flex-shrink: 0; color: #2A7060; width: 16px; }
+  .check-icon.warn { color: #C46028; }
+  .check-text { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.5; }
 
   /* EXPERT NOTES */
   .expert-para { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.9; color: #5C5040; margin-bottom: 14px; }
@@ -230,29 +243,44 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     </div>
     <div class="gauges">
       <div class="gauge">
-        <svg width="68" height="68" viewBox="0 0 68 68">
-          <circle cx="34" cy="34" r="28" fill="none" stroke="#DDD0BF" stroke-width="4"/>
-          <circle cx="34" cy="34" r="28" fill="none" stroke="#7A5C20" stroke-width="4"
+        <svg width="82" height="82" viewBox="0 0 82 82">
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#7A5C20" stroke-width="4"
             stroke-dasharray={circumference} stroke-dashoffset={conditionOffset} stroke-linecap="round"/>
-          <text x="34" y="34" text-anchor="middle" dominant-baseline="central"
+          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
             font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
-            transform="rotate(90 34 34)">{conditionScore}</text>
+            transform="rotate(90 41 41)">{conditionScore}</text>
         </svg>
         <div class="gauge-label">Overall</div>
       </div>
       <div class="gauge">
-        <svg width="68" height="68" viewBox="0 0 68 68">
-          <circle cx="34" cy="34" r="28" fill="none" stroke="#DDD0BF" stroke-width="4"/>
-          <circle cx="34" cy="34" r="28" fill="none" stroke="#2A7060" stroke-width="4"
+        <svg width="82" height="82" viewBox="0 0 82 82">
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#2A7060" stroke-width="4"
             stroke-dasharray={circumference} stroke-dashoffset={desirabilityOffset} stroke-linecap="round"/>
-          <text x="34" y="34" text-anchor="middle" dominant-baseline="central"
+          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
             font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
-            transform="rotate(90 34 34)">{desirabilityScore}</text>
+            transform="rotate(90 41 41)">{desirabilityScore}</text>
         </svg>
         <div class="gauge-label">Desirability</div>
       </div>
     </div>
-    {r.condition_notes && <p class="expert-para">{r.condition_notes}</p>}
+    <div class="condition-grade">
+      <span class="condition-grade-label">Grade</span>
+      <span class="condition-grade-val">{r.condition === 'Mint' ? 'Mint — A+' : r.condition === 'Excellent' ? 'Excellent — A' : r.condition === 'Good' ? 'Very Good — B+' : r.condition === 'Fair' ? 'Fair — C' : 'Poor — D'}</span>
+    </div>
+    {r.condition_notes && (
+      <div class="check-list">
+        {r.condition_notes.split(/[.—–]/).filter((s: string) => s.trim().length > 8).map((note: string) => (
+          <div class="check-item">
+            <span class={`check-icon${note.toLowerCase().includes('chip') || note.toLowerCase().includes('crack') || note.toLowerCase().includes('scratch') || note.toLowerCase().includes('wear') || note.toLowerCase().includes('repair') || note.toLowerCase().includes('minor') ? ' warn' : ''}`}>
+              {note.toLowerCase().includes('chip') || note.toLowerCase().includes('crack') || note.toLowerCase().includes('scratch') || note.toLowerCase().includes('wear') || note.toLowerCase().includes('repair') || note.toLowerCase().includes('minor') ? '~' : '✓'}
+            </span>
+            <span class="check-text">{note.trim()}</span>
+          </div>
+        ))}
+      </div>
+    )}
   </div>
 
   <!-- ENRICHMENT SECTIONS -->
