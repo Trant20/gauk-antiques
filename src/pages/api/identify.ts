@@ -63,6 +63,7 @@ Return this exact structure:
   "value_range_high": integer in GBP,
   "confidence": "one of: High, Medium, Low",
   "confidence_notes": "why confidence is at this level — what visual evidence supports or limits the identification",
+  "rarity_score": integer 0-100 where 100 is extremely rare. Base on maker reputation, period, pattern, form and typical survival rates for this type of piece,
   "tags": ["4-6 short keyword tags for this piece e.g. Art Deco, Hand-painted, Staffordshire"],
   "category_specific": {
     "POTTERY/CERAMICS — include if applicable": {
