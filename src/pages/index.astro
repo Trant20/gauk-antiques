@@ -777,7 +777,7 @@ const firstWords = words.slice(0, -1).join(' ')
       }
 
       if (user_id && identifyData.id) {
-              if (saveNote) saveNote.classList.add('visible')
+              const saveNote = document.getElementById('save-note'); if (saveNote) saveNote.classList.add('visible')
       }
     } catch (err: any) {
       status.textContent = err.message
