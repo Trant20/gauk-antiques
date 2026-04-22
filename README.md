@@ -29,3 +29,4 @@ Cloudflare Pages. Connected to main branch. CF_PAGES env var switches adapter to
 - Session 3: Image upload pipeline complete — FormData upload via Worker to R2, deployed and tested in production
 - Session 4: Claude Vision identification pipeline complete — R2 fetch, base64 encoding, structured JSON response, result card rendering. Tested successfully with Moorcroft pottery vase.
 - Session 5: Supabase Auth enabled, sign-in and sign-up pages built, user_id attached to identification records, identifications table created with RLS policies
+- Sessions 7-10: Full valuation card built — parchment design, 4 condition gauges, grade bar, market value SVG chart, desirability index, maker/manufacturer/mark/glaze/firing sections, expert notes, timeline, comparables, your options. Vision card on index with typewriter description and blur gate. Enrichment switched to Haiku. Audit completed and CSS conflicts resolved.
