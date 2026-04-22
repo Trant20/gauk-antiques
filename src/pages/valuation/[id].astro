@@ -20,6 +20,7 @@ if (!item) return Astro.redirect('/')
 const r = item.result_json
 const enrichment = item.enrichment_json || null
 const imageUrl = `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.image_key}`
+const secondaryImageUrl = item.secondary_image_key ? `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.secondary_image_key}` : null
 const conditionScore = enrichment?.condition_score || (r.condition === 'Mint' ? 98 : r.condition === 'Excellent' ? 88 : r.condition === 'Good' ? 72 : r.condition === 'Fair' ? 50 : 30)
 const desirabilityScore = enrichment?.desirability_score || 70
 const rarityScore = r.rarity_score || 65
@@ -72,8 +73,15 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .del-confirm { flex: 1; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #1C1810; border: 1px solid #1C1810; padding: 12px; cursor: pointer; color: #EFE7D9; }
 
   /* HERO IMAGE */
-  .card-image { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #E6DCCB; display: block; position: relative; }
   .card-image-wrap { position: relative; }
+  .card-image-single { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #E6DCCB; display: block; }
+  .card-image-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; }
+  .card-image-dual img { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: #E6DCCB; display: block; }
+  .card-image-dual-label { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; text-align: center; padding: 5px 0; background: #E6DCCB; }
+  @media (max-width: 480px) {
+    .card-image-dual { grid-template-columns: 1fr; }
+    .card-image-dual img { aspect-ratio: 4/3; }
+  }
   .conf-arc { position: absolute; bottom: 14px; right: 14px; }
   .conf-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Prata', Georgia, serif; font-size: 10px; color: #7A5C20; }
 
@@ -203,8 +211,21 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   <!-- IMAGE + CONFIDENCE ARC -->
   <div class="card-image-wrap">
-    <img class="card-image" src={imageUrl} alt={r.subcategory} />
-    <div class="conf-arc">
+    {secondaryImageUrl ? (
+      <div class="card-image-dual">
+        <div>
+          <img src={imageUrl} alt={r.subcategory} />
+          <div class="card-image-dual-label">Front</div>
+        </div>
+        <div>
+          <img src={secondaryImageUrl} alt={`${r.subcategory} — reverse`} />
+          <div class="card-image-dual-label">Back · Base · Mark</div>
+        </div>
+      </div>
+    ) : (
+      <img class="card-image-single" src={imageUrl} alt={r.subcategory} />
+    )}
+    <div class="conf-arc" style="position:absolute;bottom:14px;right:14px;z-index:10;">
       <svg width="50" height="50" viewBox="0 0 50 50">
         <circle cx="25" cy="25" r="20" fill="rgba(239,231,217,.92)" stroke="#DDD0BF" stroke-width="2"/>
         <circle cx="25" cy="25" r="20" fill="none" stroke="#7A5C20" stroke-width="2.5"
