@@ -15,7 +15,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { key, user_id } = await request.json()
+    const { key, secondary_key, user_id } = await request.json()
 
     if (!key) {
       return new Response(JSON.stringify({ error: 'No image key provided' }), {
@@ -39,6 +39,20 @@ export const POST: APIRoute = async ({ request }) => {
     const rawContentType = object.httpMetadata?.contentType || 'image/jpeg'
     const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
     const contentType = allowed.includes(rawContentType) ? rawContentType : 'image/jpeg'
+
+    // Optional second image (back, base, maker mark)
+    let secondary: { base64: string; contentType: string } | null = null
+    if (secondary_key) {
+      const secObject = await bucket.get(secondary_key)
+      if (secObject) {
+        const secBuffer = await secObject.arrayBuffer()
+        const secRaw = secObject.httpMetadata?.contentType || 'image/jpeg'
+        secondary = {
+          base64: arrayBufferToBase64(secBuffer),
+          contentType: allowed.includes(secRaw) ? secRaw : 'image/jpeg'
+        }
+      }
+    }
 
     const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
 
@@ -114,9 +128,15 @@ Only include the relevant category_specific sub-object for the identified catego
               type: 'image',
               source: { type: 'base64', media_type: contentType as any, data: base64 }
             },
+            ...(secondary ? [{
+              type: 'image' as const,
+              source: { type: 'base64' as const, media_type: secondary.contentType as any, data: secondary.base64 }
+            }] : []),
             {
               type: 'text',
-              text: 'Identify and appraise this antique. Return only the JSON.'
+              text: secondary
+                ? 'Identify and appraise this antique. The first image shows the front or main view. The second image shows the back, base, or maker mark. Use both images together for the most accurate identification. Return only the JSON.'
+                : 'Identify and appraise this antique. Return only the JSON.'
             }
           ]
         }
@@ -140,6 +160,7 @@ Only include the relevant category_specific sub-object for the identified catego
         site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744',
         user_id: user_id || null,
         image_key: key,
+        secondary_image_key: secondary_key || null,
         result_json: result,
         category: result.category,
         maker: result.maker,

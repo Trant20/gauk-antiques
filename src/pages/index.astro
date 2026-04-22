@@ -156,6 +156,28 @@ const firstWords = words.slice(0, -1).join(' ')
       font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--textMute);
     }
     .upload-actions { display: flex; flex-direction: column; gap: 8px; }
+    .upload-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0; }
+    .upload-slot { position: relative; cursor: pointer; }
+    .upload-slot-zone {
+      width: 100%; aspect-ratio: 1/1; background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      overflow: hidden; transition: background .2s, border-color .2s;
+    }
+    .upload-slot-zone:hover { background: rgba(255,255,255,.05); border-color: var(--borderHi); }
+    .upload-slot-zone.has-image { border-color: var(--borderHi); }
+    .upload-slot img { width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; background: var(--surface); display: none; }
+    .upload-slot img.visible { display: block; }
+    .upload-slot-label {
+      font-family: "Prata", Georgia, serif; font-size: 8px;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--textMute);
+      margin-top: 8px; text-align: center;
+    }
+    .upload-slot-placeholder { text-align: center; padding: 12px; }
+    .upload-slot-icon { opacity: .4; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+    .upload-slot-hint { font-family: "Prata", Georgia, serif; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--textMute); }
+    .slot-required { color: var(--goldHi); }
+    .slot-optional { color: var(--textMute); }
     .btn-primary {
       width: 100%; padding: 15px; background: var(--text); border: none;
       font-family: 'Prata', Georgia, serif; font-size: 11px;
@@ -422,33 +444,50 @@ const firstWords = words.slice(0, -1).join(' ')
         <h1 class="hero-h1">{firstWords} <em>{lastWord}</em></h1>
       </div>
       <div class="upload-panel a1">
-        <div class="upload-zone-wrap">
-          <div class="corner tl"></div>
-          <div class="corner tr"></div>
-          <div class="corner bl"></div>
-          <div class="corner br"></div>
-          <div class="upload-zone" id="upload-zone">
-            <input type="file" id="file-input" accept="image/*" style="display:none" />
-            <img id="preview-img" style="display:none" alt="Preview" />
-            <div class="scan-overlay scan-corners" id="scan-overlay">
-              <div class="scan-line"></div>
-            </div>
-            <div class="upload-placeholder" id="upload-placeholder">
-              <div class="upload-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                  <rect x="3" y="3" width="18" height="18" rx="0"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
+        <div class="upload-dual">
+          <!-- PRIMARY SLOT -->
+          <div class="upload-slot" id="slot-primary">
+            <div class="upload-slot-zone" id="zone-primary">
+              <input type="file" id="file-input" accept="image/*" style="display:none" />
+              <img id="preview-img" alt="Front" />
+              <div class="scan-overlay scan-corners" id="scan-overlay">
+                <div class="scan-line"></div>
               </div>
-              <div class="upload-prompt">Place your item here</div>
-              <div class="upload-hint">Tap to photograph or upload</div>
+              <div class="upload-slot-placeholder" id="placeholder-primary">
+                <div class="upload-slot-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <rect x="3" y="3" width="18" height="18" rx="0"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+                <div class="upload-slot-hint"><span class="slot-required">Front</span> · Required</div>
+              </div>
             </div>
+            <div class="upload-slot-label">Front / Main View</div>
+          </div>
+          <!-- SECONDARY SLOT -->
+          <div class="upload-slot" id="slot-secondary">
+            <div class="upload-slot-zone" id="zone-secondary">
+              <input type="file" id="file-input-secondary" accept="image/*" style="display:none" />
+              <img id="preview-img-secondary" alt="Back" />
+              <div class="upload-slot-placeholder" id="placeholder-secondary">
+                <div class="upload-slot-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <circle cx="12" cy="12" r="9"/>
+                    <line x1="12" y1="8" x2="12" y2="16"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                  </svg>
+                </div>
+                <div class="upload-slot-hint"><span class="slot-optional">Back</span> · Optional</div>
+              </div>
+            </div>
+            <div class="upload-slot-label">Back / Base / Mark</div>
           </div>
         </div>
         <div class="upload-actions">
           <button class="btn-primary" id="identify-btn" disabled>Identify This Item</button>
-          <button class="btn-ghost" id="camera-btn">Use Camera</button>
+          <button class="btn-ghost" id="camera-btn">Use Camera — Front</button>
         </div>
         <div class="status-text" id="status"></div>
       </div>
@@ -577,41 +616,68 @@ const firstWords = words.slice(0, -1).join(' ')
     if (accountTab) accountTab.setAttribute('href', '/library')
   }
 
-  const zone = document.getElementById('upload-zone') as HTMLElement
+  const zonePrimary = document.getElementById('zone-primary') as HTMLElement
+  const zoneSecondary = document.getElementById('zone-secondary') as HTMLElement
   const fileInput = document.getElementById('file-input') as HTMLInputElement
+  const fileInputSecondary = document.getElementById('file-input-secondary') as HTMLInputElement
   const previewImg = document.getElementById('preview-img') as HTMLImageElement
-  const placeholder = document.getElementById('upload-placeholder') as HTMLElement
+  const previewImgSecondary = document.getElementById('preview-img-secondary') as HTMLImageElement
+  const placeholderPrimary = document.getElementById('placeholder-primary') as HTMLElement
+  const placeholderSecondary = document.getElementById('placeholder-secondary') as HTMLElement
   const identifyBtn = document.getElementById('identify-btn') as HTMLButtonElement
   const cameraBtn = document.getElementById('camera-btn') as HTMLButtonElement
-  const corners = document.querySelectorAll('.corner')
   const status = document.getElementById('status') as HTMLElement
   const scanOverlay = document.getElementById('scan-overlay') as HTMLElement
 
   let selectedFile: File | null = null
+  let selectedFileSecondary: File | null = null
 
-  zone.addEventListener('click', () => fileInput.click())
+  zonePrimary.addEventListener('click', () => fileInput.click())
+  zoneSecondary.addEventListener('click', () => fileInputSecondary.click())
+
   cameraBtn.addEventListener('click', () => {
     fileInput.setAttribute('capture', 'environment')
     fileInput.click()
   })
-  zone.addEventListener('dragover', e => { e.preventDefault(); corners.forEach(c => c.classList.add('active')) })
-  zone.addEventListener('dragleave', () => corners.forEach(c => c.classList.remove('active')))
-  zone.addEventListener('drop', e => {
+
+  zonePrimary.addEventListener('dragover', e => { e.preventDefault(); zonePrimary.style.borderColor = 'var(--goldHi)' })
+  zonePrimary.addEventListener('dragleave', () => { zonePrimary.style.borderColor = '' })
+  zonePrimary.addEventListener('drop', e => {
     e.preventDefault()
-    corners.forEach(c => c.classList.remove('active'))
+    zonePrimary.style.borderColor = ''
     const file = (e as DragEvent).dataTransfer?.files?.[0]
     if (file) setFile(file)
   })
+
+  zoneSecondary.addEventListener('dragover', e => { e.preventDefault(); zoneSecondary.style.borderColor = 'var(--goldHi)' })
+  zoneSecondary.addEventListener('dragleave', () => { zoneSecondary.style.borderColor = '' })
+  zoneSecondary.addEventListener('drop', e => {
+    e.preventDefault()
+    zoneSecondary.style.borderColor = ''
+    const file = (e as DragEvent).dataTransfer?.files?.[0]
+    if (file) setFileSecondary(file)
+  })
+
   fileInput.addEventListener('change', () => { if (fileInput.files?.[0]) setFile(fileInput.files[0]) })
+  fileInputSecondary.addEventListener('change', () => { if (fileInputSecondary.files?.[0]) setFileSecondary(fileInputSecondary.files[0]) })
 
   function setFile(file: File) {
     selectedFile = file
     previewImg.src = URL.createObjectURL(file)
-    previewImg.style.display = 'block'
-    placeholder.style.display = 'none'
+    previewImg.classList.add('visible')
+    placeholderPrimary.style.display = 'none'
+    zonePrimary.classList.add('has-image')
     identifyBtn.removeAttribute('disabled')
-    const ro = document.getElementById('result-outer') as HTMLElement; if (ro) ro.style.display = 'none'
-    corners.forEach(c => c.classList.add('active'))
+    const ro = document.getElementById('result-outer') as HTMLElement
+    if (ro) ro.style.display = 'none'
+  }
+
+  function setFileSecondary(file: File) {
+    selectedFileSecondary = file
+    previewImgSecondary.src = URL.createObjectURL(file)
+    previewImgSecondary.classList.add('visible')
+    placeholderSecondary.style.display = 'none'
+    zoneSecondary.classList.add('has-image')
   }
 
   identifyBtn.addEventListener('click', async () => {
@@ -625,12 +691,22 @@ const firstWords = words.slice(0, -1).join(' ')
       const uploadRes = await fetch('/api/upload-url', { method: 'POST', body: formData })
       const uploadData = await uploadRes.json()
       if (uploadData.error) throw new Error(uploadData.error)
+
+      let secondaryKey: string | null = null
+      if (selectedFileSecondary) {
+        const secFormData = new FormData()
+        secFormData.append('file', selectedFileSecondary)
+        const secUploadRes = await fetch('/api/upload-url', { method: 'POST', body: secFormData })
+        const secUploadData = await secUploadRes.json()
+        if (!secUploadData.error) secondaryKey = secUploadData.key
+      }
+
       status.textContent = 'Examining the object...'
       const user_id = session?.user?.id || null
       const identifyRes = await fetch('/api/identify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: uploadData.key, user_id })
+        body: JSON.stringify({ key: uploadData.key, secondary_key: secondaryKey, user_id })
       })
       const identifyData = await identifyRes.json()
       if (identifyData.error) throw new Error(identifyData.error)
