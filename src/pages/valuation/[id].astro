@@ -390,6 +390,33 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
           )
         })()}
 
+        {enrichment.desirability_index && enrichment.desirability_index.length > 0 && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">Desirability Index</div>
+              <div class="section-head-line"></div>
+            </div>
+            {enrichment.desirability_context && (
+              <p style="font-family:'Prata',Georgia,serif;font-size:14px;color:#5C5040;margin-bottom:20px;line-height:1.7">{enrichment.desirability_context}</p>
+            )}
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              {enrichment.desirability_index.sort((a: any, b: any) => b.score - a.score).map((item: any) => (
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+                    <span style={`font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${item.this_piece ? '#7A5C20' : '#8A7A66'};`}>
+                      {item.name}{item.this_piece ? ' ← This piece' : ''}
+                    </span>
+                    <span style={`font-family:'Playfair Display',Didot,Georgia,serif;font-size:14px;color:${item.this_piece ? '#7A5C20' : '#8A7A66'};`}>{item.score}</span>
+                  </div>
+                  <div style="height:3px;background:#DDD0BF;border-radius:2px;overflow:hidden;">
+                    <div style={`width:${item.score}%;height:100%;background:${item.this_piece ? 'linear-gradient(90deg,#C8A060,#7A5C20)' : '#C4B49E'};border-radius:2px;`}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {(enrichment.maker_detail || enrichment.manufacturer_detail) && (
           <div class="section">
             <div class="section-head">
