@@ -18,393 +18,368 @@ const { data: item } = await supabase
 if (!item) return Astro.redirect('/')
 
 const r = item.result_json
+const enrichment = item.enrichment_json || null
 const imageUrl = `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.image_key}`
+const conditionScore = enrichment?.condition_score || (r.condition === 'Mint' ? 98 : r.condition === 'Excellent' ? 88 : r.condition === 'Good' ? 72 : r.condition === 'Fair' ? 50 : 30)
+const desirabilityScore = enrichment?.desirability_score || 70
+const circumference = 2 * Math.PI * 28
+const conditionOffset = circumference - (circumference * conditionScore / 100)
+const desirabilityOffset = circumference - (circumference * desirabilityScore / 100)
+const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium' ? 72 : 45
+const confCircumference = 2 * Math.PI * 20
+const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
+const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 ---
 <Layout title={`${r.subcategory} — GAUK Antiques Valuation`}>
-  <style>
-    .card-wrap {
-      max-width: 560px; margin: 0 auto;
-      padding: 0 0 120px;
-    }
+<style>
+  body { background: #EFE7D9; color: #1C1810; }
+  .card-wrap { max-width: 560px; margin: 0 auto; padding-bottom: 100px; background: #EFE7D9; }
+  .cap { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
+  .section { padding: 24px 20px; border-bottom: 1px solid #C4B49E; }
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-head-line { flex: 1; height: 1px; background: #C4B49E; }
 
-    /* ─── HEADER ─── */
-    .card-header {
-      position: sticky; top: 0; z-index: 50;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px;
-      background: rgba(13,11,9,.92); backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-    }
-    .card-logo {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--text);
-    }
-    .card-logo span { color: var(--goldHi); }
-    .card-date {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--textMute);
-    }
+  /* HEADER */
+  .card-header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
+    border-bottom: 1px solid #C4B49E;
+  }
+  .card-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
+  .card-logo span { color: #7A5C20; }
+  .card-date { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
 
-    /* ─── IMAGE ─── */
-    .card-image {
-      width: 100%; aspect-ratio: 4/3;
-      object-fit: contain;
-      background: var(--surface);
-      display: block;
-    }
+  /* HERO IMAGE */
+  .card-image { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #E6DCCB; display: block; position: relative; }
+  .card-image-wrap { position: relative; }
+  .conf-arc { position: absolute; bottom: 14px; right: 14px; }
+  .conf-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Prata', Georgia, serif; font-size: 10px; color: #7A5C20; }
 
-    /* ─── CATEGORY BADGE ─── */
-    .card-badges {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px 0;
-    }
-    .card-category {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--gold);
-    }
-    .card-confidence {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      padding: 4px 10px; border: 1px solid var(--border); color: var(--textMute);
-    }
+  /* TITLE */
+  .card-badges { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0; }
+  .card-category { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; }
+  .card-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(22px, 5vw, 30px); font-weight: 400; line-height: 1.2; color: #1C1810; padding: 10px 20px 6px; font-style: italic; }
+  .card-subtitle { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #5C5040; padding: 0 20px 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 16px; }
+  .tag { display: inline-block; padding: 4px 10px; border: 1px solid #C4B49E; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #5C5040; }
 
-    /* ─── TITLE ─── */
-    .card-title {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: clamp(22px, 5vw, 32px); font-weight: 400; line-height: 1.2;
-      color: var(--text); padding: 12px 20px 0;
-    }
+  /* VALUE */
+  .value-section { background: #E6DCCB; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; padding: 28px 20px; text-align: center; }
+  .value-number { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px, 7vw, 48px); font-weight: 400; line-height: 1; color: #7A5C20; letter-spacing: -1px; margin-bottom: 6px; }
+  .value-sub { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; margin-bottom: 20px; }
+  .value-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; margin-top: 16px; }
+  .value-strip-cell { background: #E6DCCB; padding: 14px 8px; }
+  .value-strip-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-bottom: 6px; }
+  .value-strip-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; color: #1C1810; }
 
-    /* ─── DESCRIPTION — typewriter ─── */
-    .card-desc {
-      padding: 16px 20px 20px;
-      font-family: 'Prata', Georgia, serif;
-      font-size: 16px; line-height: 1.9; color: var(--textDim);
-      border-bottom: 1px solid var(--border);
-      min-height: 80px;
-    }
-    .cursor {
-      display: inline-block; width: 2px; height: 1em;
-      background: var(--goldHi); margin-left: 2px;
-      vertical-align: text-bottom;
-      animation: blink .7s step-end infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  /* ID TABLE */
+  .id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
+  .id-row:last-child { border-bottom: none; }
+  .id-key { width: 100px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
+  .id-val { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #1C1810; line-height: 1.5; flex: 1; }
 
-    /* ─── ID TABLE ─── */
-    .id-table { padding: 0 20px; border-bottom: 1px solid var(--border); }
-    .id-row {
-      display: flex; gap: 16px; align-items: flex-start;
-      padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .id-row:last-child { border-bottom: none; }
-    .id-key {
-      width: 100px; flex-shrink: 0;
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--textMute); padding-top: 2px;
-    }
-    .id-val {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 16px; color: var(--text); line-height: 1.5; flex: 1;
-    }
+  /* GAUGES */
+  .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .gauge { text-align: center; }
+  .gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
+  .gauge-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
+  .gauge-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; color: #1C1810; margin-bottom: 4px; }
 
-    /* ─── VALUE SECTION ─── */
-    .value-section {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 32px 20px; text-align: center;
-    }
-    .value-label {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--textMute); margin-bottom: 12px;
-    }
-    .value-number {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: clamp(36px, 8vw, 56px); font-weight: 400; line-height: 1;
-      color: var(--goldHi); letter-spacing: -1px; margin-bottom: 8px;
-    }
-    .value-strip {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 1px; background: var(--border); margin-top: 24px;
-    }
-    .value-strip-cell {
-      background: var(--surface); padding: 14px 8px;
-    }
-    .value-strip-label {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--textMute); margin-bottom: 6px;
-    }
-    .value-strip-val {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 20px; color: var(--text);
-    }
+  /* EXPERT NOTES */
+  .expert-para { font-family: 'Prata', Georgia, serif; font-size: 15px; line-height: 1.9; color: #5C5040; margin-bottom: 14px; }
+  .expert-para:last-child { margin-bottom: 0; }
 
-    /* ─── CONDITION NOTES ─── */
-    .notes-section { padding: 24px 20px; border-bottom: 1px solid var(--border); }
-    .notes-heading {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--textMute); margin-bottom: 14px;
-    }
-    .notes-text {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 16px; line-height: 1.9; color: var(--textDim);
-    }
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 22px; }
+  .timeline-line { position: absolute; left: 5px; top: 10px; bottom: 10px; width: 1px; background: #C4B49E; }
+  .tl-item { position: relative; padding: 10px 0 10px 14px; border-bottom: 1px solid rgba(196,180,158,.2); }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-dot { position: absolute; left: -17px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: #DDD0BF; border: 1.5px solid #C4B49E; z-index: 1; }
+  .tl-dot.highlight { background: #7A5C20; border-color: #7A5C20; }
+  .tl-inner { display: flex; gap: 10px; align-items: baseline; }
+  .tl-year { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 12px; color: #8A7A66; flex-shrink: 0; width: 40px; }
+  .tl-year.highlight { color: #7A5C20; font-style: italic; }
+  .tl-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; margin-bottom: 2px; }
+  .tl-label.highlight { color: #7A5C20; }
+  .tl-note { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #5C5040; line-height: 1.5; }
 
-    /* ─── BLUR GATE ─── */
-    .blur-gate {
-      position: relative;
-    }
-    .blur-content {
-      filter: blur(6px);
-      pointer-events: none;
-      user-select: none;
-    }
-    .blur-overlay {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 24px; gap: 12px;
-      background: linear-gradient(to bottom, transparent 0%, rgba(13,11,9,.7) 30%, rgba(13,11,9,.95) 100%);
-    }
-    .blur-headline {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 22px; font-weight: 400; color: var(--text);
-      text-align: center; line-height: 1.3; margin-bottom: 4px;
-    }
-    .blur-sub {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 13px; color: var(--textDim);
-      text-align: center; line-height: 1.7; margin-bottom: 8px;
-    }
-    .btn-register {
-      width: 100%; max-width: 320px; padding: 16px;
-      background: var(--text); border: none;
-      font-family: 'Prata', Georgia, serif;
-      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--bg); cursor: pointer; text-decoration: none;
-      display: block; text-align: center; transition: opacity .2s;
-    }
-    .btn-register:hover { opacity: .9; }
-    .btn-pay {
-      width: 100%; max-width: 320px; padding: 15px;
-      background: transparent; border: 1px solid var(--goldLo);
-      font-family: 'Prata', Georgia, serif;
-      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--goldHi); cursor: pointer; text-decoration: none;
-      display: block; text-align: center; transition: border-color .2s;
-    }
-    .btn-pay:hover { border-color: var(--goldHi); }
-    .blur-divider {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--textMute);
-    }
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
+  .option { padding: 16px; display: flex; align-items: flex-start; gap: 12px; background: #EAE1D2; }
+  .option.rec { background: #DDD0BF; }
+  .option-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: #C4B49E; }
+  .option-dot.rec { background: #7A5C20; }
+  .option-action { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; color: #5C5040; margin-bottom: 4px; }
+  .option-action.rec { color: #1C1810; font-style: italic; }
+  .option-rec-badge { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; color: #7A5C20; margin-left: 10px; }
+  .option-detail { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.5; }
 
-    /* ─── FOOTER ─── */
-    .card-footer {
-      padding: 24px 20px;
-      border-top: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .footer-brand {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 13px; font-style: italic; color: var(--gold);
-    }
-    .footer-id {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 2px; color: var(--textMute);
-    }
+  /* COMPARABLES */
+  .comp-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); gap: 12px; }
+  .comp-row:last-child { border-bottom: none; }
+  .comp-title { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #1C1810; margin-bottom: 2px; }
+  .comp-sub { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; }
+  .comp-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #7A5C20; flex-shrink: 0; }
 
-    /* ─── STICKY ACTIONS ─── */
-    .sticky-actions {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      max-width: 560px; margin: 0 auto;
-      background: rgba(13,11,9,.95); backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      padding: 12px 20px 24px;
-      display: flex; gap: 10px;
-    }
-    .action-btn {
-      flex: 1; padding: 14px;
-      background: transparent; border: 1px solid var(--border);
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--textDim); cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: border-color .2s, color .2s;
-    }
-    .action-btn:hover { border-color: var(--borderHi); color: var(--text); }
-    .action-btn.primary {
-      background: var(--text); border-color: var(--text); color: var(--bg);
-    }
-    .action-btn.primary:hover { opacity: .9; }
-  </style>
+  /* FOOTER */
+  .card-footer { padding: 20px; border-top: 1px solid #C4B49E; display: flex; justify-content: space-between; align-items: center; }
+  .footer-brand { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; font-style: italic; color: #7A5C20; margin-bottom: 3px; }
+  .ai-disclaimer { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1px; color: #8A7A66; line-height: 1.6; max-width: 200px; }
 
-  <div class="card-wrap">
-    <header class="card-header">
-      <div class="card-logo">GAUK <span>Antiques</span></div>
-      <div class="card-date" id="card-date"></div>
-    </header>
+  /* STICKY ACTIONS */
+  .sticky-actions {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    max-width: 560px; margin: 0 auto;
+    background: rgba(239,231,217,.96); backdrop-filter: blur(20px);
+    border-top: 1px solid #C4B49E;
+    padding: 12px 20px 24px;
+    display: flex; gap: 8px;
+  }
+  .action-btn {
+    flex: 1; padding: 13px;
+    background: transparent; border: 1px solid #C4B49E;
+    font-family: 'Prata', Georgia, serif; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: #5C5040; cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: border-color .2s;
+  }
+  .action-btn:hover { border-color: #7A5C20; color: #1C1810; }
+  .action-btn.primary { background: #1C1810; border-color: #1C1810; color: #EFE7D9; }
 
+  /* LOADING STATE */
+  .enrich-loading { padding: 32px 20px; text-align: center; }
+  .enrich-loading-text { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+  .enrich-loading-text { animation: pulse 1.8s ease-in-out infinite; }
+</style>
+
+<div class="card-wrap">
+  <header class="card-header">
+    <div class="card-logo">GAUK <span>Antiques</span></div>
+    <div class="card-date">{date}</div>
+  </header>
+
+  <!-- IMAGE + CONFIDENCE ARC -->
+  <div class="card-image-wrap">
     <img class="card-image" src={imageUrl} alt={r.subcategory} />
-
-    <div class="card-badges">
-      <div class="card-category">{r.category}</div>
-      <div class="card-confidence">{r.confidence}</div>
+    <div class="conf-arc">
+      <svg width="50" height="50" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="20" fill="rgba(239,231,217,.92)" stroke="#DDD0BF" stroke-width="2"/>
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#7A5C20" stroke-width="2.5"
+          stroke-dasharray={confCircumference} stroke-dashoffset={confOffset} stroke-linecap="round"/>
+      </svg>
+      <div class="conf-label">{confidenceScore}%</div>
     </div>
+  </div>
 
-    <h1 class="card-title">{r.subcategory}</h1>
-
-    <div class="card-desc" id="card-desc">
-      <span id="typed-text"></span><span class="cursor" id="cursor"></span>
+  <!-- TITLE -->
+  <div class="card-badges">
+    <div class="card-category">{r.category}</div>
+  </div>
+  <div class="card-title">{r.subcategory}</div>
+  {(r.maker || r.manufacturer) && (
+    <div class="card-subtitle">{[r.maker, r.manufacturer].filter(Boolean).join(' · ')}{r.circa ? ` · ${r.circa}` : ''}</div>
+  )}
+  {r.tags && r.tags.length > 0 && (
+    <div class="tags">
+      {r.tags.map((tag: string) => <span class="tag">{tag}</span>)}
     </div>
+  )}
 
-    <div class="id-table">
-      {r.maker && (
-        <div class="id-row">
-          <div class="id-key">Maker</div>
-          <div class="id-val">{r.maker}</div>
-        </div>
-      )}
-      {r.period && (
-        <div class="id-row">
-          <div class="id-key">Period</div>
-          <div class="id-val">{r.period}{r.circa ? ` — ${r.circa}` : ''}</div>
-        </div>
-      )}
-      {r.country_of_origin && (
-        <div class="id-row">
-          <div class="id-key">Origin</div>
-          <div class="id-val">{r.country_of_origin}</div>
-        </div>
-      )}
-      <div class="id-row">
-        <div class="id-key">Condition</div>
-        <div class="id-val">{r.condition}</div>
+  <!-- VALUE -->
+  <div class="value-section">
+    <div class="cap" style="margin-bottom:12px">Estimated Value</div>
+    <div class="value-number">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+    <div class="value-sub">AI appraisal estimate · not a formal valuation</div>
+    <div class="value-strip">
+      <div class="value-strip-cell">
+        <div class="value-strip-label">Low estimate</div>
+        <div class="value-strip-val">£{(r.value_range_low || 0).toLocaleString()}</div>
+      </div>
+      <div class="value-strip-cell">
+        <div class="value-strip-label">High estimate</div>
+        <div class="value-strip-val">£{(r.value_range_high || 0).toLocaleString()}</div>
       </div>
     </div>
+  </div>
 
-    <!-- BLUR GATE wraps value + notes -->
-    <div class="blur-gate" id="blur-gate">
-      <div class="blur-content">
-        <div class="value-section">
-          <div class="value-label">Estimated Value</div>
-          <div class="value-number">
-            £{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}
-          </div>
-          <div class="value-strip">
-            <div class="value-strip-cell">
-              <div class="value-strip-label">Low estimate</div>
-              <div class="value-strip-val">£{(r.value_range_low || 0).toLocaleString()}</div>
-            </div>
-            <div class="value-strip-cell">
-              <div class="value-strip-label">High estimate</div>
-              <div class="value-strip-val">£{(r.value_range_high || 0).toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
+  <!-- IDENTIFICATION -->
+  <div class="section">
+    <div class="section-head">
+      <div class="cap">Identification</div>
+      <div class="section-head-line"></div>
+    </div>
+    {r.maker && <div class="id-row"><div class="id-key">Maker</div><div class="id-val">{r.maker}</div></div>}
+    {r.manufacturer && r.manufacturer !== r.maker && <div class="id-row"><div class="id-key">Manufacturer</div><div class="id-val">{r.manufacturer}</div></div>}
+    {r.period && <div class="id-row"><div class="id-key">Period</div><div class="id-val">{r.period}{r.circa ? ` · ${r.circa}` : ''}</div></div>}
+    {r.country_of_origin && <div class="id-row"><div class="id-key">Origin</div><div class="id-val">{r.country_of_origin}</div></div>}
+    <div class="id-row"><div class="id-key">Condition</div><div class="id-val">{r.condition}</div></div>
+    {r.category_specific && Object.entries(r.category_specific).filter(([k]) => !k.includes('—')).map(([key, val]) => (
+      val && <div class="id-row"><div class="id-key">{key.replace(/_/g, ' ')}</div><div class="id-val">{String(val)}</div></div>
+    ))}
+  </div>
 
-        {r.condition_notes && (
-          <div class="notes-section">
-            <div class="notes-heading">Condition Notes</div>
-            <div class="notes-text">{r.condition_notes}</div>
+  <!-- CONDITION -->
+  <div class="section">
+    <div class="section-head">
+      <div class="cap">Condition Report</div>
+      <div class="section-head-line"></div>
+    </div>
+    <div class="gauges">
+      <div class="gauge">
+        <svg width="68" height="68" viewBox="0 0 68 68">
+          <circle cx="34" cy="34" r="28" fill="none" stroke="#DDD0BF" stroke-width="4"/>
+          <circle cx="34" cy="34" r="28" fill="none" stroke="#7A5C20" stroke-width="4"
+            stroke-dasharray={circumference} stroke-dashoffset={conditionOffset} stroke-linecap="round"/>
+          <text x="34" y="34" text-anchor="middle" dominant-baseline="central"
+            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
+            transform="rotate(90 34 34)">{conditionScore}</text>
+        </svg>
+        <div class="gauge-label">Overall</div>
+      </div>
+      <div class="gauge">
+        <svg width="68" height="68" viewBox="0 0 68 68">
+          <circle cx="34" cy="34" r="28" fill="none" stroke="#DDD0BF" stroke-width="4"/>
+          <circle cx="34" cy="34" r="28" fill="none" stroke="#2A7060" stroke-width="4"
+            stroke-dasharray={circumference} stroke-dashoffset={desirabilityOffset} stroke-linecap="round"/>
+          <text x="34" y="34" text-anchor="middle" dominant-baseline="central"
+            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
+            transform="rotate(90 34 34)">{desirabilityScore}</text>
+        </svg>
+        <div class="gauge-label">Desirability</div>
+      </div>
+    </div>
+    {r.condition_notes && <p class="expert-para">{r.condition_notes}</p>}
+  </div>
+
+  <!-- ENRICHMENT SECTIONS -->
+  <div id="enrichment-container">
+    {enrichment ? (
+      <>
+        {enrichment.expert_notes && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">Provenance & Expert Notes</div>
+              <div class="section-head-line"></div>
+            </div>
+            {enrichment.expert_notes.map((para: string) => (
+              <p class="expert-para">{para}</p>
+            ))}
+            {enrichment.market_insight && <p class="expert-para" style="margin-top:14px;padding-top:14px;border-top:1px solid #C4B49E">{enrichment.market_insight}</p>}
           </div>
         )}
 
-        {r.confidence_notes && (
-          <div class="notes-section">
-            <div class="notes-heading">Appraiser Notes</div>
-            <div class="notes-text">{r.confidence_notes}</div>
+        {enrichment.maker_timeline && enrichment.maker_timeline.length > 0 && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">{r.maker ? `${r.maker} · Timeline` : 'Timeline'}</div>
+              <div class="section-head-line"></div>
+            </div>
+            <div class="timeline">
+              <div class="timeline-line"></div>
+              {enrichment.maker_timeline.map((entry: any) => (
+                <div class="tl-item">
+                  <div class={`tl-dot${entry.highlight ? ' highlight' : ''}`}></div>
+                  <div class="tl-inner">
+                    <div class={`tl-year${entry.highlight ? ' highlight' : ''}`}>{entry.year}</div>
+                    <div>
+                      <div class={`tl-label${entry.highlight ? ' highlight' : ''}`}>{entry.highlight ? 'This piece' : ''}</div>
+                      <div class="tl-note">{entry.event}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-      </div>
 
-      <div class="blur-overlay" id="blur-overlay">
-        <div class="blur-headline">Your valuation is ready</div>
-        <div class="blur-sub">
-          Create a free account to unlock the full report —<br/>value range, condition notes, and appraiser commentary.
-        </div>
-        <a href="/auth/signup" class="btn-register">Register Free</a>
-        <div class="blur-divider">or</div>
-        <a href="#" class="btn-pay">Full Certificate — £29.99</a>
-      </div>
-    </div>
+        {enrichment.comparable_sales && enrichment.comparable_sales.length > 0 && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">Comparable Sales</div>
+              <div class="section-head-line"></div>
+            </div>
+            {enrichment.comparable_sales.map((comp: any) => (
+              <div class="comp-row">
+                <div>
+                  <div class="comp-title">{comp.title}</div>
+                  <div class="comp-sub">{comp.detail}</div>
+                </div>
+                <div class="comp-val">{comp.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
-    <div class="card-footer">
+        {enrichment.your_options && enrichment.your_options.length > 0 && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">Your Options</div>
+              <div class="section-head-line"></div>
+            </div>
+            <div class="options">
+              {enrichment.your_options.map((opt: any) => (
+                <div class={`option${opt.recommended ? ' rec' : ''}`}>
+                  <div class={`option-dot${opt.recommended ? ' rec' : ''}`}></div>
+                  <div>
+                    <div class={`option-action${opt.recommended ? ' rec' : ''}`}>
+                      {opt.action}
+                      {opt.recommended && <span class="option-rec-badge">RECOMMENDED</span>}
+                    </div>
+                    <div class="option-detail">{opt.detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    ) : (
+      <div class="enrich-loading" id="enrich-loading">
+        <div class="enrich-loading-text">Generating full report...</div>
+      </div>
+    )}
+  </div>
+
+  <!-- FOOTER -->
+  <div class="card-footer">
+    <div>
       <div class="footer-brand">GAUK Antiques</div>
-      <div class="footer-id">REF {item.id.slice(0, 8).toUpperCase()}</div>
+      <div class="ai-disclaimer">AI appraisal · estimates only · not a formal valuation · {date}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="cap" style="margin-bottom:4px">Reference</div>
+      <div class="cap" style="color:#5C5040">{item.id.slice(0,8).toUpperCase()}</div>
     </div>
   </div>
+</div>
 
-  <div class="sticky-actions">
-    <button class="action-btn" onclick="window.print()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <polyline points="6 9 6 2 18 2 18 9"/>
-        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-        <rect x="6" y="14" width="12" height="8"/>
-      </svg>
-      Print
-    </button>
-    <button class="action-btn" id="share-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-      </svg>
-      Share
-    </button>
-    <a href="/" class="action-btn primary">New Identification</a>
-  </div>
+<div class="sticky-actions">
+  <button class="action-btn" onclick="window.print()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <polyline points="6 9 6 2 18 2 18 9"/>
+      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+      <rect x="6" y="14" width="12" height="8"/>
+    </svg>
+    Print
+  </button>
+  <button class="action-btn" id="share-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    </svg>
+    Share
+  </button>
+  <a href="/" class="action-btn primary">New Identification</a>
+</div>
 </Layout>
 
-<script define:vars={{ description: r.description, itemId: item.id }}>
-  // Date
-  document.getElementById('card-date').textContent =
-    new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-
-  // Typewriter
-  const target = document.getElementById('typed-text')
-  const cursor = document.getElementById('cursor')
-  const text = description || ''
-  let i = 0
-  function type() {
-    if (i < text.length) {
-      target.textContent += text[i]
-      i++
-      setTimeout(type, 28)
-    } else {
-      cursor.style.display = 'none'
-    }
-  }
-  setTimeout(type, 400)
-
-  // Auth check — remove blur if logged in
-  async function checkAuth() {
-    try {
-      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
-      const supabase = createClient(
-        document.querySelector('meta[name="supabase-url"]')?.content || '',
-        document.querySelector('meta[name="supabase-anon"]')?.content || ''
-      )
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        document.getElementById('blur-overlay').style.display = 'none'
-        document.querySelector('.blur-content').style.filter = 'none'
-      }
-    } catch(e) {}
-  }
-  checkAuth()
-
-  // Share
-  document.getElementById('share-btn').addEventListener('click', () => {
+<script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!enrichment }}>
+  document.getElementById('share-btn')?.addEventListener('click', () => {
     if (navigator.share) {
       navigator.share({ title: 'GAUK Antiques Valuation', url: window.location.href })
     } else {
@@ -412,4 +387,20 @@ const imageUrl = `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.ima
       document.getElementById('share-btn').textContent = 'Copied'
     }
   })
+
+  if (!hasEnrichment) {
+    fetch('/api/enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identification_id: itemId, result: resultJson })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.enrichment) window.location.reload()
+    })
+    .catch(err => {
+      const loading = document.getElementById('enrich-loading')
+      if (loading) loading.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:12px;color:#8A7A66;padding:20px;text-align:center">Report generation unavailable</div>'
+    })
+  }
 </script>
