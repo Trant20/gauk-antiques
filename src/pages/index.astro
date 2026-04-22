@@ -219,6 +219,8 @@ const firstWords = words.slice(0, -1).join(' ')
       font-size: 16px; line-height: 1.9; color: #5C5040;
       padding: 14px 20px; border-bottom: 1px solid #C4B49E; margin: 0;
     }
+    #typed-text { font-size: 16px; }
+    #typed-text { font-size: 16px; }
     .result-id-table { padding: 0 20px; border-bottom: 1px solid #C4B49E; }
     .result-id-row {
       display: flex; gap: 16px; align-items: flex-start;
@@ -475,7 +477,7 @@ const firstWords = words.slice(0, -1).join(' ')
     </div>
   </section>
 
-  <div id="result-outer" style="display:none">
+  <div id="result-outer" style="display:none; background:#EFE7D9;">
   <div id="result-section" class="result-section">
     <div class="result-badges">
       <span class="result-category" id="result-category"></span>
@@ -519,6 +521,12 @@ const firstWords = words.slice(0, -1).join(' ')
         <div class="result-gate-or">or</div>
         <a href="#" class="result-gate-pay">Full Certificate — £29.99</a>
       </div>
+    </div>
+    <div class="result-view-report" id="result-view-report" style="display:none; padding: 16px 20px;">
+      <a id="view-report-link" href="#" style="display:block;width:100%;padding:16px;background:#1C1810;font-family:Prata,Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#EFE7D9;text-align:center;text-decoration:none;">View Full Report</a>
+    </div>
+    <div class="result-view-report" id="result-view-report" style="display:none; padding: 16px 20px;">
+      <a id="view-report-link" href="#" style="display:block;width:100%;padding:16px;background:#1C1810;font-family:Prata,Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#EFE7D9;text-align:center;text-decoration:none;">View Full Report</a>
     </div>
     <div class="result-footer-bar">
       <span class="result-footer-brand">GAUK Antiques</span>
