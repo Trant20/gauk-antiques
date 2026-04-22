@@ -54,6 +54,18 @@ Return this exact structure:
   "pattern_detail": "If a pattern name is known: its history, when introduced, design influences, variants, and why collectors seek it. If unknown: describe what the decorative style suggests about period and origin.",
   "glaze_detail": "Explain this glaze type — how it was achieved, what the technical process involved, what condition issues are typical, and what to look for in high quality examples.",
   "firing_detail": "Explain what this firing type means for the piece — how it affects appearance, durability, value and what to watch for when assessing condition.",
+  "price_history": [
+    { "year": 2010, "value": integer },
+    { "year": 2012, "value": integer },
+    { "year": 2014, "value": integer },
+    { "year": 2016, "value": integer },
+    { "year": 2018, "value": integer },
+    { "year": 2020, "value": integer },
+    { "year": 2022, "value": integer },
+    { "year": 2024, "value": integer }
+  ],
+  "price_peak": { "year": integer, "value": integer },
+  "price_context": "One sentence — what drove price movement for this maker or category over this period.",
   "condition_score": integer 0-100 derived from the condition field,
   "desirability_score": integer 0-100 based on maker, period, category and rarity
 }
