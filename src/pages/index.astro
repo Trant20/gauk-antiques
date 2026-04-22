@@ -305,12 +305,14 @@ const firstWords = words.slice(0, -1).join(' ')
     }
     .result-gate-register {
       width: 100%; max-width: 300px; padding: 15px;
-      background: #1C1810; border: none;
+      background: #B8860B; border: none;
       font-family: 'Prata', Georgia, serif;
       font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-      color: #EFE7D9; text-decoration: none;
+      color: #fff; text-decoration: none;
       display: block; text-align: center;
+      transition: background .2s;
     }
+    .result-gate-register:hover { background: #9A7009; }
     .result-gate-pay {
       width: 100%; max-width: 300px; padding: 14px;
       background: transparent; border: 1px solid #A07830;
