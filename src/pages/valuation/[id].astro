@@ -54,6 +54,22 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .card-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
   .card-logo span { color: #7A5C20; }
   .card-date { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
+  .hidden { display: none !important; }
+  .card-breadcrumb { display: flex; align-items: center; gap: 6px; }
+  .bc-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
+  .bc-link:hover { color: #1C1810; }
+  .bc-sep { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #C4B49E; }
+  .bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: #8A7A66; text-transform: uppercase; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 400px) { .bc-hide-sm { display: none; } }
+  .delete-btn { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; background: none; border: 1px solid #C4B49E; padding: 6px 12px; cursor: pointer; transition: border-color .2s, color .2s; }
+  .delete-btn:hover { border-color: #C46028; color: #C46028; }
+  .del-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(28,24,16,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .del-modal { background: #EFE7D9; border: 1px solid #C4B49E; padding: 32px 24px; max-width: 320px; width: 100%; text-align: center; }
+  .del-modal-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 10px; }
+  .del-modal-sub { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; line-height: 1.7; margin-bottom: 24px; }
+  .del-modal-btns { display: flex; gap: 8px; }
+  .del-cancel { flex: 1; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: none; border: 1px solid #C4B49E; padding: 12px; cursor: pointer; color: #5C5040; }
+  .del-confirm { flex: 1; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #1C1810; border: 1px solid #1C1810; padding: 12px; cursor: pointer; color: #EFE7D9; }
 
   /* HERO IMAGE */
   .card-image { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #E6DCCB; display: block; position: relative; }
@@ -176,7 +192,13 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 <div class="card-wrap">
   <header class="card-header">
     <div class="card-logo">GAUK <span>Antiques</span></div>
-    <div class="card-date">{date}</div>
+    <nav class="card-breadcrumb">
+      <a href="/library" class="bc-link">Library</a>
+      <span class="bc-sep">›</span>
+      <span class="bc-cur">{r.category}</span>
+      <span class="bc-sep bc-hide-sm">›</span>
+      <span class="bc-cur bc-hide-sm">{r.subcategory}</span>
+    </nav>
   </header>
 
   <!-- IMAGE + CONFIDENCE ARC -->
@@ -563,9 +585,23 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       <div class="footer-brand">GAUK Antiques</div>
       <div class="ai-disclaimer">AI appraisal · estimates only · not a formal valuation · {date}</div>
     </div>
-    <div style="text-align:right">
-      <div class="cap" style="margin-bottom:4px">Reference</div>
-      <div class="cap" style="color:#5C5040">{item.id.slice(0,8).toUpperCase()}</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;">
+      <div style="text-align:right">
+        <div class="cap" style="margin-bottom:4px">Reference</div>
+        <div class="cap" style="color:#5C5040">{item.id.slice(0,8).toUpperCase()}</div>
+      </div>
+      <button id="delete-btn" class="delete-btn">Delete this report</button>
+    </div>
+  </div>
+
+  <div class="del-overlay hidden" id="del-overlay">
+    <div class="del-modal">
+      <div class="del-modal-title">Delete this report?</div>
+      <div class="del-modal-sub">This will permanently remove the identification and valuation from your library.</div>
+      <div class="del-modal-btns">
+        <button class="del-cancel" id="del-cancel">Cancel</button>
+        <button class="del-confirm" id="del-confirm">Delete</button>
+      </div>
     </div>
   </div>
 </div>
@@ -589,6 +625,30 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   </button>
   <a href="/" class="action-btn primary">New Identification</a>
 </div>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const _sb = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+  const _id = window.location.pathname.split('/').filter(Boolean).pop()
+  document.getElementById('delete-btn')?.addEventListener('click', () => {
+    document.getElementById('del-overlay').classList.remove('hidden')
+  })
+  document.getElementById('del-cancel')?.addEventListener('click', () => {
+    document.getElementById('del-overlay').classList.add('hidden')
+  })
+  document.getElementById('del-confirm')?.addEventListener('click', async () => {
+    const btn = document.getElementById('del-confirm')
+    btn.textContent = 'Deleting...'
+    btn.disabled = true
+    const { data: { session } } = await _sb.auth.getSession()
+    if (!session) { window.location.href = '/auth/signin'; return }
+    await _sb.from('identifications').delete().eq('id', _id).eq('user_id', session.user.id)
+    window.location.href = '/library'
+  })
+</script>
 </Layout>
 
 <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!enrichment }}>
