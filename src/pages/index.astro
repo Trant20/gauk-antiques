@@ -55,12 +55,7 @@ const firstWords = words.slice(0, -1).join(' ')
       color: var(--textDim); text-decoration: none; transition: color .2s;
     }
     .header-link:hover { color: var(--text); }
-    .theme-toggle {
-      background: none; border: 1px solid var(--border); cursor: pointer;
-      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-      color: var(--textDim); transition: border-color .2s, color .2s;
-    }
-    .theme-toggle:hover { border-color: var(--borderHi); color: var(--text); }
+
 
     /* ─── HERO ─── */
     .hero {
@@ -205,7 +200,7 @@ const firstWords = words.slice(0, -1).join(' ')
     .result-title {
       font-family: 'Playfair Display', Didot, Georgia, serif;
       font-size: clamp(22px, 5vw, 32px); font-weight: 400; line-height: 1.2;
-      color: #1C1810; padding: 12px 20px 0; margin: 0;
+      color: #1C1810 !important; padding: 12px 20px 0; margin: 0;
     }
     .typed-cursor {
       display: inline-block; width: 2px; height: 1em;
@@ -412,15 +407,7 @@ const firstWords = words.slice(0, -1).join(' ')
     <div class="header-actions">
       <a href="/library" class="header-link">My Library</a>
       <a href="/auth/signin" class="header-link" id="signin-link">Sign In</a>
-      <button class="theme-toggle" id="theme-btn" title="Toggle theme">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-      </button>
+
     </div>
   </header>
 
@@ -576,13 +563,6 @@ const firstWords = words.slice(0, -1).join(' ')
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY
   )
 
-  const themeBtn = document.getElementById('theme-btn')
-  themeBtn?.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme')
-    const next = current === 'light' ? 'dark' : 'light'
-    document.documentElement.setAttribute('data-theme', next)
-    localStorage.setItem('theme', next)
-  })
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
