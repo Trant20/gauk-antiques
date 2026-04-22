@@ -16,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
     const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
 
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       system: `You are a senior antiques specialist writing a professional valuation report. Based on the identification data provided, generate enrichment content for the report. Return ONLY valid JSON, no markdown.
 
