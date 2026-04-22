@@ -33,7 +33,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 <Layout title={`${r.subcategory} — GAUK Antiques Valuation`}>
 <style>
   body { background: #EFE7D9; color: #1C1810; }
-  .card-wrap { max-width: 560px; margin: 0 auto; padding-bottom: 100px; background: #EFE7D9; }
+  .card-wrap { width: 100%; max-width: 100%; padding-bottom: 100px; background: #EFE7D9; }
   .cap { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
   .section { padding: 24px 20px; border-bottom: 1px solid #C4B49E; }
   .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
@@ -61,14 +61,14 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .card-badges { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0; }
   .card-category { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; }
   .card-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(22px, 5vw, 30px); font-weight: 400; line-height: 1.2; color: #1C1810; padding: 10px 20px 6px; font-style: italic; }
-  .card-subtitle { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #5C5040; padding: 0 20px 12px; }
+  .card-subtitle { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; padding: 0 20px 12px; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 16px; }
   .tag { display: inline-block; padding: 4px 10px; border: 1px solid #C4B49E; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #5C5040; }
 
   /* VALUE */
   .value-section { background: #E6DCCB; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; padding: 28px 20px; text-align: center; }
   .value-number { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px, 7vw, 48px); font-weight: 400; line-height: 1; color: #7A5C20; letter-spacing: -1px; margin-bottom: 6px; }
-  .value-sub { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; margin-bottom: 20px; }
+  .value-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 20px; }
   .value-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; margin-top: 16px; }
   .value-strip-cell { background: #E6DCCB; padding: 14px 8px; }
   .value-strip-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-bottom: 6px; }
@@ -78,7 +78,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
   .id-row:last-child { border-bottom: none; }
   .id-key { width: 100px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
-  .id-val { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #1C1810; line-height: 1.5; flex: 1; }
+  .id-val { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; line-height: 1.5; flex: 1; }
 
   /* GAUGES */
   .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
@@ -88,7 +88,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .gauge-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; color: #1C1810; margin-bottom: 4px; }
 
   /* EXPERT NOTES */
-  .expert-para { font-family: 'Prata', Georgia, serif; font-size: 15px; line-height: 1.9; color: #5C5040; margin-bottom: 14px; }
+  .expert-para { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.9; color: #5C5040; margin-bottom: 14px; }
   .expert-para:last-child { margin-bottom: 0; }
 
   /* TIMELINE */
@@ -99,11 +99,11 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .tl-dot { position: absolute; left: -17px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: #DDD0BF; border: 1.5px solid #C4B49E; z-index: 1; }
   .tl-dot.highlight { background: #7A5C20; border-color: #7A5C20; }
   .tl-inner { display: flex; gap: 10px; align-items: baseline; }
-  .tl-year { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 12px; color: #8A7A66; flex-shrink: 0; width: 40px; }
+  .tl-year { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #8A7A66; flex-shrink: 0; width: 48px; }
   .tl-year.highlight { color: #7A5C20; font-style: italic; }
   .tl-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; margin-bottom: 2px; }
   .tl-label.highlight { color: #7A5C20; }
-  .tl-note { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #5C5040; line-height: 1.5; }
+  .tl-note { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.5; }
 
   /* OPTIONS */
   .options { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
@@ -111,16 +111,16 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   .option.rec { background: #DDD0BF; }
   .option-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: #C4B49E; }
   .option-dot.rec { background: #7A5C20; }
-  .option-action { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; color: #5C5040; margin-bottom: 4px; }
+  .option-action { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #5C5040; margin-bottom: 4px; }
   .option-action.rec { color: #1C1810; font-style: italic; }
   .option-rec-badge { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; color: #7A5C20; margin-left: 10px; }
-  .option-detail { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.5; }
+  .option-detail { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; line-height: 1.5; }
 
   /* COMPARABLES */
   .comp-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); gap: 12px; }
   .comp-row:last-child { border-bottom: none; }
-  .comp-title { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #1C1810; margin-bottom: 2px; }
-  .comp-sub { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; }
+  .comp-title { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; margin-bottom: 2px; }
+  .comp-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; }
   .comp-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #7A5C20; flex-shrink: 0; }
 
   /* FOOTER */
@@ -131,7 +131,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   /* STICKY ACTIONS */
   .sticky-actions {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-    max-width: 560px; margin: 0 auto;
+    max-width: 100%; margin: 0 auto;
     background: rgba(239,231,217,.96); backdrop-filter: blur(20px);
     border-top: 1px solid #C4B49E;
     padding: 12px 20px 24px;
