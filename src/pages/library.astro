@@ -2,84 +2,366 @@
 import Layout from '../layouts/Layout.astro'
 ---
 <Layout title="My Library — GAUK Antiques">
-  <main class="min-h-screen bg-neutral-950 text-neutral-100">
-    <header class="border-b border-neutral-800 px-8 py-4 flex items-center justify-between">
-      <h1 class="text-lg font-semibold tracking-wide">GAUK <span class="text-amber-500">Antiques</span></h1>
-      <nav class="text-sm flex items-center gap-4">
-        <a href="/" class="text-neutral-400 hover:text-amber-500 transition-colors">Identify</a>
-        <button id="signout-btn" class="text-neutral-400 hover:text-amber-500 transition-colors">Sign out</button>
-      </nav>
-    </header>
-    <div class="max-w-4xl mx-auto p-8">
-      <h2 class="text-2xl font-bold mb-2">My Library</h2>
-      <p class="text-neutral-400 text-sm mb-8">Your identification history.</p>
-      <div id="auth-gate" class="hidden text-center py-16">
-        <p class="text-neutral-400 mb-4">Sign in to view your library</p>
-        <a href="/auth/signin" class="px-6 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-colors">Sign In</a>
-      </div>
-      <div id="loading" class="text-neutral-400 text-sm">Loading...</div>
-      <div id="empty" class="hidden text-center py-16">
-        <p class="text-neutral-400 mb-4">No identifications yet</p>
-        <a href="/" class="px-6 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-colors">Identify your first item</a>
-      </div>
-      <div id="grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+<style>
+  body { background: #EFE7D9; color: #1C1810; }
+
+  /* HEADER */
+  .lib-header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
+    border-bottom: 1px solid #C4B49E;
+  }
+  .lib-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
+  .lib-logo span { color: #7A5C20; }
+  .lib-user { display: flex; align-items: center; gap: 14px; }
+  .lib-email { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1.5px; color: #8A7A66; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lib-signout { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; background: none; border: 1px solid #C4B49E; padding: 5px 10px; cursor: pointer; transition: border-color .2s; }
+  .lib-signout:hover { border-color: #7A5C20; }
+
+  /* PAGE TITLE */
+  .lib-title-wrap { padding: 28px 20px 0; }
+  .lib-page-cap { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; }
+  .lib-page-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(24px, 6vw, 36px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 4px; }
+  .lib-page-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; padding-bottom: 20px; border-bottom: 1px solid #C4B49E; }
+
+  /* TOOLBAR */
+  .lib-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
+  .lib-count { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
+  .view-toggle { display: flex; gap: 1px; background: #C4B49E; }
+  .view-btn { background: #E6DCCB; border: none; padding: 7px 11px; cursor: pointer; color: #8A7A66; transition: background .15s, color .15s; }
+  .view-btn.active { background: #1C1810; color: #EFE7D9; }
+  .view-btn svg { display: block; }
+
+  /* GRID */
+  .lib-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #C4B49E; padding: 0 0 120px; }
+  @media (min-width: 600px) { .lib-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 900px) { .lib-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .lib-card {
+    background: #EFE7D9;
+    text-decoration: none;
+    color: #1C1810;
+    display: flex; flex-direction: column;
+    transition: background .15s;
+    cursor: pointer;
+  }
+  .lib-card:hover { background: #E6DCCB; }
+  .lib-card-thumb {
+    width: 100%; aspect-ratio: 1/1; object-fit: cover;
+    background: #E6DCCB; display: block;
+  }
+  .lib-card-thumb-placeholder {
+    width: 100%; aspect-ratio: 1/1; background: #E6DCCB;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lib-card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #C4B49E; }
+  .lib-card-cat { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; }
+  .lib-card-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 14px; font-style: italic; color: #1C1810; line-height: 1.3; }
+  .lib-card-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; color: #7A5C20; margin-top: auto; }
+  .lib-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .lib-card-condition { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; }
+  .lib-card-date { font-family: 'Prata', Georgia, serif; font-size: 8px; color: #8A7A66; }
+
+  /* LIST VIEW */
+  .lib-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; padding-bottom: 120px; }
+  .lib-list-item {
+    background: #EFE7D9;
+    display: flex; align-items: center; gap: 0;
+    text-decoration: none; color: #1C1810;
+    transition: background .15s;
+  }
+  .lib-list-item:hover { background: #E6DCCB; }
+  .lib-list-thumb { width: 80px; height: 80px; object-fit: cover; display: block; flex-shrink: 0; background: #E6DCCB; }
+  .lib-list-body { padding: 14px 16px; flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .lib-list-left { flex: 1; min-width: 0; }
+  .lib-list-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
+  .lib-list-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; font-style: italic; color: #1C1810; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lib-list-sub { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; margin-top: 3px; letter-spacing: 1px; }
+  .lib-list-right { text-align: right; flex-shrink: 0; }
+  .lib-list-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #7A5C20; }
+  .lib-list-date { font-family: 'Prata', Georgia, serif; font-size: 9px; color: #8A7A66; margin-top: 4px; }
+
+  /* STATES */
+  .lib-state { min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 60px 24px; text-align: center; }
+  .lib-state-icon { color: #C4B49E; margin-bottom: 8px; }
+  .lib-state-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 22px; font-style: italic; color: #5C5040; }
+  .lib-state-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; max-width: 260px; line-height: 1.7; }
+  .lib-state-btn { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; background: #1C1810; border: none; padding: 14px 28px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 8px; }
+
+  /* BOTTOM NAV */
+  .lib-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(239,231,217,.96); backdrop-filter: blur(20px);
+    border-top: 1px solid #C4B49E;
+    display: flex;
+  }
+  .lib-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 10px 8px 14px;
+    text-decoration: none; color: #8A7A66;
+    font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+    gap: 5px; transition: color .15s;
+  }
+  .lib-nav-item.active { color: #7A5C20; }
+  .lib-nav-item:hover { color: #1C1810; }
+
+  /* LOADING SHIMMER */
+  @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+  .shimmer {
+    background: linear-gradient(90deg, #E6DCCB 25%, #EFE7D9 50%, #E6DCCB 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+  .shimmer-card { background: #EFE7D9; }
+  .shimmer-thumb { width: 100%; aspect-ratio: 1/1; }
+  .shimmer-line { height: 10px; border-radius: 2px; margin: 8px 12px 4px; }
+  .shimmer-line-short { height: 10px; border-radius: 2px; margin: 4px 12px 12px; width: 60%; }
+
+  .hidden { display: none !important; }
+</style>
+
+<div id="page-wrap">
+
+  <!-- HEADER -->
+  <header class="lib-header">
+    <div class="lib-logo">GAUK <span>Antiques</span></div>
+    <div class="lib-user">
+      <span class="lib-email" id="lib-email"></span>
+      <button class="lib-signout" id="lib-signout">Sign Out</button>
     </div>
-  </main>
-</Layout>
+  </header>
+
+  <!-- LOADING STATE -->
+  <div id="lib-loading">
+    <div class="lib-title-wrap">
+      <div class="lib-page-cap">Collection</div>
+      <div class="lib-page-title">My Library</div>
+      <div class="lib-page-sub">Loading your identifications&hellip;</div>
+    </div>
+    <div class="lib-toolbar">
+      <div style="background:#E6DCCB;width:80px;height:10px;border-radius:2px"></div>
+    </div>
+    <div class="lib-grid" id="shimmer-grid"></div>
+  </div>
+
+  <!-- AUTH GATE -->
+  <div id="lib-auth-gate" class="hidden">
+    <div class="lib-state">
+      <svg class="lib-state-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <div class="lib-state-title">Sign in to view your library</div>
+      <div class="lib-state-sub">Your identification history is saved to your account.</div>
+      <a href="/auth/signin" class="lib-state-btn">Sign In</a>
+    </div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="lib-empty" class="hidden">
+    <div class="lib-title-wrap">
+      <div class="lib-page-cap">Collection</div>
+      <div class="lib-page-title">My Library</div>
+      <div class="lib-page-sub" style="border-bottom:none">No identifications yet.</div>
+    </div>
+    <div class="lib-state">
+      <svg class="lib-state-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+        <line x1="4" y1="22" x2="4" y2="15"/>
+      </svg>
+      <div class="lib-state-title">Your collection awaits</div>
+      <div class="lib-state-sub">Photograph an antique or curio and let us identify and value it for you.</div>
+      <a href="/" class="lib-state-btn">Identify Your First Piece</a>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="lib-content" class="hidden">
+    <div class="lib-title-wrap">
+      <div class="lib-page-cap">Collection</div>
+      <div class="lib-page-title">My Library</div>
+      <div class="lib-page-sub" id="lib-sub">Your identification history.</div>
+    </div>
+    <div class="lib-toolbar">
+      <div class="lib-count" id="lib-count"></div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-grid" aria-label="Grid view">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <rect x="0" y="0" width="6" height="6"/><rect x="8" y="0" width="6" height="6"/>
+            <rect x="0" y="8" width="6" height="6"/><rect x="8" y="8" width="6" height="6"/>
+          </svg>
+        </button>
+        <button class="view-btn" id="btn-list" aria-label="List view">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <rect x="0" y="0" width="14" height="2.5"/><rect x="0" y="5.5" width="14" height="2.5"/><rect x="0" y="11" width="14" height="2.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="lib-grid-view" class="lib-grid"></div>
+    <div id="lib-list-view" class="lib-list hidden"></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="lib-nav">
+  <a href="/" class="lib-nav-item">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    Identify
+  </a>
+  <a href="/library" class="lib-nav-item active">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    </svg>
+    Library
+  </a>
+  <a href="/auth/signin" class="lib-nav-item" id="nav-account">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+    Account
+  </a>
+</nav>
 
 <script>
   import { createClient } from '@supabase/supabase-js'
+
+  const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
 
   const supabase = createClient(
     import.meta.env.PUBLIC_SUPABASE_URL,
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY
   )
 
-  const loading = document.getElementById('loading')
-  const empty = document.getElementById('empty')
-  const grid = document.getElementById('grid')
-  const authGate = document.getElementById('auth-gate')
+  const elLoading   = document.getElementById('lib-loading')
+  const elAuthGate  = document.getElementById('lib-auth-gate')
+  const elEmpty     = document.getElementById('lib-empty')
+  const elContent   = document.getElementById('lib-content')
+  const elEmail     = document.getElementById('lib-email')
+  const elCount     = document.getElementById('lib-count')
+  const elSub       = document.getElementById('lib-sub')
+  const elGridView  = document.getElementById('lib-grid-view')
+  const elListView  = document.getElementById('lib-list-view')
+  const btnGrid     = document.getElementById('btn-grid')
+  const btnList     = document.getElementById('btn-list')
+  const shimmerGrid = document.getElementById('shimmer-grid')
 
-  document.getElementById('signout-btn')?.addEventListener('click', async () => {
+  shimmerGrid.innerHTML = Array(6).fill(0).map(() => `
+    <div class="shimmer-card">
+      <div class="shimmer-thumb shimmer"></div>
+      <div class="shimmer-line shimmer"></div>
+      <div class="shimmer-line-short shimmer"></div>
+    </div>
+  `).join('')
+
+  btnGrid.addEventListener('click', () => {
+    btnGrid.classList.add('active'); btnList.classList.remove('active')
+    elGridView.classList.remove('hidden'); elListView.classList.add('hidden')
+  })
+  btnList.addEventListener('click', () => {
+    btnList.classList.add('active'); btnGrid.classList.remove('active')
+    elListView.classList.remove('hidden'); elGridView.classList.add('hidden')
+  })
+
+  document.getElementById('lib-signout').addEventListener('click', async () => {
     await supabase.auth.signOut()
     window.location.href = '/'
   })
 
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  function formatValue(r) {
+    const lo = r.value_range_low || 0
+    const hi = r.value_range_high || 0
+    if (!lo && !hi) return '\u2014'
+    return '\u00a3' + lo.toLocaleString() + ' \u2013 \u00a3' + hi.toLocaleString()
+  }
+
+  function thumbEl(imageKey, alt) {
+    if (imageKey) return '<img class="lib-card-thumb" src="' + R2 + '/' + imageKey + '" alt="' + alt + '" loading="lazy" />'
+    return '<div class="lib-card-thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B49E" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
+  }
+
+  function listThumbEl(imageKey, alt) {
+    if (imageKey) return '<img class="lib-list-thumb" src="' + R2 + '/' + imageKey + '" alt="' + alt + '" loading="lazy" />'
+    return '<div class="lib-list-thumb" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C4B49E" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
+  }
+
+  function renderGrid(items) {
+    elGridView.innerHTML = items.map(item => {
+      const r = item.result_json || {}
+      const title = r.subcategory || 'Unidentified Item'
+      return '<a href="/valuation/' + item.id + '" class="lib-card">' +
+        thumbEl(item.image_key, title) +
+        '<div class="lib-card-body">' +
+          '<div class="lib-card-cat">' + (r.category || 'Antique') + '</div>' +
+          '<div class="lib-card-title">' + title + '</div>' +
+          '<div class="lib-card-value">' + formatValue(r) + '</div>' +
+          '<div class="lib-card-meta">' +
+            '<span class="lib-card-condition">' + (r.condition || '') + '</span>' +
+            '<span class="lib-card-date">' + formatDate(item.created_at) + '</span>' +
+          '</div>' +
+        '</div></a>'
+    }).join('')
+  }
+
+  function renderList(items) {
+    elListView.innerHTML = items.map(item => {
+      const r = item.result_json || {}
+      const title = r.subcategory || 'Unidentified Item'
+      const maker = r.maker || r.manufacturer || ''
+      const sub = maker ? (maker + (r.condition ? ' \u00b7 ' + r.condition : '')) : ''
+      return '<a href="/valuation/' + item.id + '" class="lib-list-item">' +
+        listThumbEl(item.image_key, title) +
+        '<div class="lib-list-body">' +
+          '<div class="lib-list-left">' +
+            '<div class="lib-list-cat">' + (r.category || 'Antique') + '</div>' +
+            '<div class="lib-list-title">' + title + '</div>' +
+            (sub ? '<div class="lib-list-sub">' + sub + '</div>' : '') +
+          '</div>' +
+          '<div class="lib-list-right">' +
+            '<div class="lib-list-value">' + formatValue(r) + '</div>' +
+            '<div class="lib-list-date">' + formatDate(item.created_at) + '</div>' +
+          '</div>' +
+        '</div></a>'
+    }).join('')
+  }
+
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
-    loading!.classList.add('hidden')
-    authGate!.classList.remove('hidden')
+    elLoading.classList.add('hidden')
+    elAuthGate.classList.remove('hidden')
   } else {
+    elEmail.textContent = session.user.email || ''
+
     const { data, error } = await supabase
       .from('identifications')
-      .select('*')
+      .select('id, image_key, result_json, created_at')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
-    loading!.classList.add('hidden')
+    elLoading.classList.add('hidden')
 
     if (error || !data || data.length === 0) {
-      empty!.classList.remove('hidden')
+      elEmpty.classList.remove('hidden')
     } else {
-      grid!.classList.remove('hidden')
-      grid!.innerHTML = data.map(item => {
-        const r = item.result_json
-        return `
-          <div class="bg-neutral-900 border border-neutral-700 rounded-xl p-5 hover:border-amber-600 transition-colors">
-            <div class="flex items-start justify-between mb-3">
-              <span class="text-amber-500 text-xs font-medium uppercase tracking-wider">${r.category || 'Unknown'}</span>
-              <span class="text-xs text-neutral-500">${new Date(item.created_at).toLocaleDateString('en-GB')}</span>
-            </div>
-            <h3 class="font-bold mb-2">${r.subcategory || 'Item'}</h3>
-            <p class="text-neutral-400 text-xs leading-relaxed mb-3 line-clamp-2">${r.description || ''}</p>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-neutral-500">${r.maker || 'Unknown maker'}</span>
-              <span class="text-amber-500 font-semibold">£${(r.value_range_low || 0).toLocaleString()} – £${(r.value_range_high || 0).toLocaleString()}</span>
-            </div>
-          </div>
-        `
-      }).join('')
+      const n = data.length
+      elCount.textContent = n + ' identification' + (n === 1 ? '' : 's')
+      elSub.textContent = n + ' piece' + (n === 1 ? '' : 's') + ' in your collection.'
+      renderGrid(data)
+      renderList(data)
+      elContent.classList.remove('hidden')
     }
   }
 </script>
+</Layout>
