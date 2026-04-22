@@ -48,9 +48,13 @@ import Layout from '../layouts/Layout.astro'
     cursor: pointer;
   }
   .lib-card:hover { background: #E6DCCB; }
+  .lib-card-thumb-wrap {
+    width: 100%; aspect-ratio: 1/1; overflow: hidden;
+    background: #E6DCCB; display: block; position: relative;
+  }
   .lib-card-thumb {
-    width: 100%; aspect-ratio: 1/1; object-fit: cover;
-    background: #E6DCCB; display: block;
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; display: block;
   }
   .lib-card-thumb-placeholder {
     width: 100%; aspect-ratio: 1/1; background: #E6DCCB;
@@ -287,7 +291,7 @@ import Layout from '../layouts/Layout.astro'
   }
 
   function thumbEl(imageKey, alt) {
-    if (imageKey) return '<img class="lib-card-thumb" src="' + R2 + '/' + imageKey + '" alt="' + alt + '" loading="lazy" />'
+    if (imageKey) return '<div class="lib-card-thumb-wrap"><img class="lib-card-thumb" src="' + R2 + '/' + imageKey + '" alt="' + alt + '" loading="lazy" /></div>'
     return '<div class="lib-card-thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B49E" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
   }
 
