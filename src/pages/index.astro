@@ -762,10 +762,12 @@ const firstWords = words.slice(0, -1).join(' ')
       if (identifyData.id) {
         const ref = document.getElementById('result-ref') as HTMLElement
         if (ref) ref.textContent = 'REF ' + identifyData.id.slice(0,8).toUpperCase()
-        const viewReport = document.getElementById('result-view-report') as HTMLElement
-        const viewLink = document.getElementById('view-report-link') as HTMLAnchorElement
-        if (viewReport) viewReport.style.display = 'block'
-        if (viewLink) viewLink.href = '/valuation/' + identifyData.id
+        if (session) {
+          const viewReport = document.getElementById('result-view-report') as HTMLElement
+          const viewLink = document.getElementById('view-report-link') as HTMLAnchorElement
+          if (viewReport) viewReport.style.display = 'block'
+          if (viewLink) viewLink.href = '/valuation/' + identifyData.id
+        }
       }
 
       const outer = document.getElementById('result-outer') as HTMLElement
