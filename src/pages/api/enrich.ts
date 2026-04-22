@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: `You are a senior antiques specialist writing a professional valuation report. Based on the identification data provided, generate enrichment content for the report. Return ONLY valid JSON, no markdown.
 
 Return this exact structure:
@@ -53,7 +53,7 @@ Return this exact structure:
   "maker_mark_explanation": "If a mark is visible or described: explain exactly what it means, the date range it was used, and what it tells us about authenticity and period. If no mark is present or visible: describe exactly what mark genuine examples should carry, where it appears on the piece, and what to look for.",
   "pattern_detail": "If a pattern name is known: its history, when introduced, design influences, variants, and why collectors seek it. If unknown: describe what the decorative style suggests about period and origin.",
   "glaze_detail": "Explain this glaze type — how it was achieved, what the technical process involved, what condition issues are typical, and what to look for in high quality examples.",
-  "firing_detail": "Explain what this firing type means for the piece — how it affects appearance, durability, value and what to watch for when assessing condition."
+  "firing_detail": "Explain what this firing type means for the piece — how it affects appearance, durability, value and what to watch for when assessing condition.",
   "condition_score": integer 0-100 derived from the condition field,
   "desirability_score": integer 0-100 based on maker, period, category and rarity
 }
