@@ -318,6 +318,61 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <div id="enrichment-container">
     {enrichment ? (
       <>
+        {(enrichment.maker_detail || enrichment.manufacturer_detail) && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">{r.maker || 'Maker'}</div>
+              <div class="section-head-line"></div>
+            </div>
+            {enrichment.maker_detail?.bio && <p class="expert-para">{enrichment.maker_detail.bio}</p>}
+            {enrichment.maker_detail?.notable_works && <p class="expert-para">{enrichment.maker_detail.notable_works}</p>}
+            {enrichment.manufacturer_detail?.history && (
+              <>
+                <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin:16px 0 8px;">Manufacturer</div>
+                <p class="expert-para">{enrichment.manufacturer_detail.history}</p>
+                {enrichment.manufacturer_detail.relationship_to_maker && <p class="expert-para">{enrichment.manufacturer_detail.relationship_to_maker}</p>}
+              </>
+            )}
+          </div>
+        )}
+
+        {enrichment.maker_mark_explanation && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">Maker Mark</div>
+              <div class="section-head-line"></div>
+            </div>
+            {r.category_specific?.maker_mark && (
+              <div style="background:#E6DCCB;padding:12px 16px;margin-bottom:16px;border-left:3px solid #7A5C20;">
+                <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8A7A66;margin-bottom:6px;">Visible Mark</div>
+                <div style="font-family:'Prata',Georgia,serif;font-size:16px;color:#1C1810;">{r.category_specific.maker_mark}</div>
+              </div>
+            )}
+            <p class="expert-para">{enrichment.maker_mark_explanation}</p>
+          </div>
+        )}
+
+        {(enrichment.pattern_detail || enrichment.glaze_detail || enrichment.firing_detail) && (
+          <div class="section">
+            <div class="section-head">
+              <div class="cap">Technical Notes</div>
+              <div class="section-head-line"></div>
+            </div>
+            {r.category_specific?.pattern_name && (
+              <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin-bottom:8px;">Pattern — {r.category_specific.pattern_name}</div>
+            )}
+            {enrichment.pattern_detail && <p class="expert-para">{enrichment.pattern_detail}</p>}
+            {r.category_specific?.glaze_type && (
+              <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin:16px 0 8px;">Glaze — {r.category_specific.glaze_type}</div>
+            )}
+            {enrichment.glaze_detail && <p class="expert-para">{enrichment.glaze_detail}</p>}
+            {r.category_specific?.firing_type && (
+              <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin:16px 0 8px;">Firing — {r.category_specific.firing_type}</div>
+            )}
+            {enrichment.firing_detail && <p class="expert-para">{enrichment.firing_detail}</p>}
+          </div>
+        )}
+
         {enrichment.expert_notes && (
           <div class="section">
             <div class="section-head">
