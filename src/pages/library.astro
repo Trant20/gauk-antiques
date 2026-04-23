@@ -13,8 +13,6 @@ import Layout from '../layouts/Layout.astro'
     background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
     border-bottom: 1px solid #C4B49E;
   }
-  .lib-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
-  .lib-logo span { color: #7A5C20; }
   .lib-user { display: flex; align-items: center; gap: 14px; }
   .lib-email { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1.5px; color: #8A7A66; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lib-signout { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; background: none; border: 1px solid #C4B49E; padding: 5px 10px; cursor: pointer; transition: border-color .2s; }
@@ -126,7 +124,6 @@ import Layout from '../layouts/Layout.astro'
 
   <!-- HEADER -->
   <header class="lib-header">
-    <div class="lib-logo">GAUK <span>Antiques</span></div>
     <div class="lib-user">
       <span class="lib-email" id="lib-email"></span>
       <button class="lib-signout" id="lib-signout">Sign Out</button>
