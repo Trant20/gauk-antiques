@@ -744,8 +744,12 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       enrichRegister.style.display = 'block'
       if (balanceEl) balanceEl.textContent = '0'
     } else {
-      const { data: credits } = await _sb.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', SITE_ID).single()
-      const balance = credits?.balance ?? 0
+      // Use server-side API to avoid RLS issues
+      const creditsRes = await fetch(`/api/credits?site_id=${SITE_ID}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+      const creditsData = await creditsRes.json()
+      const balance = creditsData.balance ?? 0
       if (balanceEl) balanceEl.textContent = String(balance)
 
       if (balance < 2) {
@@ -781,9 +785,12 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         }
         setTimeout(advanceStep, 600)
 
-        // Deduct 2 credits
-        await _sb.rpc('deduct_identification_credit', { p_user_id: session.user.id, p_site_id: SITE_ID, p_identification_id: itemId })
-        await _sb.rpc('deduct_identification_credit', { p_user_id: session.user.id, p_site_id: SITE_ID, p_identification_id: itemId })
+        // Deduct 2 credits via server-side API
+        await fetch('/api/deduct-credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({ site_id: SITE_ID, identification_id: itemId, amount: 2 })
+        })
 
         fetch('/api/enrich', {
           method: 'POST',
