@@ -9,9 +9,10 @@
     width: 220px; flex-shrink: 0;
     background: #E6DCCB; border-right: 1px solid #C4B49E;
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
-    display: flex; flex-direction: column;
+    display: none; flex-direction: column;
     transform: translateX(0);
   }
+  .snav-sidebar.visible { display: flex; }
   .snav-main {
     margin-left: 220px; flex: 1; min-width: 0;
   }
@@ -163,8 +164,23 @@
   })
 
   // Auth
+  const isIndex = window.location.pathname === '/'
   const { data: { session } } = await supabase.auth.getSession()
+
+  // On non-index pages always show sidebar
+  if (!isIndex) {
+    sidebar.classList.add('visible')
+    sidebar.style.display = 'flex'
+  }
+
   if (session) {
+    // On index, show sidebar when logged in
+    if (isIndex) {
+      sidebar.classList.add('visible')
+      sidebar.style.display = 'flex'
+      const main = document.querySelector('.snav-main') as HTMLElement
+      if (main && window.innerWidth >= 768) main.style.marginLeft = '220px'
+    }
     document.getElementById('snav-signout')!.style.display = 'block'
     document.getElementById('snav-signin')!.style.display = 'none'
     const credits = document.getElementById('snav-credits')!
@@ -178,4 +194,5 @@
     document.getElementById('snav-signin')!.style.display = 'block'
     document.getElementById('snav-signout')!.style.display = 'none'
   }
+
 </script>
