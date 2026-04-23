@@ -1,0 +1,181 @@
+---
+---
+<style is:global>
+  /* LAYOUT */
+  .snav-layout {
+    display: flex; min-height: 100vh;
+  }
+  .snav-sidebar {
+    width: 220px; flex-shrink: 0;
+    background: #E6DCCB; border-right: 1px solid #C4B49E;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    display: flex; flex-direction: column;
+    transform: translateX(0);
+  }
+  .snav-main {
+    margin-left: 220px; flex: 1; min-width: 0;
+  }
+
+  /* MOBILE */
+  @media (max-width: 767px) {
+    .snav-sidebar {
+      transform: translateX(-100%);
+      transition: transform .28s cubic-bezier(.22,1,.36,1);
+      z-index: 300;
+    }
+    .snav-sidebar.open { transform: translateX(0); }
+    .snav-main { margin-left: 0; }
+    .snav-hamburger {
+      display: flex; position: fixed; top: 12px; left: 12px; z-index: 400;
+      width: 36px; height: 36px; background: #E6DCCB; border: 1px solid #C4B49E;
+      flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      cursor: pointer;
+    }
+    .snav-hamburger span { display: block; width: 16px; height: 1px; background: #5C5040; transition: all .25s; }
+    .snav-hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .snav-hamburger.open span:nth-child(2) { opacity: 0; }
+    .snav-hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+    .snav-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(28,24,16,.5); backdrop-filter: blur(4px);
+    }
+    .snav-overlay.open { display: block; }
+  }
+  @media (min-width: 768px) {
+    .snav-hamburger { display: none; }
+    .snav-overlay { display: none !important; }
+  }
+
+  /* SIDEBAR INTERNALS */
+  .snav-logo-wrap {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid #C4B49E;
+  }
+  .snav-logo { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
+  .snav-logo span { color: #7A5C20; }
+
+  .snav-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+  .snav-section-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding: 16px 20px 6px; }
+
+  .snav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 20px; text-decoration: none;
+    font-family: 'Prata', Georgia, serif; font-size: 13px;
+    color: #5C5040; border-left: 2px solid transparent;
+    transition: all .15s;
+  }
+  .snav-link:hover { color: #1C1810; background: #DDD0BF; }
+  .snav-link.active { color: #7A5C20; border-left-color: #7A5C20; background: #DDD0BF; }
+  .snav-link svg { flex-shrink: 0; opacity: .7; }
+  .snav-link.active svg { opacity: 1; }
+
+  .snav-divider { height: 1px; background: #C4B49E; margin: 12px 20px; }
+
+  .snav-credits {
+    margin: 0 16px 16px;
+    background: #EFE7D9; border: 1px solid #C4B49E; padding: 14px 16px;
+    display: none;
+  }
+  .snav-credits.visible { display: block; }
+  .snav-credits-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; margin-bottom: 4px; }
+  .snav-credits-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 28px; color: #7A5C20; line-height: 1; margin-bottom: 10px; }
+  .snav-credits-topup { display: block; width: 100%; padding: 8px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #EFE7D9; text-decoration: none; text-align: center; cursor: pointer; box-sizing: border-box; }
+
+  .snav-foot {
+    padding: 16px 20px; border-top: 1px solid #C4B49E;
+  }
+  .snav-signout { width: 100%; padding: 10px; background: none; border: 1px solid #C4B49E; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; cursor: pointer; transition: all .2s; display: none; }
+  .snav-signout:hover { border-color: #C46028; color: #C46028; }
+  .snav-signin { display: none; width: 100%; padding: 10px; background: #B8860B; border: none; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #fff; text-decoration: none; text-align: center; cursor: pointer; box-sizing: border-box; }
+</style>
+
+<!-- Mobile hamburger -->
+<button class="snav-hamburger" id="snav-ham" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Mobile overlay -->
+<div class="snav-overlay" id="snav-overlay"></div>
+
+<!-- Sidebar -->
+<aside class="snav-sidebar" id="snav-sidebar">
+  <div class="snav-logo-wrap">
+    <div class="snav-logo">GAUK <span>Antiques</span></div>
+  </div>
+
+  <nav class="snav-nav">
+    <div class="snav-section-label">Menu</div>
+    <a href="/" class="snav-link" data-path="/">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Identify
+    </a>
+    <a href="/library" class="snav-link" data-path="/library">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      My Library
+    </a>
+    <a href="/account" class="snav-link" data-path="/account">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      My Account
+    </a>
+    <a href="/pricing" class="snav-link" data-path="/pricing">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Pricing
+    </a>
+
+    <div class="snav-divider"></div>
+
+    <div class="snav-credits" id="snav-credits">
+      <div class="snav-credits-label">Credits</div>
+      <div class="snav-credits-value" id="snav-credits-val">—</div>
+      <a href="/pricing" class="snav-credits-topup">Top Up</a>
+    </div>
+  </nav>
+
+  <div class="snav-foot">
+    <button class="snav-signout" id="snav-signout">Sign Out</button>
+    <a href="/auth/signin" class="snav-signin" id="snav-signin">Sign In</a>
+  </div>
+</aside>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+  const ham = document.getElementById('snav-ham')!
+  const overlay = document.getElementById('snav-overlay')!
+  const sidebar = document.getElementById('snav-sidebar')!
+
+  function openNav() { sidebar.classList.add('open'); overlay.classList.add('open'); ham.classList.add('open') }
+  function closeNav() { sidebar.classList.remove('open'); overlay.classList.remove('open'); ham.classList.remove('open') }
+
+  ham.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav())
+  overlay.addEventListener('click', closeNav)
+
+  // Active links
+  const path = window.location.pathname
+  document.querySelectorAll('.snav-link[data-path]').forEach(el => {
+    const p = (el as HTMLElement).dataset.path!
+    if (p === '/' ? path === '/' : path.startsWith(p)) el.classList.add('active')
+  })
+
+  // Auth
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    document.getElementById('snav-signout')!.style.display = 'block'
+    document.getElementById('snav-signin')!.style.display = 'none'
+    const credits = document.getElementById('snav-credits')!
+    credits.classList.add('visible')
+    const { data } = await supabase.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', SITE_ID).single()
+    document.getElementById('snav-credits-val')!.textContent = String(data?.balance ?? 0)
+    document.getElementById('snav-signout')!.addEventListener('click', async () => {
+      await supabase.auth.signOut(); window.location.href = '/'
+    })
+  } else {
+    document.getElementById('snav-signin')!.style.display = 'block'
+    document.getElementById('snav-signout')!.style.display = 'none'
+  }
+</script>
