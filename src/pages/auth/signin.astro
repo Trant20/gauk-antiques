@@ -64,8 +64,19 @@ import Layout from '../../layouts/Layout.astro'
     btn.textContent = 'Signing in...'
     errorEl!.style.display = 'none'
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { showError(error.message); btn.removeAttribute('disabled'); btn.textContent = 'Sign In'; return }
+
+    const pendingId = localStorage.getItem('pending_identification_id')
+    if (pendingId && data.user?.id) {
+      await fetch('/api/claim-identification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identification_id: pendingId, user_id: data.user.id })
+      })
+      localStorage.removeItem('pending_identification_id')
+    }
+
     window.location.href = '/library'
   })
 
