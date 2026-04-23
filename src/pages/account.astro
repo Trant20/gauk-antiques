@@ -46,12 +46,12 @@ import Layout from '../layouts/Layout.astro'
     <button class="account-signout" id="signout-btn">Sign Out</button>
   </header>
 
-  <div id="auth-gate" class="auth-gate hidden">
+  <div id="auth-gate" class="auth-gate" style="display:none">
     <div class="auth-gate-title">Sign in to view your account</div>
     <a href="/auth/signin" class="account-btn">Sign In</a>
   </div>
 
-  <div id="account-content" class="hidden">
+  <div id="account-content">
     <div id="payment-notice"></div>
 
     <div class="section-cap">Credits</div>
@@ -119,9 +119,9 @@ import Layout from '../layouts/Layout.astro'
   })
 
   if (!session) {
-    document.getElementById('auth-gate')!.classList.remove('hidden')
+    document.getElementById('account-content')!.style.display = 'none'
+    document.getElementById('auth-gate')!.style.display = 'block'
   } else {
-    document.getElementById('account-content')!.classList.remove('hidden')
     document.getElementById('account-email')!.textContent = session.user.email || ''
 
     // Payment notice
