@@ -2,75 +2,85 @@
 import Layout from '../../layouts/Layout.astro'
 ---
 <Layout title="Create Account — GAUK Antiques">
-  <main class="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-8">
-    <div class="w-full max-w-md">
-      <div class="mb-8">
-        <h1 class="text-lg font-semibold tracking-wide">GAUK <span class="text-amber-500">Antiques</span></h1>
-      </div>
-      <h2 class="text-2xl font-bold mb-2">Create account</h2>
-      <p class="text-neutral-400 text-sm mb-8">Save your identifications and build your collection history.</p>
-
-      <div id="error-msg" class="hidden mb-4 p-3 bg-red-950 border border-red-800 rounded-lg text-red-400 text-sm"></div>
-      <div id="success-msg" class="hidden mb-4 p-3 bg-green-950 border border-green-800 rounded-lg text-green-400 text-sm"></div>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm text-neutral-400 mb-1">Email</label>
-          <input id="email" type="email" class="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100 focus:outline-none focus:border-amber-500 transition-colors" placeholder="you@example.com" />
-        </div>
-        <div>
-          <label class="block text-sm text-neutral-400 mb-1">Password</label>
-          <input id="password" type="password" class="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100 focus:outline-none focus:border-amber-500 transition-colors" placeholder="Min 6 characters" />
-        </div>
-        <button id="signup-btn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-colors">
-          Create Account
-        </button>
-      </div>
-
-      <p class="mt-6 text-center text-sm text-neutral-400">
-        Already have an account? <a href="/auth/signin" class="text-amber-500 hover:text-amber-400">Sign in</a>
-      </p>
+<style>
+  body { background: #EFE7D9; color: #1C1810; }
+  .auth-wrap {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 20px 80px;
+  }
+  .auth-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; margin-bottom: 40px; }
+  .auth-logo span { color: #7A5C20; }
+  .auth-card { width: 100%; max-width: 400px; }
+  .auth-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
+  .auth-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 28px; font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 8px; }
+  .auth-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 32px; line-height: 1.7; padding-bottom: 24px; border-bottom: 1px solid #C4B49E; }
+  .auth-field { margin-bottom: 20px; }
+  .auth-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; display: block; margin-bottom: 8px; }
+  .auth-input { width: 100%; padding: 13px 16px; background: #E6DCCB; border: 1px solid #C4B49E; font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; outline: none; box-sizing: border-box; transition: border-color .2s; }
+  .auth-input:focus { border-color: #7A5C20; }
+  .auth-btn { width: 100%; padding: 16px; background: #B8860B; border: none; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #fff; cursor: pointer; margin-top: 8px; transition: background .2s; }
+  .auth-btn:hover { background: #9A7009; }
+  .auth-btn:disabled { opacity: .5; cursor: default; }
+  .auth-error { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #C46028; background: #F5EDE3; border: 1px solid #E8C8A8; padding: 12px 16px; margin-bottom: 20px; display: none; }
+  .auth-footer { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; text-align: center; margin-top: 24px; }
+  .auth-footer a { color: #7A5C20; text-decoration: none; }
+</style>
+<div class="auth-wrap">
+  <div class="auth-logo">GAUK <span>Antiques</span></div>
+  <div class="auth-card">
+    <div class="auth-eyebrow">New Account</div>
+    <div class="auth-title">Create your account</div>
+    <div class="auth-sub">Save identifications, build your collection and unlock full valuations.</div>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-field">
+      <label class="auth-label" for="email">Email address</label>
+      <input class="auth-input" type="email" id="email" placeholder="you@example.com" autocomplete="email" />
     </div>
-  </main>
+    <div class="auth-field">
+      <label class="auth-label" for="password">Password</label>
+      <input class="auth-input" type="password" id="password" placeholder="Minimum 6 characters" autocomplete="new-password" />
+    </div>
+    <button class="auth-btn" id="signup-btn">Create Account</button>
+    <div class="auth-footer">Already have an account? <a href="/auth/signin">Sign in</a></div>
+  </div>
+</div>
 </Layout>
 
 <script>
   import { createClient } from '@supabase/supabase-js'
-
   const supabase = createClient(
     import.meta.env.PUBLIC_SUPABASE_URL,
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY
   )
+  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
   const btn = document.getElementById('signup-btn')
-  const errorMsg = document.getElementById('error-msg')
-  const successMsg = document.getElementById('success-msg')
+  const errorEl = document.getElementById('auth-error')
 
   btn?.addEventListener('click', async () => {
-    const email = (document.getElementById('email') as HTMLInputElement).value
+    const email = (document.getElementById('email') as HTMLInputElement).value.trim()
     const password = (document.getElementById('password') as HTMLInputElement).value
-
-    if (!email || !password) {
-      errorMsg!.textContent = 'Please fill in all fields'
-      errorMsg!.classList.remove('hidden')
-      return
-    }
-
+    if (!email || !password) { showError('Please fill in all fields'); return }
+    if (password.length < 6) { showError('Password must be at least 6 characters'); return }
     btn.setAttribute('disabled', 'true')
     btn.textContent = 'Creating account...'
-    errorMsg!.classList.add('hidden')
+    errorEl!.style.display = 'none'
 
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) { showError(error.message); btn.removeAttribute('disabled'); btn.textContent = 'Create Account'; return }
 
-    if (error) {
-      errorMsg!.textContent = error.message
-      errorMsg!.classList.remove('hidden')
-      btn.removeAttribute('disabled')
-      btn.textContent = 'Create Account'
-    } else {
-      successMsg!.textContent = 'Account created! Check your email to confirm then sign in.'
-      successMsg!.classList.remove('hidden')
-      btn.textContent = 'Account Created'
-    }
+    // Grant signup credits
+    await fetch('/api/grant-credits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: data.user?.id, site_id: SITE_ID })
+    })
+
+    window.location.href = '/welcome'
   })
+
+  function showError(msg: string) {
+    errorEl!.textContent = msg
+    errorEl!.style.display = 'block'
+  }
 </script>
