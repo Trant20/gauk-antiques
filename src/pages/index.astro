@@ -40,8 +40,9 @@ const firstWords = words.slice(0, -1).join(' ')
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 20px 40px;
-      background: linear-gradient(to bottom, rgba(13,11,9,.85), transparent);
+      background: linear-gradient(to bottom, rgba(13,11,9,.5), transparent);
     }
+    .site-header.hidden { display: none; }
     .site-logo {
       font-family: 'Prata', Georgia, serif;
       font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
@@ -612,11 +613,8 @@ const firstWords = words.slice(0, -1).join(' ')
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
-    const signinLink = document.getElementById('signin-link')
-    if (signinLink) {
-      signinLink.textContent = session.user.email?.split('@')[0] || 'Account'
-      signinLink.setAttribute('href', '/library')
-    }
+    const header = document.querySelector('.site-header') as HTMLElement
+    if (header) header.classList.add('hidden')
     const accountTab = document.getElementById('account-tab')
     if (accountTab) accountTab.setAttribute('href', '/library')
   }
