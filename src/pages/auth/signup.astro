@@ -76,6 +76,17 @@ import Layout from '../../layouts/Layout.astro'
       body: JSON.stringify({ user_id: data.user?.id, site_id: SITE_ID })
     })
 
+    // Claim any pending anonymous identification
+    const pendingId = localStorage.getItem('pending_identification_id')
+    if (pendingId && data.user?.id) {
+      await fetch('/api/claim-identification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identification_id: pendingId, user_id: data.user.id })
+      })
+      localStorage.removeItem('pending_identification_id')
+    }
+
     window.location.href = '/welcome'
   })
 
