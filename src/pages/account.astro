@@ -107,8 +107,6 @@ import AppShell from '../layouts/AppShell.astro'
     document.getElementById('credit-balance')!.textContent = String(credits?.balance ?? 0)
 
     // Plan
-    const { data: userPlan } = await supabase.from('user_plans').select('plans(name)').eq('user_id', session.user.id).eq('site_id', SITE_ID).eq('status', 'active').single()
-    if (userPlan) document.getElementById('account-plan')!.textContent = (userPlan as any).plans?.name || 'Free'
 
     // Transactions
     const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', SITE_ID).order('created_at', { ascending: false }).limit(10)
