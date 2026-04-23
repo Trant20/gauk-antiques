@@ -40,9 +40,9 @@ const firstWords = words.slice(0, -1).join(' ')
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 20px 40px;
-      background: linear-gradient(to bottom, rgba(13,11,9,.5), transparent);
+      background: linear-gradient(to bottom, rgba(13,11,9,.7), transparent);
     }
-    .site-header.hidden { display: none; }
+    .site-header.hidden { display: none !important; }
     .site-logo {
       font-family: 'Prata', Georgia, serif;
       font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
@@ -434,12 +434,12 @@ const firstWords = words.slice(0, -1).join(' ')
     @media (max-width: 767px) { .site-header .header-actions { display: none; } }
   </style>
 
-  <header class="site-header a0">
+  <header class="site-header a0" id="site-header">
     <div class="site-logo">GAUK <span>Antiques</span></div>
     <div class="header-actions">
-      <a href="/library" class="header-link">My Library</a>
-      <a href="/auth/signin" class="header-link" id="signin-link">Sign In</a>
-
+      <a href="/pricing" class="header-link">Pricing</a>
+      <a href="/auth/signin" class="header-link">Sign In</a>
+      <a href="/auth/signup" class="header-link" style="padding:8px 16px;border:1px solid rgba(196,168,112,.5);color:var(--goldHi)">Register Free</a>
     </div>
   </header>
 
@@ -613,10 +613,22 @@ const firstWords = words.slice(0, -1).join(' ')
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
-    const header = document.querySelector('.site-header') as HTMLElement
+    // Hide logged-out header
+    const header = document.getElementById('site-header') as HTMLElement
     if (header) header.classList.add('hidden')
+    // Show sidebar
+    const sidebar = document.getElementById('snav-sidebar') as HTMLElement
+    const main = document.querySelector('.snav-main') as HTMLElement
+    if (sidebar) sidebar.style.display = 'flex'
+    if (main && window.innerWidth >= 768) main.style.marginLeft = '220px'
     const accountTab = document.getElementById('account-tab')
-    if (accountTab) accountTab.setAttribute('href', '/library')
+    if (accountTab) accountTab.setAttribute('href', '/account')
+  } else {
+    // Hide sidebar for logged-out users
+    const sidebar = document.getElementById('snav-sidebar') as HTMLElement
+    const ham = document.getElementById('snav-ham') as HTMLElement
+    if (sidebar) sidebar.style.display = 'none'
+    if (ham) ham.style.display = 'none'
   }
 
   const zonePrimary = document.getElementById('zone-primary') as HTMLElement
