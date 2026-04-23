@@ -171,7 +171,6 @@ import AppShell from '../layouts/AppShell.astro'
   const elAuthGate  = document.getElementById('lib-auth-gate')
   const elEmpty     = document.getElementById('lib-empty')
   const elContent   = document.getElementById('lib-content')
-  const elEmail     = document.getElementById('lib-email')
   const elCount     = document.getElementById('lib-count')
   const elSub       = document.getElementById('lib-sub')
   const elGridView  = document.getElementById('lib-grid-view')
@@ -195,11 +194,6 @@ import AppShell from '../layouts/AppShell.astro'
   btnList.addEventListener('click', () => {
     btnList.classList.add('active'); btnGrid.classList.remove('active')
     elListView.classList.remove('hidden'); elGridView.classList.add('hidden')
-  })
-
-  document.getElementById('lib-signout').addEventListener('click', async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
   })
 
   function formatDate(iso) {
@@ -269,7 +263,6 @@ import AppShell from '../layouts/AppShell.astro'
     elLoading.classList.add('hidden')
     elAuthGate.classList.remove('hidden')
   } else {
-    elEmail.textContent = session.user.email || ''
 
     const { data, error } = await supabase
       .from('identifications')
