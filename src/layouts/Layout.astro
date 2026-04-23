@@ -1,5 +1,6 @@
 ---
 const { title } = Astro.props
+import SideNav from '../components/SideNav.astro'
 ---
 <!doctype html>
 <html lang="en">
@@ -74,7 +75,12 @@ const { title } = Astro.props
   </head>
   <body>
     <div class="grain"></div>
-    <slot />
+    <div class="snav-layout">
+      <SideNav />
+      <div class="snav-main">
+        <slot />
+      </div>
+    </div>
     <script>
       const saved = localStorage.getItem('theme')
       const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
