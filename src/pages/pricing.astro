@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/Layout.astro'
+import AppShell from '../layouts/AppShell.astro'
 import { createClient } from '@supabase/supabase-js'
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
@@ -9,13 +9,9 @@ const subs = plans?.filter(p => p.plan_type === 'subscription') || []
 const topups = plans?.filter(p => p.plan_type === 'topup') || []
 const url = Astro.url.searchParams.get('payment')
 ---
-<Layout title="Pricing — GAUK Antiques">
+<AppShell title="Pricing — GAUK Antiques" pageCap="Plans & Credits" pageTitle="Simple, transparent pricing" pageSubtitle="Credits never expire. Use them across any GAUK property. One credit = one identification. Three credits = full valuation report.">
 <style>
   body { background: #EFE7D9; color: #1C1810; }
-  .pricing-wrap { max-width: 680px; margin: 0 auto; padding: 60px 24px 120px; }
-  .pricing-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
-  .pricing-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px, 5vw, 40px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 8px; }
-  .pricing-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 40px; line-height: 1.7; padding-bottom: 32px; border-bottom: 1px solid #C4B49E; }
   .pricing-section-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; }
   .plan-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 28px 24px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .plan-card.featured { background: #1C1810; border-color: #1C1810; }
@@ -48,12 +44,9 @@ const url = Astro.url.searchParams.get('payment')
   .notice.success { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; }
   .notice.cancelled { background: #FFF3E0; border: 1px solid #FFCC80; color: #E65100; }
 </style>
-<div class="pricing-wrap">
-  {url === 'success' && <div class="notice success">Payment successful — credits have been added to your account.</div>}
+{url === 'success' && <div class="notice success">Payment successful — credits have been added to your account.</div>}
   {url === 'cancelled' && <div class="notice cancelled">Payment cancelled — no charge was made.</div>}
   <div class="pricing-eyebrow">Plans & Credits</div>
-  <div class="pricing-title">Simple, transparent pricing</div>
-  <div class="pricing-sub">Credits never expire. Use them across any GAUK property. One credit = one identification. Three credits = full valuation report.</div>
 
   <div class="pricing-section-label">Subscription</div>
   {subs.map(plan => (
@@ -88,8 +81,7 @@ const url = Astro.url.searchParams.get('payment')
     <div class="credit-explain-title">How credits work</div>
     <div class="credit-explain-body">1 credit identifies an item — category, maker, period, condition and value range saved to your library. 3 credits unlocks the full valuation report — expert notes, market history, comparable sales and your options. Credits never expire and work across all GAUK properties.</div>
   </div>
-</div>
-</Layout>
+</AppShell>
 
 <script>
   import { createClient } from '@supabase/supabase-js'
