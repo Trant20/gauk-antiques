@@ -34,7 +34,7 @@ const words = heroHeadline.split(' ')
 const lastWord = words.slice(-1)[0]
 const firstWords = words.slice(0, -1).join(' ')
 ---
-<Layout title="GAUK Antiques — AI Antique Identification & Valuation">
+<Layout title="GAUK Antiques — AI Antique Identification & Valuation" sidebar={false}>
   <style>
     .site-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -616,19 +616,9 @@ const firstWords = words.slice(0, -1).join(' ')
     // Hide logged-out header
     const header = document.getElementById('site-header') as HTMLElement
     if (header) header.classList.add('hidden')
-    // Show sidebar
-    const sidebar = document.getElementById('snav-sidebar') as HTMLElement
-    const main = document.querySelector('.snav-main') as HTMLElement
-    if (sidebar) sidebar.style.display = 'flex'
-    if (main && window.innerWidth >= 768) main.style.marginLeft = '220px'
+
     const accountTab = document.getElementById('account-tab')
     if (accountTab) accountTab.setAttribute('href', '/account')
-  } else {
-    // Hide sidebar for logged-out users
-    const sidebar = document.getElementById('snav-sidebar') as HTMLElement
-    const ham = document.getElementById('snav-ham') as HTMLElement
-    if (sidebar) sidebar.style.display = 'none'
-    if (ham) ham.style.display = 'none'
   }
 
   const zonePrimary = document.getElementById('zone-primary') as HTMLElement
