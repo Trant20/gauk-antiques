@@ -1,0 +1,326 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+)
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const { data: settings } = await supabase.from('site_settings').select('key, value').eq('site_id', SITE_ID)
+const cfg: Record<string, string> = {}
+settings?.forEach(r => { cfg[r.key] = r.value })
+---
+<Layout title="Identify — GAUK Antiques">
+<style>
+  body { background: #EFE7D9; color: #1C1810; }
+
+  .identify-wrap { max-width: 600px; margin: 0 auto; padding: 40px 24px 120px; }
+
+  .identify-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
+  .identify-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,5vw,40px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 8px; }
+  .identify-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 32px; line-height: 1.7; padding-bottom: 24px; border-bottom: 1px solid #C4B49E; }
+
+  /* UPLOAD */
+  .upload-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .upload-slot { position: relative; cursor: pointer; }
+  .upload-slot-zone { width: 100%; aspect-ratio: 1/1; background: #E6DCCB; border: 1px solid #C4B49E; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; transition: background .2s, border-color .2s; position: relative; }
+  .upload-slot-zone:hover { background: #DDD0BF; border-color: #A07830; }
+  .upload-slot-zone.has-image { border-color: #A07830; }
+  .upload-slot img { width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; background: #E6DCCB; display: none; }
+  .upload-slot img.visible { display: block; }
+  .upload-slot-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; margin-top: 8px; text-align: center; }
+  .upload-slot-placeholder { text-align: center; padding: 16px; }
+  .upload-slot-icon { opacity: .5; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; }
+  .upload-slot-hint { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #5C5040; }
+  .slot-required { color: #7A5C20; font-size: 13px; }
+  .slot-optional { color: #1C1810; font-size: 13px; }
+
+  /* SCAN */
+  .scan-overlay { position: absolute; inset: 0; z-index: 10; pointer-events: none; display: none; overflow: hidden; }
+  .scan-overlay.active { display: block; }
+  .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, #C8A060, transparent); animation: scanLine 1.8s ease-in-out infinite; }
+  @keyframes scanLine { 0% { top: 0%; } 100% { top: 100%; } }
+
+  /* BUTTONS */
+  .btn-primary { width: 100%; padding: 15px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; cursor: pointer; transition: opacity .2s; margin-bottom: 8px; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .4; cursor: default; }
+  .btn-ghost { width: 100%; padding: 14px; background: transparent; border: 1px solid #C4B49E; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #5C5040; cursor: pointer; transition: border-color .2s, color .2s; }
+  .btn-ghost:hover { border-color: #7A5C20; color: #1C1810; }
+  .status-text { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-align: center; min-height: 18px; margin-top: 12px; }
+
+  /* RESULT */
+  .result-section { background: #EFE7D9; color: #1C1810; margin-top: 32px; border: 1px solid #C4B49E; }
+  .result-badges { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 0; }
+  .result-category { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; }
+  .result-confidence { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border: 1px solid #C4B49E; color: #8A7A66; }
+  .result-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,4vw,28px); font-weight: 400; font-style: italic; color: #1C1810; padding: 12px 20px 0; margin: 0; }
+  .result-desc { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.9; color: #5C5040; padding: 14px 20px; border-bottom: 1px solid #C4B49E; margin: 0; }
+  .typed-cursor { display: inline-block; width: 2px; height: 1em; background: #7A5C20; margin-left: 2px; vertical-align: text-bottom; animation: blink .7s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .result-id-table { padding: 0 20px; border-bottom: 1px solid #C4B49E; }
+  .result-id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
+  .result-id-row:last-child { border-bottom: none; }
+  .result-id-key { width: 90px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
+  .result-id-val { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; line-height: 1.5; flex: 1; }
+  .result-blur-gate { position: relative; }
+  .result-blur-content { filter: blur(5px); pointer-events: none; user-select: none; }
+  .result-value-block { background: #E6DCCB; border-bottom: 1px solid #C4B49E; padding: 28px 20px; text-align: center; }
+  .result-value-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #8A7A66; margin-bottom: 10px; }
+  .result-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,6vw,44px); font-weight: 400; color: #7A5C20; letter-spacing: -1px; }
+  .result-notes-preview { padding: 24px 20px; background: #EAE1D2; }
+  .result-notes-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-bottom: 10px; }
+  .result-notes-text { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.9; color: #5C5040; }
+  .result-blur-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 10px; background: linear-gradient(to bottom, transparent 0%, rgba(239,231,217,.8) 20%, rgba(239,231,217,.98) 100%); }
+  .result-gate-headline { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-weight: 400; color: #1C1810; text-align: center; line-height: 1.3; }
+  .result-gate-sub { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #5C5040; text-align: center; line-height: 1.7; }
+  .result-gate-register { width: 100%; max-width: 300px; padding: 15px; background: #B8860B; border: none; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #fff; text-decoration: none; display: block; text-align: center; transition: background .2s; }
+  .result-gate-register:hover { background: #9A7009; }
+  .result-footer-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-top: 1px solid #C4B49E; }
+  .result-footer-brand { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; font-style: italic; color: #7A5C20; }
+  .result-footer-ref { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; color: #8A7A66; }
+  .result-view-report { padding: 16px 20px; box-sizing: border-box; width: 100%; display: none; }
+  .result-view-report a { display: block; width: 100%; max-width: 100%; padding: 16px; background: #1C1810; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; text-align: center; text-decoration: none; box-sizing: border-box; }
+  .save-note { display: none; padding: 10px 20px; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; }
+  .save-note.visible { display: block; }
+</style>
+
+<div class="identify-wrap">
+  <div class="identify-eyebrow">New Identification</div>
+  <div class="identify-title">Identify a piece</div>
+  <div class="identify-sub">Upload a clear photograph. Our AI identifies your antique and returns a professional valuation.</div>
+
+  <!-- DUAL UPLOAD -->
+  <div class="upload-dual">
+    <div class="upload-slot" id="slot-primary">
+      <div class="upload-slot-zone" id="zone-primary">
+        <input type="file" id="file-input" accept="image/*" style="display:none" />
+        <img id="preview-img" alt="Front" />
+        <div class="scan-overlay" id="scan-overlay"><div class="scan-line"></div></div>
+        <div class="upload-slot-placeholder" id="placeholder-primary">
+          <div class="upload-slot-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A7A66" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="0"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+          <div class="upload-slot-hint"><span class="slot-required">Front</span> · Required</div>
+        </div>
+      </div>
+      <div class="upload-slot-label">Front / Main View</div>
+    </div>
+    <div class="upload-slot" id="slot-secondary">
+      <div class="upload-slot-zone" id="zone-secondary">
+        <input type="file" id="file-input-secondary" accept="image/*" style="display:none" />
+        <img id="preview-img-secondary" alt="Mark" />
+        <div class="upload-slot-placeholder" id="placeholder-secondary">
+          <div class="upload-slot-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A7A66" stroke-width="1">
+              <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </div>
+          <div class="upload-slot-hint"><span class="slot-optional">Mark</span> · Optional</div>
+        </div>
+      </div>
+      <div class="upload-slot-label">Signature · Mark · Hallmark</div>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="identify-btn" disabled>Identify This Item</button>
+  <button class="btn-ghost" id="camera-btn">Use Camera — Front</button>
+  <div class="status-text" id="status"></div>
+
+  <!-- RESULT -->
+  <div id="result-section" class="result-section" style="display:none">
+    <div class="result-badges">
+      <span class="result-category" id="result-category"></span>
+      <span class="result-confidence" id="result-confidence"></span>
+    </div>
+    <h2 class="result-title" id="result-title"></h2>
+    <p class="result-desc"><span id="typed-text"></span><span class="typed-cursor" id="typed-cursor"></span></p>
+    <div class="result-id-table">
+      <div class="result-id-row" id="row-maker" style="display:none"><div class="result-id-key">Maker</div><div class="result-id-val" id="result-maker"></div></div>
+      <div class="result-id-row" id="row-period" style="display:none"><div class="result-id-key">Period</div><div class="result-id-val" id="result-period"></div></div>
+      <div class="result-id-row" id="row-origin" style="display:none"><div class="result-id-key">Origin</div><div class="result-id-val" id="result-origin"></div></div>
+      <div class="result-id-row"><div class="result-id-key">Condition</div><div class="result-id-val" id="result-condition"></div></div>
+    </div>
+    <div class="result-blur-gate">
+      <div class="result-blur-overlay" id="blur-overlay">
+        <a href="/auth/signup" class="result-gate-register">Register Free to Unlock</a>
+        <div class="result-gate-headline">Your valuation is ready</div>
+        <div class="result-gate-sub">Free account — no payment required.</div>
+      </div>
+      <div class="result-blur-content" id="blur-content">
+        <div class="result-value-block">
+          <div class="result-value-label">Estimated Value</div>
+          <div class="result-value" id="result-value"></div>
+        </div>
+        <div class="result-notes-preview">
+          <div class="result-notes-label">Appraiser Notes</div>
+          <div class="result-notes-text" id="result-notes"></div>
+        </div>
+      </div>
+    </div>
+    <div class="result-view-report" id="result-view-report">
+      <a id="view-report-link" href="#">View Full Report</a>
+    </div>
+    <div class="result-footer-bar">
+      <span class="result-footer-brand">GAUK Antiques</span>
+      <span class="result-footer-ref" id="result-ref"></span>
+    </div>
+    <div class="save-note" id="save-note">Saved to your library</div>
+  </div>
+</div>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const zonePrimary = document.getElementById('zone-primary') as HTMLElement
+  const zoneSecondary = document.getElementById('zone-secondary') as HTMLElement
+  const fileInput = document.getElementById('file-input') as HTMLInputElement
+  const fileInputSecondary = document.getElementById('file-input-secondary') as HTMLInputElement
+  const previewImg = document.getElementById('preview-img') as HTMLImageElement
+  const previewImgSecondary = document.getElementById('preview-img-secondary') as HTMLImageElement
+  const placeholderPrimary = document.getElementById('placeholder-primary') as HTMLElement
+  const placeholderSecondary = document.getElementById('placeholder-secondary') as HTMLElement
+  const identifyBtn = document.getElementById('identify-btn') as HTMLButtonElement
+  const cameraBtn = document.getElementById('camera-btn') as HTMLButtonElement
+  const status = document.getElementById('status') as HTMLElement
+  const scanOverlay = document.getElementById('scan-overlay') as HTMLElement
+
+  let selectedFile: File | null = null
+  let selectedFileSecondary: File | null = null
+
+  zonePrimary.addEventListener('click', () => fileInput.click())
+  zoneSecondary.addEventListener('click', () => fileInputSecondary.click())
+  cameraBtn.addEventListener('click', () => { fileInput.setAttribute('capture', 'environment'); fileInput.click() })
+
+  zonePrimary.addEventListener('dragover', e => { e.preventDefault(); zonePrimary.style.borderColor = '#A07830' })
+  zonePrimary.addEventListener('dragleave', () => { zonePrimary.style.borderColor = '' })
+  zonePrimary.addEventListener('drop', e => { e.preventDefault(); zonePrimary.style.borderColor = ''; const f = (e as DragEvent).dataTransfer?.files?.[0]; if (f) setFile(f) })
+  zoneSecondary.addEventListener('dragover', e => { e.preventDefault(); zoneSecondary.style.borderColor = '#A07830' })
+  zoneSecondary.addEventListener('dragleave', () => { zoneSecondary.style.borderColor = '' })
+  zoneSecondary.addEventListener('drop', e => { e.preventDefault(); zoneSecondary.style.borderColor = ''; const f = (e as DragEvent).dataTransfer?.files?.[0]; if (f) setFileSecondary(f) })
+
+  fileInput.addEventListener('change', () => { if (fileInput.files?.[0]) setFile(fileInput.files[0]) })
+  fileInputSecondary.addEventListener('change', () => { if (fileInputSecondary.files?.[0]) setFileSecondary(fileInputSecondary.files[0]) })
+
+  function setFile(file: File) {
+    selectedFile = file
+    previewImg.src = URL.createObjectURL(file)
+    previewImg.classList.add('visible')
+    placeholderPrimary.style.display = 'none'
+    zonePrimary.classList.add('has-image')
+    identifyBtn.removeAttribute('disabled')
+    document.getElementById('result-section')!.style.display = 'none'
+  }
+
+  function setFileSecondary(file: File) {
+    selectedFileSecondary = file
+    previewImgSecondary.src = URL.createObjectURL(file)
+    previewImgSecondary.classList.add('visible')
+    placeholderSecondary.style.display = 'none'
+    zoneSecondary.classList.add('has-image')
+  }
+
+  identifyBtn.addEventListener('click', async () => {
+    if (!selectedFile) return
+    identifyBtn.setAttribute('disabled', 'true')
+    status.textContent = 'Uploading...'
+    scanOverlay.classList.add('active')
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      const uploadRes = await fetch('/api/upload-url', { method: 'POST', body: formData })
+      const uploadData = await uploadRes.json()
+      if (uploadData.error) throw new Error(uploadData.error)
+
+      let secondaryKey: string | null = null
+      if (selectedFileSecondary) {
+        const secFormData = new FormData()
+        secFormData.append('file', selectedFileSecondary)
+        const secRes = await fetch('/api/upload-url', { method: 'POST', body: secFormData })
+        const secData = await secRes.json()
+        if (!secData.error) secondaryKey = secData.key
+      }
+
+      status.textContent = 'Examining the object...'
+      const user_id = session?.user?.id || null
+      const identifyRes = await fetch('/api/identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: uploadData.key, secondary_key: secondaryKey, user_id })
+      })
+      const identifyData = await identifyRes.json()
+      if (identifyData.error) throw new Error(identifyData.error)
+      const r = identifyData.result
+      status.textContent = ''
+      scanOverlay.classList.remove('active')
+
+      document.getElementById('result-category')!.textContent = r.category
+      document.getElementById('result-confidence')!.textContent = r.confidence
+      document.getElementById('result-title')!.textContent = r.subcategory
+      document.getElementById('result-condition')!.textContent = r.condition
+
+      const notesEl = document.getElementById('result-notes')!
+      const notes = [r.condition_notes, r.confidence_notes].filter(Boolean).join(' ')
+      if (notes) notesEl.textContent = notes
+
+      const typedText = document.getElementById('typed-text')!
+      const typedCursor = document.getElementById('typed-cursor')!
+      const desc = r.description || ''
+      let ti = 0
+      typedText.textContent = ''
+      typedCursor.style.display = 'inline-block'
+      function typeChar() {
+        if (ti < desc.length) { typedText.textContent += desc[ti]; ti++; setTimeout(typeChar, 22) }
+        else { typedCursor.style.display = 'none' }
+      }
+      setTimeout(typeChar, 400)
+
+      document.getElementById('result-value')!.textContent = '\u00a3' + (r.value_range_low || 0).toLocaleString() + ' \u2013 \u00a3' + (r.value_range_high || 0).toLocaleString()
+
+      if (r.maker) { document.getElementById('result-maker')!.textContent = r.maker; document.getElementById('row-maker')!.style.display = 'flex' }
+      if (r.period) { document.getElementById('result-period')!.textContent = r.period + (r.circa ? ' \u2014 ' + r.circa : ''); document.getElementById('row-period')!.style.display = 'flex' }
+      if (r.country_of_origin) { document.getElementById('result-origin')!.textContent = r.country_of_origin; document.getElementById('row-origin')!.style.display = 'flex' }
+
+      if (identifyData.id) {
+        localStorage.setItem('pending_identification_id', identifyData.id)
+        const ref = document.getElementById('result-ref')!
+        ref.textContent = 'REF ' + identifyData.id.slice(0,8).toUpperCase()
+        if (session) {
+          const viewReport = document.getElementById('result-view-report')!
+          const viewLink = document.getElementById('view-report-link') as HTMLAnchorElement
+          viewReport.style.display = 'block'
+          viewLink.href = '/valuation/' + identifyData.id
+        }
+      }
+
+      document.getElementById('result-section')!.style.display = 'block'
+      document.getElementById('result-section')!.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+      if (session) {
+        const bc = document.getElementById('blur-content')!
+        const bo = document.getElementById('blur-overlay')!
+        bc.style.filter = 'none'
+        bo.style.display = 'none'
+        const saveNote = document.getElementById('save-note')!
+        if (user_id && identifyData.id) saveNote.classList.add('visible')
+      }
+
+    } catch (err: any) {
+      status.textContent = err.message
+      scanOverlay.classList.remove('active')
+    } finally {
+      identifyBtn.removeAttribute('disabled')
+    }
+  })
+</script>
