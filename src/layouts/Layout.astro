@@ -78,12 +78,16 @@ import SideNav from '../components/SideNav.astro'
   </head>
   <body>
     <div class="grain"></div>
-    <div class="snav-layout">
-      <SideNav />
-      <div class="snav-main">
-        <slot />
+    {sidebar ? (
+      <div class="snav-layout">
+        <SideNav />
+        <div class="snav-main">
+          <slot />
+        </div>
       </div>
-    </div>
+    ) : (
+      <slot />
+    )}
     <script>
       const saved = localStorage.getItem('theme')
       const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
