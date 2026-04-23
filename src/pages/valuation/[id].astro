@@ -732,10 +732,10 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     const balanceEl = document.getElementById('enrich-credit-balance')
 
     // Check auth and credits
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+    const { createClient } = await import('@supabase/supabase-js')
     const _sb = createClient(
-      document.querySelector('meta[name="supabase-url"]').content,
-      document.querySelector('meta[name="supabase-anon"]').content
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     )
     const { data: { session } } = await _sb.auth.getSession()
 
