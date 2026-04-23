@@ -605,7 +605,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         )}
       </>
     ) : (
-      <div id="enrich-cta" style="padding:40px 20px;text-align:center;border-top:1px solid #C4B49E;">
+      <div id="enrich-cta" data-item-id={item.id} data-has-enrichment={enrichment ? "true" : "false"} data-result-json={JSON.stringify(r)} style="padding:40px 20px;text-align:center;border-top:1px solid #C4B49E;">
         <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#7A5C20;margin-bottom:12px;">Full Valuation Report</div>
         <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:22px;font-style:italic;color:#1C1810;margin-bottom:10px;">Unlock the complete report</div>
         <div style="font-family:'Prata',Georgia,serif;font-size:14px;color:#8A7A66;line-height:1.8;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;">Expert notes, maker biography, market history, comparable sales, desirability index and your options.</div>
@@ -812,5 +812,114 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       })
     }
   })();
+  }
+</script>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+
+  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+  const enrichCta = document.getElementById('enrich-cta')
+  if (!enrichCta || enrichCta.dataset.hasEnrichment === 'true') {
+    // Already enriched or no CTA — nothing to do
+  } else {
+    const itemId = enrichCta.dataset.itemId
+    const enrichLoading = document.getElementById('enrich-loading')
+    const enrichBtn = document.getElementById('enrich-btn')
+    const enrichTopup = document.getElementById('enrich-topup')
+    const enrichRegister = document.getElementById('enrich-register')
+    const balanceEl = document.getElementById('enrich-credit-balance')
+
+    const sb = createClient(
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    )
+
+    ;(async () => {
+      const { data: { session } } = await sb.auth.getSession()
+
+      if (!session) {
+        if (enrichBtn) enrichBtn.style.display = 'none'
+        if (enrichRegister) enrichRegister.style.display = 'block'
+        if (balanceEl) balanceEl.textContent = '0'
+        return
+      }
+
+      // Get balance from server-side API
+      const creditsRes = await fetch(`/api/credits?site_id=${SITE_ID}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+      const creditsData = await creditsRes.json()
+      const balance = creditsData.balance ?? 0
+      if (balanceEl) balanceEl.textContent = String(balance)
+
+      if (balance < 2) {
+        if (enrichBtn) enrichBtn.style.display = 'none'
+        if (enrichTopup) enrichTopup.style.display = 'block'
+        return
+      }
+
+      enrichBtn?.addEventListener('click', async () => {
+        enrichBtn.textContent = 'Generating...'
+        enrichBtn.setAttribute('disabled', 'true')
+        if (enrichCta) enrichCta.style.display = 'none'
+        if (enrichLoading) enrichLoading.style.display = 'block'
+
+        const stages = [
+          'Consulting auction records',
+          'Researching maker history',
+          'Analysing comparable sales',
+          'Building market value data',
+          'Compiling expert notes',
+          'Preparing your full report'
+        ]
+        const progressEl = document.getElementById('enrich-progress')
+        const stageEl = document.getElementById('enrich-stage')
+        const steps = [0,1,2,3,4].map(i => document.getElementById('step-' + i))
+        let currentStep = 0
+        const stepDuration = 14000 / stages.length
+
+        function advanceStep() {
+          if (!progressEl || !stageEl) return
+          const pct = Math.min(85, Math.round((currentStep / (stages.length - 1)) * 85))
+          progressEl.style.width = pct + '%'
+          stageEl.textContent = stages[currentStep]
+          steps.forEach((s, i) => {
+            if (!s) return
+            s.classList.remove('active', 'done')
+            if (i < currentStep) s.classList.add('done')
+            else if (i === currentStep) s.classList.add('active')
+          })
+          if (currentStep < stages.length - 1) { currentStep++; setTimeout(advanceStep, stepDuration) }
+        }
+        setTimeout(advanceStep, 600)
+
+        // Deduct 2 credits
+        await fetch('/api/deduct-credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({ site_id: SITE_ID, identification_id: itemId, amount: 2 })
+        })
+
+        // Fire enrichment
+        fetch('/api/enrich', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identification_id: itemId, result: JSON.parse(enrichCta.dataset.resultJson || '{}') })
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.enrichment) {
+            if (progressEl) progressEl.style.width = '100%'
+            if (stageEl) stageEl.textContent = 'Report ready'
+            setTimeout(() => window.location.reload(), 400)
+          }
+        })
+        .catch(() => {
+          if (enrichLoading) enrichLoading.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:12px;color:#8A7A66;padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>'
+        })
+      })
+    })()
   }
 </script>
