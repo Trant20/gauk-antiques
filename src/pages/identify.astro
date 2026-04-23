@@ -1,26 +1,11 @@
 ---
-import Layout from '../layouts/Layout.astro'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-)
-
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-const { data: settings } = await supabase.from('site_settings').select('key, value').eq('site_id', SITE_ID)
-const cfg: Record<string, string> = {}
-settings?.forEach(r => { cfg[r.key] = r.value })
+import AppShell from '../layouts/AppShell.astro'
 ---
-<Layout title="Identify — GAUK Antiques">
+<AppShell title="Identify — GAUK Antiques" pageCap="New Identification" pageTitle="Identify a piece" pageSubtitle="Upload a clear photograph. Our AI identifies your antique and returns a professional valuation.">
 <style>
   body { background: #EFE7D9; color: #1C1810; }
 
-  .identify-wrap { max-width: 600px; margin: 0 auto; padding: 40px 24px 120px; }
 
-  .identify-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
-  .identify-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,5vw,40px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 8px; }
-  .identify-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 32px; line-height: 1.7; padding-bottom: 24px; border-bottom: 1px solid #C4B49E; }
 
   /* UPLOAD */
   .upload-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
@@ -87,11 +72,7 @@ settings?.forEach(r => { cfg[r.key] = r.value })
   .save-note.visible { display: block; }
 </style>
 
-<div class="identify-wrap">
-  <div class="identify-eyebrow">New Identification</div>
-  <div class="identify-title">Identify a piece</div>
-  <div class="identify-sub">Upload a clear photograph. Our AI identifies your antique and returns a professional valuation.</div>
-
+<div>
   <!-- DUAL UPLOAD -->
   <div class="upload-dual">
     <div class="upload-slot" id="slot-primary">
@@ -172,7 +153,7 @@ settings?.forEach(r => { cfg[r.key] = r.value })
     <div class="save-note" id="save-note">Saved to your library</div>
   </div>
 </div>
-</Layout>
+</AppShell>
 
 <script>
   import { createClient } from '@supabase/supabase-js'
