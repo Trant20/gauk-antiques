@@ -1,6 +1,5 @@
 ---
-const { title, sidebar = true } = Astro.props
-import SideNav from '../components/SideNav.astro'
+const { title } = Astro.props
 ---
 <!doctype html>
 <html lang="en">
@@ -34,25 +33,9 @@ import SideNav from '../components/SideNav.astro'
         --radius:   2px;
       }
 
-      [data-theme="light"] {
-        --bg:       #F5F0E8;
-        --surface:  #EDE8DC;
-        --card:     #E8E0D0;
-        --lift:     #DDD5C2;
-        --border:   #C8BFA8;
-        --borderHi: #A89880;
-        --text:     #1A1710;
-        --textDim:  #5A5040;
-        --textMute: #8A8070;
-        --gold:     #8A6830;
-        --goldHi:   #A8853A;
-        --goldLo:   #C4A870;
-      }
-
       html { background: #EFE7D9; }
       body {
-        background: #EFE7D9;
-        color: var(--text);
+        background: #EFE7D9; color: #1C1810;
         font-family: 'Prata', Georgia, serif;
         font-size: 16px;
         -webkit-font-smoothing: antialiased;
@@ -65,9 +48,6 @@ import SideNav from '../components/SideNav.astro'
         background-size: 180px;
       }
 
-      .snav-layout { display: flex; min-height: 100vh; }
-      .snav-main { margin-left: 220px; flex: 1; min-width: 0; width: calc(100% - 220px); }
-      @media (max-width: 767px) { .snav-main { margin-left: 0; width: 100%; } }
       @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
       .a0 { animation: fadeUp .75s cubic-bezier(.22,1,.36,1) both; }
       .a1 { animation: fadeUp .75s .1s cubic-bezier(.22,1,.36,1) both; }
@@ -78,20 +58,6 @@ import SideNav from '../components/SideNav.astro'
   </head>
   <body>
     <div class="grain"></div>
-    {sidebar ? (
-      <div class="snav-layout">
-        <SideNav />
-        <div class="snav-main">
-          <slot />
-        </div>
-      </div>
-    ) : (
-      <slot />
-    )}
-    <script>
-      const saved = localStorage.getItem('theme')
-      const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-      document.documentElement.setAttribute('data-theme', saved || preferred)
-    </script>
+    <slot />
   </body>
 </html>
