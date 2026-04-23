@@ -88,22 +88,6 @@ import Layout from '../layouts/Layout.astro'
   .lib-state-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; max-width: 260px; line-height: 1.7; }
   .lib-state-btn { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; background: #1C1810; border: none; padding: 14px 28px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 8px; }
 
-  /* BOTTOM NAV */
-  .lib-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(239,231,217,.96); backdrop-filter: blur(20px);
-    border-top: 1px solid #C4B49E;
-    display: flex;
-  }
-  .lib-nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 10px 8px 14px;
-    text-decoration: none; color: #8A7A66;
-    font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
-    gap: 5px; transition: color .15s;
-  }
-  .lib-nav-item.active { color: #7A5C20; }
-  .lib-nav-item:hover { color: #1C1810; }
 
   /* LOADING SHIMMER */
   @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
@@ -203,29 +187,6 @@ import Layout from '../layouts/Layout.astro'
 
 </div>
 
-<!-- BOTTOM NAV -->
-<nav class="lib-nav">
-  <a href="/" class="lib-nav-item">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-    Identify
-  </a>
-  <a href="/library" class="lib-nav-item active">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-    </svg>
-    Library
-  </a>
-  <a href="/account" class="lib-nav-item" id="nav-account">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
-    </svg>
-    Account
-  </a>
-</nav>
 
 <script>
   import { createClient } from '@supabase/supabase-js'
