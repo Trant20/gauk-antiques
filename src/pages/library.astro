@@ -1,25 +1,13 @@
 ---
-import Layout from '../layouts/Layout.astro'
+import AppShell from '../layouts/AppShell.astro'
 ---
-<Layout title="My Library — GAUK Antiques">
+<AppShell title="My Library — GAUK Antiques" pageCap="Collection" pageTitle="My Library" pageSubtitle="Your identification history.">
 <style is:global>
   body { background: #EFE7D9; color: #1C1810; }
 
   /* HEADER */
-  .lib-header {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px;
-    background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
-
-  }
-  .lib-user { display: flex; align-items: center; gap: 14px; }
 
   /* PAGE TITLE */
-  .lib-title-wrap { padding: 28px 20px 0; }
-  .lib-page-cap { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; }
-  .lib-page-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(24px, 6vw, 36px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 4px; }
-  .lib-page-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; padding-bottom: 20px; border-bottom: 1px solid #C4B49E; }
 
   /* TOOLBAR */
   .lib-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
@@ -109,11 +97,7 @@ import Layout from '../layouts/Layout.astro'
 
   <!-- LOADING STATE -->
   <div id="lib-loading">
-    <div class="lib-title-wrap">
-      <div class="lib-page-cap">Collection</div>
-      <div class="lib-page-title">My Library</div>
-      <div class="lib-page-sub">Loading your identifications&hellip;</div>
-    </div>
+
     <div class="lib-toolbar">
       <div style="background:#E6DCCB;width:80px;height:10px;border-radius:2px"></div>
     </div>
@@ -135,11 +119,7 @@ import Layout from '../layouts/Layout.astro'
 
   <!-- EMPTY STATE -->
   <div id="lib-empty" class="hidden">
-    <div class="lib-title-wrap">
-      <div class="lib-page-cap">Collection</div>
-      <div class="lib-page-title">My Library</div>
-      <div class="lib-page-sub" style="border-bottom:none">No identifications yet.</div>
-    </div>
+
     <div class="lib-state">
       <svg class="lib-state-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
         <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
@@ -153,11 +133,7 @@ import Layout from '../layouts/Layout.astro'
 
   <!-- CONTENT -->
   <div id="lib-content" class="hidden">
-    <div class="lib-title-wrap">
-      <div class="lib-page-cap">Collection</div>
-      <div class="lib-page-title">My Library</div>
-      <div class="lib-page-sub" id="lib-sub">Your identification history.</div>
-    </div>
+
     <div class="lib-toolbar">
       <div class="lib-count" id="lib-count"></div>
       <div class="view-toggle">
@@ -315,4 +291,4 @@ import Layout from '../layouts/Layout.astro'
     }
   }
 </script>
-</Layout>
+</AppShell>
