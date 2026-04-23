@@ -11,7 +11,6 @@ import Layout from '../layouts/Layout.astro'
     padding: 14px 0; background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
     border-bottom: 1px solid #C4B49E; margin-bottom: 40px;
   }
-  .account-signout { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; background: none; border: 1px solid #C4B49E; padding: 6px 12px; cursor: pointer; }
   .section-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
   .section-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
   .account-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 24px; margin-bottom: 12px; }
@@ -37,7 +36,6 @@ import Layout from '../layouts/Layout.astro'
 </style>
 <div class="account-wrap">
   <header class="account-header">
-    <button class="account-signout" id="signout-btn">Sign Out</button>
   </header>
 
   <div id="auth-gate" class="auth-gate" style="display:none">
