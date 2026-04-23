@@ -13,8 +13,6 @@ const url = Astro.url.searchParams.get('payment')
 <style>
   body { background: #EFE7D9; color: #1C1810; }
   .pricing-wrap { max-width: 680px; margin: 0 auto; padding: 60px 24px 120px; }
-  .pricing-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; margin-bottom: 48px; }
-  .pricing-logo span { color: #7A5C20; }
   .pricing-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
   .pricing-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px, 5vw, 40px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 8px; }
   .pricing-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 40px; line-height: 1.7; padding-bottom: 32px; border-bottom: 1px solid #C4B49E; }
@@ -51,7 +49,6 @@ const url = Astro.url.searchParams.get('payment')
   .notice.cancelled { background: #FFF3E0; border: 1px solid #FFCC80; color: #E65100; }
 </style>
 <div class="pricing-wrap">
-  <div class="pricing-logo"><a href="/" style="text-decoration:none;color:inherit">GAUK <span>Antiques</span></a></div>
   {url === 'success' && <div class="notice success">Payment successful — credits have been added to your account.</div>}
   {url === 'cancelled' && <div class="notice cancelled">Payment cancelled — no charge was made.</div>}
   <div class="pricing-eyebrow">Plans & Credits</div>
