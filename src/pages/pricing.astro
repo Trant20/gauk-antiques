@@ -1,0 +1,120 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { createClient } from '@supabase/supabase-js'
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+const { data: plans } = await supabase.from('plans').select('*').eq('site_id', SITE_ID).eq('active', true).order('sort_order')
+const subs = plans?.filter(p => p.plan_type === 'subscription') || []
+const topups = plans?.filter(p => p.plan_type === 'topup') || []
+const url = Astro.url.searchParams.get('payment')
+---
+<Layout title="Pricing — GAUK Antiques">
+<style>
+  body { background: #EFE7D9; color: #1C1810; }
+  .pricing-wrap { max-width: 680px; margin: 0 auto; padding: 60px 24px 120px; }
+  .pricing-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; margin-bottom: 48px; }
+  .pricing-logo span { color: #7A5C20; }
+  .pricing-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
+  .pricing-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px, 5vw, 40px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 8px; }
+  .pricing-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 40px; line-height: 1.7; padding-bottom: 32px; border-bottom: 1px solid #C4B49E; }
+  .pricing-section-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; }
+  .plan-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 28px 24px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .plan-card.featured { background: #1C1810; border-color: #1C1810; }
+  .plan-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
+  .plan-card.featured .plan-name { color: #EFE7D9; }
+  .plan-detail { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; }
+  .plan-card.featured .plan-detail { color: #8A7A66; }
+  .plan-right { text-align: right; flex-shrink: 0; }
+  .plan-price { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 28px; color: #7A5C20; line-height: 1; }
+  .plan-card.featured .plan-price { color: #C8A060; }
+  .plan-period { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; margin-bottom: 12px; }
+  .plan-btn { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 20px; border: 1px solid #C4B49E; background: transparent; color: #5C5040; cursor: pointer; transition: all .2s; white-space: nowrap; }
+  .plan-btn:hover { border-color: #7A5C20; color: #1C1810; }
+  .plan-card.featured .plan-btn { background: #C8A060; border-color: #C8A060; color: #1C1810; }
+  .plan-credits { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-top: 4px; }
+  .plan-card.featured .plan-credits { color: #C8A060; }
+  .divider { height: 1px; background: #C4B49E; margin: 32px 0; }
+  .topup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 32px; }
+  @media (max-width: 480px) { .topup-grid { grid-template-columns: 1fr; } }
+  .topup-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 20px 16px; text-align: center; }
+  .topup-credits { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 32px; color: #7A5C20; line-height: 1; }
+  .topup-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; margin: 4px 0 12px; }
+  .topup-price { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; color: #1C1810; margin-bottom: 12px; }
+  .topup-btn { width: 100%; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 10px; border: 1px solid #C4B49E; background: transparent; color: #5C5040; cursor: pointer; transition: all .2s; }
+  .topup-btn:hover { border-color: #7A5C20; color: #1C1810; }
+  .credit-explain { background: #E6DCCB; border-left: 3px solid #7A5C20; padding: 20px 24px; margin-top: 32px; }
+  .credit-explain-title { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
+  .credit-explain-body { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.8; }
+  .notice { font-family: 'Prata', Georgia, serif; font-size: 14px; padding: 12px 16px; margin-bottom: 24px; }
+  .notice.success { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; }
+  .notice.cancelled { background: #FFF3E0; border: 1px solid #FFCC80; color: #E65100; }
+</style>
+<div class="pricing-wrap">
+  <div class="pricing-logo"><a href="/" style="text-decoration:none;color:inherit">GAUK <span>Antiques</span></a></div>
+  {url === 'success' && <div class="notice success">Payment successful — credits have been added to your account.</div>}
+  {url === 'cancelled' && <div class="notice cancelled">Payment cancelled — no charge was made.</div>}
+  <div class="pricing-eyebrow">Plans & Credits</div>
+  <div class="pricing-title">Simple, transparent pricing</div>
+  <div class="pricing-sub">Credits never expire. Use them across any GAUK property. One credit = one identification. Three credits = full valuation report.</div>
+
+  <div class="pricing-section-label">Subscription</div>
+  {subs.map(plan => (
+    <div class={`plan-card${plan.name === 'Pro' ? ' featured' : ''}`}>
+      <div>
+        <div class="plan-name">{plan.name}</div>
+        <div class="plan-detail">{plan.credits} credits per month · roll over up to 50</div>
+        <div class="plan-credits">{plan.credits} credits / month</div>
+      </div>
+      <div class="plan-right">
+        <div class="plan-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+        <div class="plan-period">{plan.name.includes('Annual') ? 'per year' : 'per month'}</div>
+        <button class="plan-btn" data-price={plan.stripe_price_id} data-mode="subscription">Subscribe</button>
+      </div>
+    </div>
+  ))}
+
+  <div class="divider"></div>
+  <div class="pricing-section-label">One-time Packs</div>
+  <div class="topup-grid">
+    {topups.map(plan => (
+      <div class="topup-card">
+        <div class="topup-credits">{plan.credits}</div>
+        <div class="topup-label">Credits</div>
+        <div class="topup-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+        <button class="topup-btn" data-price={plan.stripe_price_id} data-mode="payment">{plan.name}</button>
+      </div>
+    ))}
+  </div>
+
+  <div class="credit-explain">
+    <div class="credit-explain-title">How credits work</div>
+    <div class="credit-explain-body">1 credit identifies an item — category, maker, period, condition and value range saved to your library. 3 credits unlocks the full valuation report — expert notes, market history, comparable sales and your options. Credits never expire and work across all GAUK properties.</div>
+  </div>
+</div>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  document.querySelectorAll('[data-price]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!session) { window.location.href = '/auth/signup'; return }
+      const price_id = (btn as HTMLElement).dataset.price
+      const mode = (btn as HTMLElement).dataset.mode
+      ;(btn as HTMLButtonElement).textContent = 'Loading...'
+      ;(btn as HTMLButtonElement).setAttribute('disabled', 'true')
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price_id, mode, user_id: session.user.id, email: session.user.email })
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else { alert('Checkout error — please try again'); (btn as HTMLButtonElement).removeAttribute('disabled') }
+    })
+  })
+</script>

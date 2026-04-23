@@ -1,0 +1,158 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+<Layout title="My Account — GAUK Antiques">
+<style>
+  body { background: #EFE7D9; color: #1C1810; }
+  .account-wrap { max-width: 560px; margin: 0 auto; padding: 0 24px 120px; }
+  .account-header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
+    border-bottom: 1px solid #C4B49E; margin-bottom: 40px;
+  }
+  .account-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
+  .account-logo span { color: #7A5C20; }
+  .account-signout { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; background: none; border: 1px solid #C4B49E; padding: 6px 12px; cursor: pointer; }
+  .section-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .section-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .account-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 24px; margin-bottom: 12px; }
+  .credit-big { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 64px; color: #7A5C20; line-height: 1; }
+  .credit-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-top: 6px; }
+  .account-email { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; margin-bottom: 4px; }
+  .account-plan { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; }
+  .account-btn { display: block; width: 100%; padding: 14px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; cursor: pointer; text-decoration: none; text-align: center; margin-bottom: 8px; transition: opacity .2s; }
+  .account-btn:hover { opacity: .85; }
+  .account-btn.ghost { background: transparent; border: 1px solid #C4B49E; color: #5C5040; }
+  .account-btn.ghost:hover { border-color: #7A5C20; color: #1C1810; }
+  .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-reason { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #5C5040; }
+  .tx-date { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
+  .tx-delta { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; }
+  .tx-delta.pos { color: #2A7060; }
+  .tx-delta.neg { color: #C46028; }
+  .auth-gate { text-align: center; padding: 80px 24px; }
+  .auth-gate-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 24px; font-style: italic; color: #5C5040; margin-bottom: 16px; }
+  .notice { font-family: 'Prata', Georgia, serif; font-size: 14px; padding: 12px 16px; margin-bottom: 24px; }
+  .notice.success { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; }
+  .lib-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(239,231,217,.96); backdrop-filter: blur(20px); border-top: 1px solid #C4B49E; display: flex; }
+  .lib-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 8px 14px; text-decoration: none; color: #8A7A66; font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; gap: 5px; transition: color .15s; }
+  .lib-nav-item.active { color: #7A5C20; }
+</style>
+<div class="account-wrap">
+  <header class="account-header">
+    <div class="account-logo">GAUK <span>Antiques</span></div>
+    <button class="account-signout" id="signout-btn">Sign Out</button>
+  </header>
+
+  <div id="auth-gate" class="auth-gate hidden">
+    <div class="auth-gate-title">Sign in to view your account</div>
+    <a href="/auth/signin" class="account-btn">Sign In</a>
+  </div>
+
+  <div id="account-content" class="hidden">
+    <div id="payment-notice"></div>
+
+    <div class="section-cap">Credits</div>
+    <div class="account-card" style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div class="credit-big" id="credit-balance">—</div>
+        <div class="credit-label">Credits remaining</div>
+      </div>
+      <div style="text-align:right">
+        <div class="account-email" id="account-email"></div>
+        <div class="account-plan" id="account-plan">Free</div>
+      </div>
+    </div>
+
+    <a href="/pricing" class="account-btn">Top Up Credits</a>
+    <a href="/pricing" class="account-btn ghost">View All Plans</a>
+
+    <div style="height:32px"></div>
+    <div class="section-cap">Recent Activity</div>
+    <div class="account-card" id="tx-list">
+      <div style="font-family:'Prata',Georgia,serif;font-size:14px;color:#8A7A66;">Loading…</div>
+    </div>
+
+    <div style="height:32px"></div>
+    <div class="section-cap">Library</div>
+    <a href="/library" class="account-btn ghost">View My Collection</a>
+  </div>
+</div>
+
+<nav class="lib-nav">
+  <a href="/" class="lib-nav-item">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Identify
+  </a>
+  <a href="/library" class="lib-nav-item">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Library
+  </a>
+  <a href="/account" class="lib-nav-item active">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Account
+  </a>
+</nav>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+  const REASON_LABELS: Record<string, string> = {
+    signup_bonus: 'Signup bonus',
+    subscription_grant: 'Subscription grant',
+    topup_purchase: 'Top-up purchase',
+    identification_used: 'Identification',
+    admin_adjustment: 'Admin adjustment',
+    rollover: 'Rollover'
+  }
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  document.getElementById('signout-btn')?.addEventListener('click', async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  })
+
+  if (!session) {
+    document.getElementById('auth-gate')!.classList.remove('hidden')
+  } else {
+    document.getElementById('account-content')!.classList.remove('hidden')
+    document.getElementById('account-email')!.textContent = session.user.email || ''
+
+    // Payment notice
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('payment') === 'success') {
+      const n = document.getElementById('payment-notice')!
+      n.innerHTML = '<div class="notice success">Payment successful — credits added to your account.</div>'
+    }
+
+    // Credits
+    const { data: credits } = await supabase.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', SITE_ID).single()
+    document.getElementById('credit-balance')!.textContent = String(credits?.balance ?? 0)
+
+    // Plan
+    const { data: userPlan } = await supabase.from('user_plans').select('plans(name)').eq('user_id', session.user.id).eq('site_id', SITE_ID).eq('status', 'active').single()
+    if (userPlan) document.getElementById('account-plan')!.textContent = (userPlan as any).plans?.name || 'Free'
+
+    // Transactions
+    const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', SITE_ID).order('created_at', { ascending: false }).limit(10)
+    const txList = document.getElementById('tx-list')!
+    if (!txs || txs.length === 0) {
+      txList.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:14px;color:#8A7A66;">No activity yet.</div>'
+    } else {
+      txList.innerHTML = txs.map(tx => `
+        <div class="tx-row">
+          <div>
+            <div class="tx-reason">${REASON_LABELS[tx.reason] || tx.reason}</div>
+            <div class="tx-date">${new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          </div>
+          <div class="tx-delta ${tx.delta > 0 ? 'pos' : 'neg'}">${tx.delta > 0 ? '+' : ''}${tx.delta}</div>
+        </div>`).join('')
+    }
+  }
+</script>
