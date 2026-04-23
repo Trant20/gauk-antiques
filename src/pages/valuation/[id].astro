@@ -714,95 +714,12 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       document.getElementById('share-btn').textContent = 'Copied'
     }
   })
-
-  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-
-  if (!hasEnrichment) {
-  (async () => {
-    const enrichCta = document.getElementById('enrich-cta')
-    const enrichLoading = document.getElementById('enrich-loading')
-    const enrichBtn = document.getElementById('enrich-btn')
-    const enrichTopup = document.getElementById('enrich-topup')
-    const enrichRegister = document.getElementById('enrich-register')
-
-    // Check auth and credits
-    const { createClient } = await import('@supabase/supabase-js')
-    const _sb = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-    )
-    const { data: { session } } = await _sb.auth.getSession()
-
-    if (!session) {
-      enrichBtn.style.display = 'none'
-      enrichRegister.style.display = 'block'
-    } else {
-      // Use server-side API to avoid RLS issues
-      const creditsRes = await fetch(`/api/credits?site_id=${SITE_ID}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
-      const creditsData = await creditsRes.json()
-      const balance = creditsData.balance ?? 0
-
-      if (balance < 2) {
-        enrichBtn.style.display = 'none'
-        enrichTopup.style.display = 'block'
-      }
-
-      enrichBtn?.addEventListener('click', async () => {
-        enrichBtn.textContent = 'Generating...'
-        enrichBtn.setAttribute('disabled', 'true')
-        enrichCta.style.display = 'none'
-        enrichLoading.style.display = 'block'
-
-        const stages = ['Consulting auction records','Researching maker history','Analysing comparable sales','Building market value data','Compiling expert notes','Preparing your full report']
-        const progressEl = document.getElementById('enrich-progress')
-        const stageEl = document.getElementById('enrich-stage')
-        const steps = [0,1,2,3,4].map(i => document.getElementById('step-' + i))
-        let currentStep = 0
-        const stepDuration = 14000 / stages.length
-
-        function advanceStep() {
-          if (!progressEl || !stageEl) return
-          const pct = Math.min(85, Math.round((currentStep / (stages.length - 1)) * 85))
-          progressEl.style.width = pct + '%'
-          stageEl.textContent = stages[currentStep]
-          steps.forEach((s, i) => {
-            if (!s) return
-            s.classList.remove('active', 'done')
-            if (i < currentStep) s.classList.add('done')
-            else if (i === currentStep) s.classList.add('active')
-          })
-          if (currentStep < stages.length - 1) { currentStep++; setTimeout(advanceStep, stepDuration) }
-        }
-        setTimeout(advanceStep, 600)
-
-        // Deduct 2 credits via server-side API
-        await fetch('/api/deduct-credits', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-          body: JSON.stringify({ site_id: SITE_ID, identification_id: itemId, amount: 2 })
-        })
-
-        fetch('/api/enrich', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identification_id: itemId, result: resultJson })
-        })
-        .then(r => r.json())
-        .then(data => {
-          if (data.enrichment) {
-            if (progressEl) progressEl.style.width = '100%'
-            if (stageEl) stageEl.textContent = 'Report ready'
-            setTimeout(() => window.location.reload(), 400)
-          }
-        })
-        .catch(() => {
-          enrichLoading.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:12px;color:#8A7A66;padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>'
-        })
-      })
-    }
-  })();
+  // Pass vars to data attributes for the module script below
+  const cta = document.getElementById('enrich-cta')
+  if (cta) {
+    cta.dataset.itemId = itemId
+    cta.dataset.hasEnrichment = hasEnrichment ? 'true' : 'false'
+    cta.dataset.resultJson = JSON.stringify(resultJson)
   }
 </script>
 
