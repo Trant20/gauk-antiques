@@ -1,22 +1,6 @@
 ---
 ---
 <style is:global>
-  .snav-trigger {
-    position: fixed; top: 14px; left: 16px; z-index: 200;
-    width: 36px; height: 36px; background: none; border: 1px solid #C4B49E;
-    cursor: pointer; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 5px;
-    transition: border-color .2s;
-  }
-  .snav-trigger:hover { border-color: #7A5C20; }
-  .snav-trigger span {
-    display: block; width: 16px; height: 1px; background: #5C5040;
-    transition: all .25s;
-  }
-  .snav-trigger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-  .snav-trigger.open span:nth-child(2) { opacity: 0; }
-  .snav-trigger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
   .snav-overlay {
     position: fixed; inset: 0; z-index: 150;
     background: rgba(28,24,16,.5); backdrop-filter: blur(4px);
@@ -75,11 +59,6 @@
   .snav-signout:hover { border-color: #C46028; color: #C46028; }
   .snav-signin { display: block; width: 100%; padding: 12px; background: #B8860B; border: none; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #fff; cursor: pointer; text-decoration: none; text-align: center; box-sizing: border-box; }
 </style>
-
-<!-- Hamburger trigger -->
-<button class="snav-trigger" id="snav-trigger" aria-label="Menu">
-  <span></span><span></span><span></span>
-</button>
 
 <!-- Overlay -->
 <div class="snav-overlay" id="snav-overlay"></div>
@@ -144,15 +123,17 @@
   )
   const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
-  const trigger = document.getElementById('snav-trigger')!
   const overlay = document.getElementById('snav-overlay')!
   const drawer  = document.getElementById('snav-drawer')!
 
-  function open() { trigger.classList.add('open'); overlay.classList.add('open'); drawer.classList.add('open') }
-  function close() { trigger.classList.remove('open'); overlay.classList.remove('open'); drawer.classList.remove('open') }
+  function openNav() { overlay.classList.add('open'); drawer.classList.add('open'); document.querySelectorAll('.snav-ham').forEach(b => b.classList.add('open')) }
+  function closeNav() { overlay.classList.remove('open'); drawer.classList.remove('open'); document.querySelectorAll('.snav-ham').forEach(b => b.classList.remove('open')) }
 
-  trigger.addEventListener('click', () => drawer.classList.contains('open') ? close() : open())
-  overlay.addEventListener('click', close)
+  ;(window as any).openSideNav = openNav
+  ;(window as any).closeSideNav = closeNav
+
+  overlay.addEventListener('click', closeNav)
+  document.querySelectorAll('.snav-ham').forEach(b => b.addEventListener('click', () => drawer.classList.contains('open') ? closeNav() : openNav()))
 
   // Active state
   const path = window.location.pathname
