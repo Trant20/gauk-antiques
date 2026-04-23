@@ -724,6 +724,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
   if (!hasEnrichment) {
+  (async () => {
     const enrichCta = document.getElementById('enrich-cta')
     const enrichLoading = document.getElementById('enrich-loading')
     const enrichBtn = document.getElementById('enrich-btn')
@@ -810,5 +811,6 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         })
       })
     }
+  })();
   }
 </script>
