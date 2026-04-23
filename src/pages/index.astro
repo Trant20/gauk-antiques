@@ -762,6 +762,7 @@ const firstWords = words.slice(0, -1).join(' ')
         document.getElementById('row-origin')!.style.display = 'flex'
       }
       if (identifyData.id) {
+        localStorage.setItem('pending_identification_id', identifyData.id)
         const ref = document.getElementById('result-ref') as HTMLElement
         if (ref) ref.textContent = 'REF ' + identifyData.id.slice(0,8).toUpperCase()
         if (session) {
