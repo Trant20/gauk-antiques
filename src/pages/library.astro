@@ -172,7 +172,6 @@ import AppShell from '../layouts/AppShell.astro'
   const elEmpty     = document.getElementById('lib-empty')
   const elContent   = document.getElementById('lib-content')
   const elCount     = document.getElementById('lib-count')
-  const elSub       = document.getElementById('lib-sub')
   const elGridView  = document.getElementById('lib-grid-view')
   const elListView  = document.getElementById('lib-list-view')
   const btnGrid     = document.getElementById('btn-grid')
@@ -277,7 +276,6 @@ import AppShell from '../layouts/AppShell.astro'
     } else {
       const n = data.length
       elCount.textContent = n + ' identification' + (n === 1 ? '' : 's')
-      elSub.textContent = n + ' piece' + (n === 1 ? '' : 's') + ' in your collection.'
       renderGrid(data)
       renderList(data)
       elContent.classList.remove('hidden')
