@@ -164,23 +164,10 @@
   })
 
   // Auth
-  const isIndex = window.location.pathname === '/'
   const { data: { session } } = await supabase.auth.getSession()
-
-  // On non-index pages always show sidebar
-  if (!isIndex) {
-    sidebar.classList.add('visible')
-    sidebar.style.display = 'flex'
-  }
-
+  sidebar.classList.add('visible')
+  sidebar.style.display = 'flex'
   if (session) {
-    // On index, show sidebar when logged in
-    if (isIndex) {
-      sidebar.classList.add('visible')
-      sidebar.style.display = 'flex'
-      const main = document.querySelector('.snav-main') as HTMLElement
-      if (main && window.innerWidth >= 768) main.style.marginLeft = '220px'
-    }
     document.getElementById('snav-signout')!.style.display = 'block'
     document.getElementById('snav-signin')!.style.display = 'none'
     const credits = document.getElementById('snav-credits')!
