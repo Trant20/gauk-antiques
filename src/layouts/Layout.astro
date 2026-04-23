@@ -65,6 +65,9 @@ import SideNav from '../components/SideNav.astro'
         background-size: 180px;
       }
 
+      .snav-layout { display: flex; min-height: 100vh; }
+      .snav-main { margin-left: 220px; flex: 1; min-width: 0; width: calc(100% - 220px); }
+      @media (max-width: 767px) { .snav-main { margin-left: 0; width: 100%; } }
       @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
       .a0 { animation: fadeUp .75s cubic-bezier(.22,1,.36,1) both; }
       .a1 { animation: fadeUp .75s .1s cubic-bezier(.22,1,.36,1) both; }
