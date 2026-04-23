@@ -246,6 +246,15 @@ import AppShell from '../layouts/AppShell.astro'
       status.textContent = ''
       scanOverlay.classList.remove('active')
 
+      // Deduct 1 credit for logged-in users
+      if (session && identifyData.id) {
+        await fetch('/api/deduct-credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({ site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744', identification_id: identifyData.id, amount: 1 })
+        })
+      }
+
       document.getElementById('result-category')!.textContent = r.category
       document.getElementById('result-confidence')!.textContent = r.confidence
       document.getElementById('result-title')!.textContent = r.subcategory
