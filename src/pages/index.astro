@@ -153,11 +153,11 @@ const firstWords = words.slice(0, -1).join(' ')
     }
     .upload-prompt {
       font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 16px; font-weight: 400; color: var(--textDim); margin-bottom: 6px;
+      font-size: 18px; font-weight: 400; color: var(--text); margin-bottom: 8px;
     }
     .upload-hint {
       font-family: 'Prata', Georgia, serif;
-      font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--textMute);
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--textDim);
     }
     .upload-actions { display: flex; flex-direction: column; gap: 8px; }
     .upload-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0; }
@@ -173,15 +173,15 @@ const firstWords = words.slice(0, -1).join(' ')
     .upload-slot img { width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; background: var(--surface); display: none; }
     .upload-slot img.visible { display: block; }
     .upload-slot-label {
-      font-family: "Prata", Georgia, serif; font-size: 8px;
-      letter-spacing: 2px; text-transform: uppercase; color: var(--textMute);
+      font-family: "Prata", Georgia, serif; font-size: 11px;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--textDim);
       margin-top: 8px; text-align: center;
     }
     .upload-slot-placeholder { text-align: center; padding: 12px; }
-    .upload-slot-icon { opacity: .4; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
-    .upload-slot-hint { font-family: "Prata", Georgia, serif; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--textMute); }
-    .slot-required { color: var(--goldHi); }
-    .slot-optional { color: var(--textMute); }
+    .upload-slot-icon { opacity: .7; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; }
+    .upload-slot-hint { font-family: "Prata", Georgia, serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--textDim); }
+    .slot-required { color: var(--goldHi); font-size: 13px; }
+    .slot-optional { color: var(--text); font-size: 13px; }
     .btn-primary {
       width: 100%; padding: 15px; background: var(--text); border: none;
       font-family: 'Prata', Georgia, serif; font-size: 11px;
