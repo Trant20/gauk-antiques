@@ -1,0 +1,163 @@
+---
+const { title } = Astro.props
+import Layout from './Layout.astro'
+---
+<Layout title={title}>
+<style is:global>
+  /* PUBLIC NAV */
+  .pub-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 64px;
+    background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
+    border-bottom: 1px solid #C4B49E;
+  }
+  .pub-logo {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
+    color: #1C1810; text-decoration: none;
+  }
+  .pub-logo span { color: #7A5C20; }
+  .pub-nav-links {
+    display: flex; align-items: center; gap: 28px;
+  }
+  .pub-nav-link {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: #5C5040; text-decoration: none; transition: color .2s;
+  }
+  .pub-nav-link:hover { color: #1C1810; }
+  .pub-nav-cta {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: #fff; background: #B8860B;
+    padding: 10px 20px; text-decoration: none;
+    transition: background .2s; white-space: nowrap;
+  }
+  .pub-nav-cta:hover { background: #9A7009; }
+  .pub-nav-signin {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: #7A5C20; text-decoration: none;
+    border: 1px solid #C4B49E; padding: 9px 16px;
+    transition: border-color .2s;
+  }
+  .pub-nav-signin:hover { border-color: #7A5C20; }
+
+  /* Hide nav links on mobile, keep CTA */
+  @media (max-width: 767px) {
+    .pub-nav { padding: 0 20px; }
+    .pub-nav-links .pub-nav-link { display: none; }
+  }
+
+  /* PAGE BODY — offset for fixed nav */
+  .pub-body { padding-top: 64px; }
+
+  /* PUBLIC FOOTER */
+  .pub-footer {
+    background: #E6DCCB; border-top: 1px solid #C4B49E;
+    padding: 40px; margin-top: 80px;
+  }
+  .pub-footer-inner {
+    max-width: 900px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px;
+  }
+  @media (max-width: 600px) { .pub-footer-inner { grid-template-columns: 1fr; gap: 24px; } }
+  .pub-footer-logo {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+    color: #1C1810; margin-bottom: 10px;
+  }
+  .pub-footer-logo span { color: #7A5C20; }
+  .pub-footer-tagline {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 13px; color: #8A7A66; line-height: 1.8;
+  }
+  .pub-footer-heading {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: #5C5040; margin-bottom: 14px;
+  }
+  .pub-footer-link {
+    display: block; font-family: 'Prata', Georgia, serif;
+    font-size: 13px; color: #8A7A66; text-decoration: none;
+    margin-bottom: 8px; transition: color .2s;
+  }
+  .pub-footer-link:hover { color: #7A5C20; }
+  .pub-footer-bottom {
+    max-width: 900px; margin: 32px auto 0;
+    padding-top: 20px; border-top: 1px solid #C4B49E;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .pub-footer-copy {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 11px; color: #8A7A66;
+  }
+
+  /* Logged-in state — hide CTA, show account link */
+  .pub-nav-cta.hidden { display: none; }
+  .pub-nav-account {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: #5C5040; text-decoration: none; display: none;
+  }
+  .pub-nav-account.visible { display: block; }
+</style>
+
+<!-- NAV -->
+<nav class="pub-nav">
+  <a href="/" class="pub-logo">GAUK <span>Antiques</span></a>
+  <div class="pub-nav-links">
+    <a href="/#how" class="pub-nav-link">How it Works</a>
+    <a href="/pricing" class="pub-nav-link">Pricing</a>
+    <a href="/auth/signin" class="pub-nav-signin" id="pub-signin">Sign In</a>
+    <a href="/identify" class="pub-nav-link pub-nav-account" id="pub-account">My Collection</a>
+    <a href="/auth/signup" class="pub-nav-cta" id="pub-cta">Start Your Catalogue</a>
+  </div>
+</nav>
+
+<!-- BODY -->
+<div class="pub-body">
+  <slot />
+</div>
+
+<!-- FOOTER -->
+<footer class="pub-footer">
+  <div class="pub-footer-inner">
+    <div>
+      <div class="pub-footer-logo">GAUK <span>Antiques</span></div>
+      <div class="pub-footer-tagline">AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.</div>
+    </div>
+    <div>
+      <div class="pub-footer-heading">Discover</div>
+      <a href="/" class="pub-footer-link">Identify an Item</a>
+      <a href="/pricing" class="pub-footer-link">Pricing</a>
+      <a href="/auth/signup" class="pub-footer-link">Create Account</a>
+    </div>
+    <div>
+      <div class="pub-footer-heading">Network</div>
+      <a href="https://gaukmotorbuzz.com" class="pub-footer-link">MotorBuzz</a>
+      <a href="https://gauk.co.uk" class="pub-footer-link">GAUK Motors</a>
+    </div>
+  </div>
+  <div class="pub-footer-bottom">
+    <div class="pub-footer-copy">&copy; {new Date().getFullYear()} GAUK Media. All rights reserved.</div>
+    <div class="pub-footer-copy">AI appraisals are estimates only and do not constitute formal valuations.</div>
+  </div>
+</footer>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const sb = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) {
+    const cta = document.getElementById('pub-cta')
+    const signin = document.getElementById('pub-signin')
+    const account = document.getElementById('pub-account')
+    if (cta) cta.classList.add('hidden')
+    if (signin) signin.style.display = 'none'
+    if (account) account.classList.add('visible')
+  }
+</script>
+</Layout>

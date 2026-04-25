@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/Layout.astro'
+import PublicShell from '../layouts/PublicShell.astro'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -34,7 +34,7 @@ const words = heroHeadline.split(' ')
 const lastWord = words.slice(-1)[0]
 const firstWords = words.slice(0, -1).join(' ')
 ---
-<Layout title="GAUK Antiques — AI Antique Identification & Valuation" sidebar={false}>
+<PublicShell title="GAUK Antiques — AI Antique Identification & Valuation">
   <style>
     .site-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -434,14 +434,6 @@ const firstWords = words.slice(0, -1).join(' ')
     @media (max-width: 767px) { .site-header .header-actions { display: none; } }
   </style>
 
-  <header class="site-header a0" id="site-header">
-    <div class="site-logo">GAUK <span>Antiques</span></div>
-    <div class="header-actions">
-      <a href="/pricing" class="header-link">Pricing</a>
-      <a href="/auth/signin" class="header-link">Sign In</a>
-      <a href="/auth/signup" class="header-link" style="padding:8px 16px;border:1px solid rgba(196,168,112,.5);color:var(--goldHi)">Register Free</a>
-    </div>
-  </header>
 
   <section class="hero">
     <div class="hero-bg" style={`background-image: url('${heroImage}')`}></div>
@@ -601,7 +593,7 @@ const firstWords = words.slice(0, -1).join(' ')
       Account
     </a>
   </nav>
-</Layout>
+</PublicShell>
 
 <script>
   import { createClient } from '@supabase/supabase-js'
