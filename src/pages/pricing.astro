@@ -1,5 +1,5 @@
 ---
-import AppShell from '../layouts/AppShell.astro'
+import PublicShell from '../layouts/PublicShell.astro'
 import { createClient } from '@supabase/supabase-js'
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
@@ -81,7 +81,7 @@ const url = Astro.url.searchParams.get('payment')
     <div class="credit-explain-title">How credits work</div>
     <div class="credit-explain-body">1 credit identifies an item — category, maker, period, condition and value range saved to your library. 3 credits unlocks the full valuation report — expert notes, market history, comparable sales and your options. Credits never expire and work across all GAUK properties.</div>
   </div>
-</AppShell>
+</PublicShell>
 
 <script>
   import { createClient } from '@supabase/supabase-js'
