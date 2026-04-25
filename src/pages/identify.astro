@@ -163,6 +163,7 @@ import AppShell from '../layouts/AppShell.astro'
   )
 
   const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { window.location.href = '/auth/signin'; }
 
   const zonePrimary = document.getElementById('zone-primary') as HTMLElement
   const zoneSecondary = document.getElementById('zone-secondary') as HTMLElement
