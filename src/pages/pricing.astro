@@ -43,8 +43,10 @@ const url = Astro.url.searchParams.get('payment')
   .notice { font-family: 'Prata', Georgia, serif; font-size: 14px; padding: 12px 16px; margin-bottom: 24px; }
   .notice.success { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; }
   .notice.cancelled { background: #FFF3E0; border: 1px solid #FFCC80; color: #E65100; }
+  .pricing-page-wrap { max-width: 720px; margin: 0 auto; padding: 100px 24px 80px; }
 </style>
-{url === 'success' && <div class="notice success">Payment successful — credits have been added to your account.</div>}
+<div class="pricing-page-wrap">
+  {url === 'success' && <div class="notice success">Payment successful — credits have been added to your account.</div>}
   {url === 'cancelled' && <div class="notice cancelled">Payment cancelled — no charge was made.</div>}
   <div class="pricing-eyebrow">Plans & Credits</div>
 
@@ -81,6 +83,7 @@ const url = Astro.url.searchParams.get('payment')
     <div class="credit-explain-title">How credits work</div>
     <div class="credit-explain-body">1 credit identifies an item — category, maker, period, condition and value range saved to your library. 3 credits unlocks the full valuation report — expert notes, market history, comparable sales and your options. Credits never expire and work across all GAUK properties.</div>
   </div>
+</div>
 </PublicShell>
 
 <script>
