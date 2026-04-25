@@ -100,7 +100,7 @@ import Layout from './Layout.astro'
   .pub-nav-account {
     font-family: 'Prata', Georgia, serif;
     font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-    color: #5C5040; text-decoration: none; display: none;
+    color: rgba(239,231,217,.7); text-decoration: none; display: none;
   }
   .pub-nav-account.visible { display: block; }
 </style>
@@ -150,6 +150,13 @@ import Layout from './Layout.astro'
 <script>
   import { createClient } from '@supabase/supabase-js'
   const sb = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+  // Scroll behaviour — darken nav on scroll
+  const nav = document.querySelector('.pub-nav')
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 40) nav?.classList.add('scrolled')
+    else nav?.classList.remove('scrolled')
+  })
+
   const { data: { session } } = await sb.auth.getSession()
   if (session) {
     const cta = document.getElementById('pub-cta')
