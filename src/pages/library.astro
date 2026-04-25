@@ -259,8 +259,7 @@ import AppShell from '../layouts/AppShell.astro'
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
-    elLoading.classList.add('hidden')
-    elAuthGate.classList.remove('hidden')
+    window.location.href = '/auth/signin'
   } else {
 
     const { data, error } = await supabase
