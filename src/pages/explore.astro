@@ -1,0 +1,246 @@
+---
+import PublicShell from '../layouts/PublicShell.astro'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+)
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
+
+const { data: recent } = await supabase
+  .from('identifications')
+  .select('id, image_key, result_json, category, created_at')
+  .eq('site_id', SITE_ID)
+  .not('image_key', 'is', null)
+  .order('created_at', { ascending: false })
+  .limit(6)
+
+const { data: catRows } = await supabase
+  .from('identifications')
+  .select('category')
+  .eq('site_id', SITE_ID)
+  .not('category', 'is', null)
+
+const catCounts: Record<string, number> = {}
+catRows?.forEach(r => { if (r.category) catCounts[r.category] = (catCounts[r.category] || 0) + 1 })
+const categories = Object.entries(catCounts).sort((a, b) => b[1] - a[1])
+
+const articles = [
+  { title: 'Carnival Glass — An Introduction', category: 'Glass', slug: 'carnival-glass-an-introduction' },
+  { title: 'Antique Marks and What They Tell You', category: 'Silver', slug: 'antique-marks-and-what-they-tell-you' },
+  { title: 'A Brief History of Clocks', category: 'Clocks', slug: 'a-brief-history-of-clocks' },
+  { title: 'Four-Poster Beds', category: 'Furniture', slug: 'four-poster-beds' },
+  { title: "Pewterers' Marks", category: 'Silver', slug: 'pewterers-marks' },
+  { title: "World's Most Expensive Teddy Bears", category: 'Toys', slug: 'worlds-most-expensive-teddy-bears' },
+]
+
+const CAT_SLUGS: Record<string, string> = {
+  'Pottery': 'pottery', 'Ceramics': 'pottery', 'Glass': 'glass',
+  'Silver': 'silver', 'Furniture': 'furniture', 'Art': 'art',
+  'Jewellery': 'jewellery', 'Clocks': 'clocks', 'Textiles': 'textiles',
+  'Books': 'books', 'Toys': 'toys', 'Militaria': 'militaria',
+}
+---
+<PublicShell title="Explore — GAUK Antiques">
+<style>
+  .exp-hero {
+    background: #1C1810; padding: 80px 24px 64px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .exp-hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center top, #3C2415 0%, #1C1810 70%);
+    opacity: .6;
+  }
+  .exp-hero-content { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
+  .exp-hero-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 14px; }
+  .exp-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px,6vw,56px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.15; margin-bottom: 16px; }
+  .exp-hero-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: rgba(239,231,217,.65); line-height: 1.8; margin-bottom: 32px; }
+  .exp-ask-wrap { max-width: 480px; margin: 0 auto; }
+  .exp-ask-bar { background: rgba(239,231,217,.08); border: 1px solid rgba(200,160,96,.3); padding: 14px 20px; display: flex; gap: 12px; align-items: center; }
+  .exp-ask-input { background: none; border: none; color: rgba(239,231,217,.4); font-family: 'Prata', Georgia, serif; font-size: 14px; flex: 1; outline: none; cursor: default; }
+  .exp-ask-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(200,160,96,.5); white-space: nowrap; }
+  .exp-ask-coming { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(200,160,96,.5); text-align: center; margin-top: 10px; }
+
+  .exp-wrap { max-width: 960px; margin: 0 auto; padding: 56px 24px 80px; }
+  .exp-section { margin-bottom: 56px; }
+  .exp-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+  .exp-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .exp-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,4vw,28px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 6px; }
+  .exp-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #8A7A66; line-height: 1.8; margin-bottom: 24px; max-width: 560px; }
+
+  /* CATEGORIES */
+  .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .cat-tile { background: #E6DCCB; border: 1px solid #C4B49E; padding: 20px 14px; text-align: center; text-decoration: none; color: #1C1810; transition: background .15s; display: block; }
+  .cat-tile:hover { background: #DDD0BF; }
+  .cat-tile-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
+  .cat-tile-count { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
+
+  /* ID CARDS */
+  .id-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #C4B49E; }
+  @media (max-width: 600px) { .id-grid { grid-template-columns: repeat(2, 1fr); } }
+  .id-card { background: #EFE7D9; }
+  .id-img-wrap { width: 100%; aspect-ratio: 1/1; overflow: hidden; position: relative; background: #E6DCCB; }
+  .id-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .id-body { padding: 12px; border-top: 1px solid #C4B49E; }
+  .id-maker { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 3px; }
+  .id-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; font-style: italic; color: #1C1810; margin-bottom: 6px; }
+  .id-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 12px; color: #7A5C20; }
+  .id-cat { font-family: 'Prata', Georgia, serif; font-size: 8px; color: #8A7A66; margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* RSS PLACEHOLDER */
+  .rss-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .rss-grid { grid-template-columns: 1fr; } }
+  .rss-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .rss-thumb { width: 56px; height: 56px; background: #C4B49E; flex-shrink: 0; }
+  .rss-source { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
+  .rss-title { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #1C1810; line-height: 1.5; margin-bottom: 4px; }
+  .rss-date { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; }
+  .rss-coming { background: #E6DCCB; border: 1px solid #C4B49E; padding: 32px; text-align: center; }
+  .rss-coming-text { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; }
+
+  /* ARTICLES */
+  .article-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; position: relative; }
+  .article-row { background: #EFE7D9; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; text-decoration: none; color: #1C1810; transition: background .15s; }
+  .article-row:hover { background: #E6DCCB; }
+  .article-cat { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
+  .article-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; font-style: italic; color: #1C1810; }
+  .article-arrow { font-family: 'Prata', Georgia, serif; font-size: 18px; color: #C4B49E; flex-shrink: 0; }
+  .article-gate { position: absolute; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(to bottom, transparent, rgba(239,231,217,.97)); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 20px; gap: 10px; }
+  .article-gate-text { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; font-style: italic; color: #1C1810; }
+  .article-gate-sub { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; }
+  .article-gate-btn { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; background: #B8860B; color: #fff; padding: 12px 28px; text-decoration: none; }
+
+  /* CTA */
+  .exp-cta { background: #E6DCCB; border: 1px solid #C4B49E; padding: 48px; text-align: center; margin-top: 56px; }
+  .exp-cta-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 26px; font-style: italic; color: #1C1810; margin-bottom: 10px; }
+  .exp-cta-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #8A7A66; margin-bottom: 24px; line-height: 1.8; }
+  .exp-cta-btn { display: inline-block; background: #1C1810; color: #EFE7D9; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 14px 32px; text-decoration: none; transition: opacity .2s; }
+  .exp-cta-btn:hover { opacity: .85; }
+</style>
+
+<!-- HERO -->
+<div class="exp-hero">
+  <div class="exp-hero-bg"></div>
+  <div class="exp-hero-content">
+    <div class="exp-hero-eyebrow">The Antiques Lounge</div>
+    <h1 class="exp-hero-title">Everything antiques.<br>In one place.</h1>
+    <p class="exp-hero-sub">Explore our growing knowledge base — maker biographies, identification guides, market values and news from the antiques world.</p>
+    <div class="exp-ask-wrap">
+      <div class="exp-ask-bar">
+        <input class="exp-ask-input" placeholder="Ask anything about antiques..." readonly />
+        <span class="exp-ask-label">Coming soon</span>
+      </div>
+      <div class="exp-ask-coming">Intelligent search — launching soon</div>
+    </div>
+  </div>
+</div>
+
+<div class="exp-wrap">
+
+  <!-- CATEGORIES -->
+  <div class="exp-section">
+    <div class="exp-cap">Browse by category</div>
+    <h2 class="exp-title">What are you collecting?</h2>
+    <p class="exp-sub">Our AI has identified pieces across these categories — click to explore makers, values and recent finds.</p>
+    <div class="cat-grid">
+      {categories.map(([cat, count]) => (
+        <a href={`/categories/${CAT_SLUGS[cat] || cat.toLowerCase()}`} class="cat-tile">
+          <div class="cat-tile-name">{cat}</div>
+          <div class="cat-tile-count">{count} {count === 1 ? 'piece' : 'pieces'}</div>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <!-- RECENT IDs -->
+  {recent && recent.length > 0 && (
+    <div class="exp-section">
+      <div class="exp-cap">Recently identified</div>
+      <h2 class="exp-title">From the collection</h2>
+      <p class="exp-sub">Real pieces identified by our AI — values are market estimates based on condition, maker and period.</p>
+      <div class="id-grid">
+        {recent.map(item => {
+          const r = item.result_json || {}
+          return (
+            <div class="id-card">
+              <div class="id-img-wrap">
+                {item.image_key && <img class="id-img" src={`${R2}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
+              </div>
+              <div class="id-body">
+                {r.maker && <div class="id-maker">{r.maker}</div>}
+                <div class="id-title">{r.subcategory || 'Antique Item'}</div>
+                <div class="id-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+                <div class="id-cat">{item.category}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )}
+
+  <!-- AROUND THE WEB -->
+  <div class="exp-section">
+    <div class="exp-cap">Around the web</div>
+    <h2 class="exp-title">Antiques news & insights</h2>
+    <p class="exp-sub">Curated from the best antiques publications and auction houses. Updated daily.</p>
+    <div class="rss-coming">
+      <div class="rss-coming-text">Live news feed — launching shortly. We are curating the best antiques sources from Antiques Trade Gazette, Christie's, Bonhams and more.</div>
+    </div>
+  </div>
+
+  <!-- ARTICLES -->
+  <div class="exp-section">
+    <div class="exp-cap">From the archive</div>
+    <h2 class="exp-title">The knowledge base</h2>
+    <p class="exp-sub">Guides, histories and collector reference — built over years, growing every day.</p>
+    <div class="article-list" id="article-list">
+      {articles.map(a => (
+        <a href={`/learn/${a.slug}`} class="article-row">
+          <div>
+            <div class="article-cat">{a.category}</div>
+            <div class="article-title">{a.title}</div>
+          </div>
+          <div class="article-arrow">›</div>
+        </a>
+      ))}
+      <div class="article-gate" id="article-gate" style="display:none">
+        <div class="article-gate-text">Join the Antiques Lounge</div>
+        <div class="article-gate-sub">Free to register — unlock the full knowledge base.</div>
+        <a href="/auth/signup" class="article-gate-btn">Start Your Catalogue</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="exp-cta">
+    <div class="exp-cta-title">Have a piece to identify?</div>
+    <div class="exp-cta-sub">Upload a photograph and our AI identifies maker, period, condition and estimated value in seconds.</div>
+    <a href="/" class="exp-cta-btn">Identify free →</a>
+  </div>
+
+</div>
+</PublicShell>
+
+<script>
+  const LIMIT = 3
+  const KEY = 'gauk_explore_views'
+  const views = parseInt(localStorage.getItem(KEY) || '0') + 1
+  localStorage.setItem(KEY, String(views))
+
+  if (views > LIMIT) {
+    const gate = document.getElementById('article-gate')
+    const list = document.getElementById('article-list')
+    if (gate) gate.style.display = 'flex'
+    // Show only first 2 articles clearly, rest blurred
+    const rows = list?.querySelectorAll('.article-row')
+    rows?.forEach((row, i) => {
+      if (i >= 2) (row as HTMLElement).style.filter = 'blur(3px)'
+    })
+  }
+</script>
