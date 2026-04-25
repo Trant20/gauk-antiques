@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/Layout.astro'
+import PublicShell from '../layouts/PublicShell.astro'
 import { createClient } from '@supabase/supabase-js'
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
@@ -62,4 +62,4 @@ const freeCredits = plan?.credits || 5
   <div class="welcome-body">Each credit unlocks one full valuation report — expert notes, market history, comparable sales, and your options.</div>
   <div class="welcome-hint">When you need more, top up any time. Credits never expire.</div>
 </div>
-</Layout>
+</PublicShell>
