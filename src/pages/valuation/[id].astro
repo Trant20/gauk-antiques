@@ -686,6 +686,11 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     import.meta.env.PUBLIC_SUPABASE_URL,
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY
   )
+
+  // Auth gate
+  const { data: { session: _gate } } = await _sb.auth.getSession()
+  if (!_gate) { window.location.href = '/auth/signin'; }
+
   const _id = window.location.pathname.split('/').filter(Boolean).pop()
   document.getElementById('delete-btn')?.addEventListener('click', () => {
     document.getElementById('del-overlay').classList.remove('hidden')
