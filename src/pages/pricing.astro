@@ -9,7 +9,7 @@ const subs = plans?.filter(p => p.plan_type === 'subscription') || []
 const topups = plans?.filter(p => p.plan_type === 'topup') || []
 const url = Astro.url.searchParams.get('payment')
 ---
-<AppShell title="Pricing — GAUK Antiques" pageCap="Plans & Credits" pageTitle="Simple, transparent pricing" pageSubtitle="Credits never expire. Use them across any GAUK property. One credit = one identification. Three credits = full valuation report.">
+<PublicShell title="Pricing — GAUK Antiques">
 <style>
   body { background: #EFE7D9; color: #1C1810; }
   .pricing-section-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; }
