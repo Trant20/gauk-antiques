@@ -78,6 +78,7 @@ import AppShell from '../layouts/AppShell.astro'
   }
 
   const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { window.location.href = '/auth/signin'; }
 
   document.getElementById('signout-btn')?.addEventListener('click', async () => {
     await supabase.auth.signOut()
