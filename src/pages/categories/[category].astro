@@ -1,0 +1,361 @@
+---
+import PublicShell from '../../layouts/PublicShell.astro'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+)
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
+
+const { category } = Astro.params
+if (!category) return Astro.redirect('/explore')
+
+const CATEGORY_META: Record<string, { title: string; headline: string; sub: string; ask: string }> = {
+  pottery:   { title: 'Pottery & Ceramics', headline: 'The world of Pottery & Ceramics', sub: 'From Art Pottery to fine porcelain — one of the most collected and valued categories in the antiques world.', ask: 'Ask anything about pottery & ceramics...' },
+  ceramics:  { title: 'Ceramics', headline: 'The world of Ceramics', sub: 'Studio pieces, factory porcelain and everything between — ceramics span centuries of craft and invention.', ask: 'Ask anything about ceramics...' },
+  glass:     { title: 'Glass & Crystal', headline: 'The world of Glass & Crystal', sub: 'From Venetian blown glass to Victorian pressed crystal — a category of extraordinary depth and variety.', ask: 'Ask anything about glass & crystal...' },
+  jewellery: { title: 'Jewellery', headline: 'The world of Antique Jewellery', sub: 'Georgian mourning rings to Art Nouveau brooches — jewellery carries history, sentiment and significant value.', ask: 'Ask anything about antique jewellery...' },
+  silver:    { title: 'Silver & Metalware', headline: 'The world of Silver & Metalware', sub: 'Hallmarked silver tells a story of maker, date and place — one of the most precisely documented categories in antiques.', ask: 'Ask anything about silver & metalware...' },
+  furniture: { title: 'Furniture', headline: 'The world of Antique Furniture', sub: 'From Georgian mahogany to Arts and Crafts oak — furniture defines the rooms and the eras it came from.', ask: 'Ask anything about antique furniture...' },
+  art:       { title: 'Art & Paintings', headline: 'The world of Art & Paintings', sub: 'Oils, watercolours, prints and sculpture — the art market rewards knowledge, provenance and a good eye.', ask: 'Ask anything about antique art & paintings...' },
+  clocks:    { title: 'Clocks & Watches', headline: 'The world of Clocks & Watches', sub: 'Bracket clocks, longcase clocks, pocket watches — mechanical precision meets decorative art.', ask: 'Ask anything about clocks & watches...' },
+  textiles:  { title: 'Textiles', headline: 'The world of Antique Textiles', sub: 'Samplers, tapestries, quilts and lace — textiles are among the most fragile and most personal of antiques.', ask: 'Ask anything about antique textiles...' },
+  books:     { title: 'Books & Manuscripts', headline: 'The world of Antique Books', sub: 'First editions, illuminated manuscripts, maps and ephemera — the printed word holds extraordinary value.', ask: 'Ask anything about antique books & manuscripts...' },
+  toys:      { title: 'Toys & Collectables', headline: 'The world of Antique Toys', sub: 'Steiff bears, Dinky cars, tin toys and games — childhood nostalgia commands serious collector interest.', ask: 'Ask anything about antique toys & collectables...' },
+  militaria: { title: 'Militaria', headline: 'The world of Militaria', sub: 'Medals, uniforms, weapons and memorabilia — militaria connects collectors to the defining moments of history.', ask: 'Ask anything about militaria...' },
+  other:     { title: 'Other Antiques', headline: 'Antiques & Curiosities', sub: 'Scientific instruments, tribal art, folk objects — the antiques world rewards curiosity about the unexpected.', ask: 'Ask anything about antiques & curiosities...' },
+}
+
+const meta = CATEGORY_META[category.toLowerCase()] || CATEGORY_META.other
+const dbCategory = category.charAt(0).toUpperCase() + category.slice(1)
+
+// Hero image from site_settings
+const { data: heroSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', `category_hero_${category}`)
+  .single()
+const heroImage = heroSetting?.value || ''
+
+// Recent identifications
+const { data: recent, count } = await supabase
+  .from('identifications')
+  .select('id, image_key, result_json, created_at', { count: 'exact' })
+  .eq('site_id', SITE_ID)
+  .eq('category', dbCategory)
+  .not('image_key', 'is', null)
+  .order('created_at', { ascending: false })
+  .limit(8)
+
+// Notable makers from identifications
+const { data: makerRows } = await supabase
+  .from('identifications')
+  .select('result_json')
+  .eq('site_id', SITE_ID)
+  .eq('category', dbCategory)
+  .not('result_json->>maker', 'is', null)
+
+const makerCounts: Record<string, number> = {}
+makerRows?.forEach(r => {
+  const m = r.result_json?.maker
+  if (m) makerCounts[m] = (makerCounts[m] || 0) + 1
+})
+const makers = Object.entries(makerCounts).sort((a, b) => b[1] - a[1]).slice(0, 6)
+
+// Articles (placeholder until articles table populated)
+const { data: articles } = await supabase
+  .from('articles')
+  .select('id, title, slug, excerpt, published_at')
+  .eq('site_id', SITE_ID)
+  .eq('category', dbCategory)
+  .eq('published', true)
+  .order('published_at', { ascending: false })
+  .limit(5)
+
+// Auction results
+const { data: auctions } = await supabase
+  .from('auction_results')
+  .select('id, title, maker, price_pence, auction_house, sold_date')
+  .eq('site_id', SITE_ID)
+  .eq('category', dbCategory)
+  .order('sold_date', { ascending: false })
+  .limit(4)
+
+// External articles
+const { data: external } = await supabase
+  .from('external_articles')
+  .select('id, title, url, source_name, published_at, image_url')
+  .eq('site_id', SITE_ID)
+  .eq('category', dbCategory)
+  .order('published_at', { ascending: false })
+  .limit(4)
+---
+<PublicShell title={`${meta.title} — GAUK Antiques`}>
+<style>
+  /* HERO */
+  .cat-hero {
+    position: relative; min-height: 70vh;
+    display: flex; align-items: flex-end;
+    overflow: hidden; background: #1C1810;
+  }
+  .cat-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .cat-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.95) 0%, rgba(13,8,4,.5) 50%, rgba(13,8,4,.2) 100%); }
+  .cat-hero-content { position: relative; z-index: 2; width: 100%; max-width: 800px; margin: 0 auto; padding: 60px 40px; text-align: center; }
+  .cat-hero-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: #C8A060; margin-bottom: 16px; }
+  .cat-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(36px,7vw,72px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.1; margin-bottom: 16px; }
+  .cat-hero-sub { font-family: 'Prata', Georgia, serif; font-size: 17px; color: rgba(239,231,217,.65); line-height: 1.8; max-width: 560px; margin: 0 auto 32px; }
+  .cat-hero-count { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #C8A060; margin-bottom: 32px; }
+
+  /* ASK BAR */
+  .cat-ask-wrap { max-width: 560px; margin: 0 auto; }
+  .cat-ask-bar { background: rgba(239,231,217,.08); border: 1px solid rgba(200,160,96,.3); padding: 16px 24px; display: flex; gap: 14px; align-items: center; }
+  .cat-ask-input { background: none; border: none; color: rgba(239,231,217,.5); font-family: 'Prata', Georgia, serif; font-size: 15px; flex: 1; outline: none; cursor: default; }
+  .cat-ask-btn { background: #B8860B; color: #fff; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 18px; border: none; white-space: nowrap; }
+  .cat-ask-note { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(200,160,96,.4); text-align: center; margin-top: 10px; }
+
+  /* SECTIONS */
+  .cat-body { background: #EFE7D9; }
+  .cat-section { max-width: 1100px; margin: 0 auto; padding: 64px 32px; border-bottom: 1px solid #C4B49E; }
+  .cat-section:last-child { border-bottom: none; }
+  .cat-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .cat-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .cat-heading { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(22px,4vw,36px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 8px; }
+  .cat-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #8A7A66; line-height: 1.8; margin-bottom: 32px; max-width: 600px; }
+
+  /* STORY STACK */
+  .story-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; }
+  @media (max-width: 600px) { .story-stack { grid-template-columns: 1fr; } }
+  .story-card { background: #EFE7D9; padding: 24px; display: flex; gap: 16px; align-items: flex-start; text-decoration: none; color: #1C1810; transition: background .15s; }
+  .story-card:hover { background: #E6DCCB; }
+  .story-num { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 36px; color: #C4B49E; line-height: 1; flex-shrink: 0; width: 48px; }
+  .story-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 6px; }
+  .story-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; font-style: italic; color: #1C1810; line-height: 1.3; margin-bottom: 8px; }
+  .story-excerpt { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.7; }
+  .story-placeholder { background: #E6DCCB; border: 1px dashed #C4B49E; padding: 32px; text-align: center; }
+  .story-placeholder-text { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
+
+  /* IDENTIFICATION INTERRUPT */
+  .id-interrupt { background: #1C1810; padding: 64px 32px; text-align: center; }
+  .id-interrupt-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 14px; }
+  .id-interrupt-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,5vw,48px); font-style: italic; color: #EFE7D9; margin-bottom: 12px; }
+  .id-interrupt-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: rgba(239,231,217,.6); line-height: 1.8; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .id-interrupt-btn { display: inline-block; background: #B8860B; color: #fff; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; padding: 16px 40px; text-decoration: none; transition: background .2s; }
+  .id-interrupt-btn:hover { background: #9A7009; }
+
+  /* IDENTIFICATION STRIP */
+  .id-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #C4B49E; }
+  @media (max-width: 700px) { .id-strip { grid-template-columns: repeat(2, 1fr); } }
+  .id-strip-card { background: #EFE7D9; }
+  .id-strip-img { width: 100%; aspect-ratio: 1/1; overflow: hidden; position: relative; background: #E6DCCB; }
+  .id-strip-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .id-strip-body { padding: 12px; border-top: 1px solid #C4B49E; }
+  .id-strip-maker { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 3px; }
+  .id-strip-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; font-style: italic; color: #1C1810; margin-bottom: 4px; line-height: 1.3; }
+  .id-strip-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 12px; color: #7A5C20; }
+
+  /* AUCTION WATCH */
+  .auction-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .auction-grid { grid-template-columns: 1fr; } }
+  .auction-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 20px; }
+  .auction-house { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 6px; }
+  .auction-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; font-style: italic; color: #1C1810; margin-bottom: 10px; line-height: 1.3; }
+  .auction-price { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 28px; color: #7A5C20; line-height: 1; margin-bottom: 4px; }
+  .auction-date { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; letter-spacing: 1px; }
+  .auction-placeholder { background: #E6DCCB; border: 1px dashed #C4B49E; padding: 40px; text-align: center; }
+  .auction-placeholder-text { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.7; }
+
+  /* MAKERS */
+  .makers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .makers-grid { grid-template-columns: repeat(2, 1fr); } }
+  .maker-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 24px 20px; text-decoration: none; color: #1C1810; transition: background .15s; display: block; }
+  .maker-card:hover { background: #DDD0BF; }
+  .maker-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 6px; }
+  .maker-count { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
+
+  /* FROM THE TRADE */
+  .trade-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .trade-grid { grid-template-columns: 1fr; } }
+  .trade-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 16px; display: flex; gap: 14px; }
+  .trade-thumb { width: 64px; height: 64px; background: #C4B49E; flex-shrink: 0; object-fit: cover; }
+  .trade-source { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
+  .trade-title { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #1C1810; line-height: 1.5; margin-bottom: 4px; }
+  .trade-date { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; }
+  .trade-placeholder { background: #E6DCCB; border: 1px dashed #C4B49E; padding: 40px; text-align: center; }
+  .trade-placeholder-text { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.7; }
+
+  /* NEWSLETTER */
+  .newsletter { background: #1C1810; padding: 56px 32px; text-align: center; }
+  .newsletter-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 12px; }
+  .newsletter-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(22px,4vw,36px); font-style: italic; color: #EFE7D9; margin-bottom: 10px; }
+  .newsletter-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: rgba(239,231,217,.6); margin-bottom: 28px; }
+  .newsletter-form { display: flex; gap: 0; max-width: 440px; margin: 0 auto; }
+  .newsletter-input { flex: 1; padding: 14px 20px; background: rgba(239,231,217,.08); border: 1px solid rgba(239,231,217,.2); border-right: none; font-family: 'Prata', Georgia, serif; font-size: 14px; color: #EFE7D9; outline: none; }
+  .newsletter-input::placeholder { color: rgba(239,231,217,.3); }
+  .newsletter-btn { padding: 14px 24px; background: #B8860B; border: none; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #fff; cursor: pointer; white-space: nowrap; }
+</style>
+
+<!-- HERO -->
+<div class="cat-hero">
+  {heroImage && <div class="cat-hero-bg" style={`background-image:url('${heroImage}')`}></div>}
+  <div class="cat-hero-overlay"></div>
+  <div class="cat-hero-content">
+    <div class="cat-hero-eyebrow">Category</div>
+    <h1 class="cat-hero-title">{meta.headline}</h1>
+    <p class="cat-hero-sub">{meta.sub}</p>
+    {count && <div class="cat-hero-count">{count} pieces identified</div>}
+    <div class="cat-ask-wrap">
+      <div class="cat-ask-bar">
+        <input class="cat-ask-input" placeholder={meta.ask} readonly />
+        <button class="cat-ask-btn">Ask</button>
+      </div>
+      <div class="cat-ask-note">Intelligent search — coming soon</div>
+    </div>
+  </div>
+</div>
+
+<div class="cat-body">
+
+  <!-- STORY STACK -->
+  <div class="cat-section">
+    <div class="cat-cap">From the archive</div>
+    <h2 class="cat-heading">Essential reading</h2>
+    <p class="cat-sub">Guides, histories and collector reference for {meta.title.toLowerCase()}.</p>
+    {articles && articles.length > 0 ? (
+      <div class="story-stack">
+        {articles.map((a, i) => (
+          <a href={`/learn/${a.slug}`} class="story-card">
+            <div class="story-num">0{i + 1}</div>
+            <div>
+              <div class="story-cat">{meta.title}</div>
+              <div class="story-title">{a.title}</div>
+              {a.excerpt && <div class="story-excerpt">{a.excerpt}</div>}
+            </div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="story-placeholder">
+        <div class="story-placeholder-text">Articles for this category are being added — check back soon.<br/>Meanwhile, explore our <a href="/explore" style="color:#7A5C20">knowledge base</a>.</div>
+      </div>
+    )}
+  </div>
+
+  <!-- IDENTIFICATION INTERRUPT -->
+  <div class="id-interrupt">
+    <div class="id-interrupt-eyebrow">Free Identification</div>
+    <div class="id-interrupt-title">What is your {meta.title.toLowerCase()} worth?</div>
+    <div class="id-interrupt-sub">Upload a photograph and our AI identifies maker, period, condition and estimated value in seconds.</div>
+    <a href="/" class="id-interrupt-btn">Identify Your Piece Free</a>
+  </div>
+
+  <!-- RECENT IDENTIFICATIONS -->
+  {recent && recent.length > 0 && (
+    <div class="cat-section">
+      <div class="cat-cap">Community</div>
+      <h2 class="cat-heading">Recently identified</h2>
+      <p class="cat-sub">Real pieces identified this week — values are AI market estimates.</p>
+      <div class="id-strip">
+        {recent.slice(0, 4).map(item => {
+          const r = item.result_json || {}
+          return (
+            <div class="id-strip-card">
+              <div class="id-strip-img">
+                {item.image_key && <img src={`${R2}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
+              </div>
+              <div class="id-strip-body">
+                {r.maker && <div class="id-strip-maker">{r.maker}</div>}
+                <div class="id-strip-title">{r.subcategory || 'Antique Item'}</div>
+                <div class="id-strip-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )}
+
+  <!-- AUCTION WATCH -->
+  <div class="cat-section">
+    <div class="cat-cap">Auction Watch</div>
+    <h2 class="cat-heading">Recent results</h2>
+    <p class="cat-sub">Real prices from the major auction houses — updated as results come in.</p>
+    {auctions && auctions.length > 0 ? (
+      <div class="auction-grid">
+        {auctions.map(a => (
+          <div class="auction-card">
+            <div class="auction-house">{a.auction_house}</div>
+            <div class="auction-title">{a.title}</div>
+            <div class="auction-price">£{((a.price_pence || 0) / 100).toLocaleString()}</div>
+            <div class="auction-date">{a.sold_date ? new Date(a.sold_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="auction-placeholder">
+        <div class="auction-placeholder-text">Auction results for {meta.title.toLowerCase()} are being compiled.<br/>Results from Bonhams, Christie's and Sotheby's will appear here.</div>
+      </div>
+    )}
+  </div>
+
+  <!-- NOTABLE MAKERS -->
+  {makers.length > 0 && (
+    <div class="cat-section">
+      <div class="cat-cap">Notable Makers</div>
+      <h2 class="cat-heading">The names collectors know</h2>
+      <p class="cat-sub">The most identified makers in our collection — click to explore their history, marks and values.</p>
+      <div class="makers-grid">
+        {makers.map(([maker, count]) => (
+          <a href={`/makers/${maker.toLowerCase().replace(/\s+/g, '-')}`} class="maker-card">
+            <div class="maker-name">{maker}</div>
+            <div class="maker-count">{count} {count === 1 ? 'piece' : 'pieces'} identified</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- FROM THE TRADE -->
+  <div class="cat-section">
+    <div class="cat-cap">From the Trade</div>
+    <h2 class="cat-heading">Latest news & insights</h2>
+    <p class="cat-sub">Curated from the best antiques publications and auction houses.</p>
+    {external && external.length > 0 ? (
+      <div class="trade-grid">
+        {external.map(a => (
+          <a href={a.url} target="_blank" rel="noopener" class="trade-card" style="text-decoration:none">
+            {a.image_url
+              ? <img class="trade-thumb" src={a.image_url} alt={a.title} loading="lazy" />
+              : <div class="trade-thumb"></div>
+            }
+            <div>
+              <div class="trade-source">{a.source_name}</div>
+              <div class="trade-title">{a.title}</div>
+              {a.published_at && <div class="trade-date">{new Date(a.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>}
+            </div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="trade-placeholder">
+        <div class="trade-placeholder-text">Live news feed from Antiques Trade Gazette, Christie's, Bonhams and more — launching shortly.</div>
+      </div>
+    )}
+  </div>
+
+  <!-- NEWSLETTER -->
+  <div class="newsletter">
+    <div class="newsletter-eyebrow">Weekly Digest</div>
+    <div class="newsletter-title">The best of {meta.title}</div>
+    <div class="newsletter-sub">Top identifications, auction results and market insights — every week.</div>
+    <div class="newsletter-form">
+      <input class="newsletter-input" type="email" placeholder="your@email.com" />
+      <button class="newsletter-btn">Subscribe</button>
+    </div>
+  </div>
+
+</div>
+</PublicShell>
