@@ -39,6 +39,31 @@ import Layout from './Layout.astro'
   }
   .pub-nav-signin:hover { border-color: #EFE7D9; color: #EFE7D9; }
 
+  /* CATEGORIES DROPDOWN */
+  .pub-nav-dropdown { position: relative; }
+  .pub-nav-dropdown-trigger {
+    font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(239,231,217,.7);
+    background: none; border: none; cursor: pointer; padding: 0;
+    transition: color .2s; display: flex; align-items: center; gap: 6px;
+  }
+  .pub-nav-dropdown-trigger:hover { color: #EFE7D9; }
+  .pub-nav-dropdown-menu {
+    display: none; position: absolute; top: calc(100% + 16px); left: 50%;
+    transform: translateX(-50%); background: rgba(20,16,10,.98);
+    backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.08);
+    min-width: 200px; z-index: 200; padding: 8px 0;
+  }
+  .pub-nav-dropdown:hover .pub-nav-dropdown-menu { display: block; }
+  .pub-nav-dropdown-item {
+    display: block; font-family: 'Prata', Georgia, serif; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(239,231,217,.6); text-decoration: none;
+    padding: 10px 20px; transition: color .2s, background .2s;
+  }
+  .pub-nav-dropdown-item:hover { color: #EFE7D9; background: rgba(255,255,255,.05); }
+  .pub-nav-dropdown-divider { height: 1px; background: rgba(255,255,255,.08); margin: 6px 0; }
+
   /* HAMBURGER */
   .pub-ham { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
   .pub-ham span { display: block; width: 18px; height: 1px; background: #EFE7D9; transition: all .25s; }
@@ -134,7 +159,19 @@ import Layout from './Layout.astro'
   <a href="/" class="pub-logo">GAUK <span>Antiques</span></a>
   <button class="pub-ham" id="pub-ham" aria-label="Menu"><span></span><span></span><span></span></button>
   <div class="pub-nav-links">
-    <a href="/explore" class="pub-nav-link">Explore</a>
+    <div class="pub-nav-dropdown">
+      <button class="pub-nav-dropdown-trigger">Categories ▾</button>
+      <div class="pub-nav-dropdown-menu">
+        <a href="/categories/pottery" class="pub-nav-dropdown-item">Pottery & Ceramics</a>
+        <a href="/categories/silver" class="pub-nav-dropdown-item">Silver</a>
+        <a href="/categories/furniture" class="pub-nav-dropdown-item">Furniture</a>
+        <a href="/categories/art" class="pub-nav-dropdown-item">Art</a>
+        <a href="/categories/glass" class="pub-nav-dropdown-item">Glass</a>
+        <a href="/categories/jewellery" class="pub-nav-dropdown-item">Jewellery</a>
+        <div class="pub-nav-dropdown-divider"></div>
+        <a href="/explore" class="pub-nav-dropdown-item">All Categories →</a>
+      </div>
+    </div>
     <a href="/pricing" class="pub-nav-link">Pricing</a>
     <a href="/auth/signin" class="pub-nav-signin" id="pub-signin">Sign In</a>
     <a href="/identify" class="pub-nav-link pub-nav-account" id="pub-account">My Collection</a>
