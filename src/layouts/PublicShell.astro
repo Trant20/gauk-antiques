@@ -55,6 +55,9 @@ import Layout from './Layout.astro'
     min-width: 200px; z-index: 200; padding: 8px 0;
   }
   .pub-nav-dropdown:hover .pub-nav-dropdown-menu { display: block; }
+  .pub-nav-dropdown-menu::before {
+    content: ''; position: absolute; top: -16px; left: 0; right: 0; height: 16px;
+  }
   .pub-nav-dropdown-item {
     display: block; font-family: 'Prata', Georgia, serif; font-size: 10px;
     letter-spacing: 2px; text-transform: uppercase;
