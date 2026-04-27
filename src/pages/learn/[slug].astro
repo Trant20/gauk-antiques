@@ -113,15 +113,6 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   .art-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: #8A7A66; text-transform: uppercase; }
 </style>
 
-<!-- BREADCRUMB -->
-<nav class="art-breadcrumb">
-  <a href="/explore" class="art-bc-link">Explore</a>
-  <span class="art-bc-sep">›</span>
-  <a href={`/categories/${catSlug}`} class="art-bc-link">{article.category}</a>
-  <span class="art-bc-sep">›</span>
-  <span class="art-bc-cur">{article.title.slice(0, 40)}{article.title.length > 40 ? '…' : ''}</span>
-</nav>
-
 <!-- HERO -->
 <div class="art-hero">
   {article.image_url && <div class="art-hero-img" style={`background-image:url('${article.image_url}')`}></div>}
