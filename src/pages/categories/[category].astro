@@ -13,7 +13,9 @@ const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
 const { category } = Astro.params
 if (!category) return Astro.redirect('/explore')
 
-const dbCategory = category.charAt(0).toUpperCase() + category.slice(1)
+// Normalise slug — decode URI and clean
+const decodedCategory = decodeURIComponent(category)
+const dbCategory = decodedCategory.charAt(0).toUpperCase() + decodedCategory.slice(1)
 
 // Validate category exists in the list
 const { data: catListSetting } = await supabase
@@ -24,7 +26,10 @@ const { data: catListSetting } = await supabase
   .single()
 
 const validCategories: string[] = catListSetting?.value ? JSON.parse(catListSetting.value) : []
-const validSlugs = validCategories.map((c: string) => c.toLowerCase())
+const validSlugs = validCategories.map((c: string) => 
+  c.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+)
+const normalisedSlug = decodedCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 // Check for redirect (renamed categories)
 const { data: redirectSetting } = await supabase
@@ -38,7 +43,7 @@ if (redirectSetting?.value) {
   return Astro.redirect(`/categories/${redirectSetting.value}`, 301)
 }
 
-if (!validSlugs.includes(category.toLowerCase())) {
+if (!validSlugs.includes(normalisedSlug)) {
   return Astro.redirect('/explore', 302)
 }
 
