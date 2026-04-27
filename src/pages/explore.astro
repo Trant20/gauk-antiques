@@ -18,6 +18,15 @@ const { data: recent } = await supabase
   .order('created_at', { ascending: false })
   .limit(6)
 
+const { data: catSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', 'categories')
+  .single()
+
+const allCategories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
+
 const { data: catRows } = await supabase
   .from('identifications')
   .select('category')
@@ -26,7 +35,7 @@ const { data: catRows } = await supabase
 
 const catCounts: Record<string, number> = {}
 catRows?.forEach(r => { if (r.category) catCounts[r.category] = (catCounts[r.category] || 0) + 1 })
-const categories = Object.entries(catCounts).sort((a, b) => b[1] - a[1])
+const categories = allCategories.map(cat => [cat, catCounts[cat] || 0] as [string, number])
 
 const articles = [
   { title: 'Carnival Glass — An Introduction', category: 'Glass', slug: 'carnival-glass-an-introduction' },

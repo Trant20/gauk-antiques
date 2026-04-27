@@ -1,6 +1,23 @@
 ---
 const { title } = Astro.props
 import Layout from './Layout.astro'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+)
+
+const { data: catSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
+  .eq('key', 'categories')
+  .single()
+
+const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : [
+  'Pottery','Ceramics','Glass','Jewellery','Silver','Furniture','Art','Clocks','Textiles','Books','Toys','Militaria','Other'
+]
 ---
 <Layout title={title}>
 <style is:global>
