@@ -94,7 +94,23 @@ const { data: external } = await supabase
   .order('published_at', { ascending: false })
   .limit(4)
 ---
-<PublicShell title={`${meta.title} — GAUK Antiques`} description={meta.sub} ogImage={heroImage}>
+<PublicShell title={`${heroTitle} — GAUK Antiques`} description={heroSubtitle} ogImage={heroImage}>
+<link rel="canonical" href={`https://gaukantiques.com/categories/${category}`} slot="head" />
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": heroTitle,
+  "description": heroSubtitle,
+  "url": `https://gaukantiques.com/categories/${category}`,
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://gaukantiques.com" },
+      { "@type": "ListItem", "position": 2, "name": "Explore", "item": "https://gaukantiques.com/explore" },
+      { "@type": "ListItem", "position": 3, "name": heroTitle, "item": `https://gaukantiques.com/categories/${category}` }
+    ]
+  }
+})} />
 <style>
   /* HERO */
   .cat-hero {
@@ -259,7 +275,7 @@ const { data: external } = await supabase
   <div class="cat-section" id="articles">
     <div class="cat-cap">From the archive</div>
     <h2 class="cat-heading">Essential reading</h2>
-    <p class="cat-sub">Guides, histories and collector reference for {meta.title.toLowerCase()}.</p>
+    <p class="cat-sub">Guides, histories and collector reference for {dbCategory.toLowerCase()}.</p>
     <a href={`/categories/${category}/articles`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all articles →</a>
     {articles && articles.length > 0 ? (
       <div class="story-stack">
@@ -284,7 +300,7 @@ const { data: external } = await supabase
   <!-- IDENTIFICATION INTERRUPT -->
   <div class="id-interrupt">
     <div class="id-interrupt-eyebrow">Free Identification</div>
-    <div class="id-interrupt-title">What is your {meta.title.toLowerCase()} worth?</div>
+    <div class="id-interrupt-title">What is your {dbCategory.toLowerCase()} worth?</div>
     <div class="id-interrupt-sub">Upload a photograph and our AI identifies maker, period, condition and estimated value in seconds.</div>
     <a href="/" class="id-interrupt-btn">Identify Your Piece Free</a>
   </div>
@@ -389,7 +405,7 @@ const { data: external } = await supabase
   <!-- NEWSLETTER -->
   <div class="newsletter">
     <div class="newsletter-eyebrow">Weekly Digest</div>
-    <div class="newsletter-title">The best of {meta.title}</div>
+    <div class="newsletter-title">The best of {dbCategory}</div>
     <div class="newsletter-sub">Top identifications, auction results and market insights — every week.</div>
     <div class="newsletter-form">
       <input class="newsletter-input" type="email" placeholder="your@email.com" />
