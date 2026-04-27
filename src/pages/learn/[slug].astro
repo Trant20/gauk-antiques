@@ -149,7 +149,11 @@ const catSlug = CAT_SLUG[article.category] || 'other'
     </a>
   </div>
 
-  <div class="art-body" set:html={article.body} />
+  <div class="art-body" set:html={
+    article.body.includes('<p>') || article.body.includes('<strong>') || article.body.includes('<ul>')
+      ? article.body
+      : article.body.split('\n\n').filter((p: string) => p.trim()).map((p: string) => `<p>${p.trim()}</p>`).join('')
+  } />
 
   <!-- IDENTIFY CTA -->
   <div class="art-cta">
