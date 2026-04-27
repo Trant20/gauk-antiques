@@ -257,11 +257,16 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
     drawer?.classList.toggle('open')
   })
 
-  // Scroll behaviour — darken nav on scroll
+  // Scroll behaviour — darken and hide nav on scroll
   const nav = document.querySelector('.pub-nav')
+  let lastY = 0
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 40) nav?.classList.add('scrolled')
+    const y = window.scrollY
+    if (y > 40) nav?.classList.add('scrolled')
     else nav?.classList.remove('scrolled')
+    if (y > 100 && y > lastY) nav?.classList.add('hidden-nav')
+    else nav?.classList.remove('hidden-nav')
+    lastY = y
   })
 
   const { data: { session } } = await sb.auth.getSession()
