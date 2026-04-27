@@ -1,0 +1,183 @@
+---
+import PublicShell from '../../layouts/PublicShell.astro'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+)
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const { slug } = Astro.params
+
+const { data: article } = await supabase
+  .from('articles')
+  .select('*')
+  .eq('site_id', SITE_ID)
+  .eq('slug', slug)
+  .eq('published', true)
+  .single()
+
+if (!article) return Astro.redirect('/explore')
+
+const { data: related } = await supabase
+  .from('articles')
+  .select('id, title, slug, excerpt, image_url, category')
+  .eq('site_id', SITE_ID)
+  .eq('category', article.category)
+  .eq('published', true)
+  .neq('slug', slug)
+  .limit(3)
+
+const date = article.published_at
+  ? new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : new Date(article.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+
+const CAT_SLUG: Record<string, string> = {
+  'Pottery': 'pottery', 'Ceramics': 'pottery', 'Glass': 'glass',
+  'Silver': 'silver', 'Furniture': 'furniture', 'Art': 'art',
+  'Jewellery': 'jewellery', 'Clocks': 'clocks', 'Textiles': 'textiles',
+  'Books': 'books', 'Toys': 'toys', 'Militaria': 'militaria', 'Other': 'other'
+}
+const catSlug = CAT_SLUG[article.category] || 'other'
+---
+<PublicShell title={`${article.title} — GAUK Antiques`}>
+<style>
+  /* HERO */
+  .art-hero {
+    position: relative; width: 100%;
+    min-height: 50vh; display: flex; align-items: flex-end;
+    background: #1C1810; overflow: hidden;
+  }
+  .art-hero-img { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(.5); }
+  .art-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.95) 0%, rgba(13,8,4,.3) 100%); }
+  .art-hero-content { position: relative; z-index: 2; max-width: 800px; margin: 0 auto; padding: 48px 40px; width: 100%; }
+  @media (max-width: 600px) { .art-hero-content { padding: 32px 20px; } }
+  .art-hero-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .art-hero-cat { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; text-decoration: none; }
+  .art-hero-cat:hover { color: #EFE7D9; }
+  .art-hero-sep { color: rgba(239,231,217,.3); }
+  .art-hero-date { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; color: rgba(239,231,217,.5); }
+  .art-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,5vw,52px); font-weight: 400; color: #EFE7D9; line-height: 1.15; margin-bottom: 16px; }
+  .art-hero-excerpt { font-family: 'Prata', Georgia, serif; font-size: 17px; color: rgba(239,231,217,.7); line-height: 1.8; max-width: 640px; }
+
+  /* BODY */
+  .art-wrap { max-width: 800px; margin: 0 auto; padding: 56px 40px 80px; }
+  @media (max-width: 600px) { .art-wrap { padding: 40px 20px 60px; } }
+
+  /* ARTICLE CONTENT */
+  .art-body { font-family: 'Prata', Georgia, serif; font-size: 17px; color: #3C3028; line-height: 2; }
+  .art-body p { margin-bottom: 24px; }
+  .art-body strong, .art-body b { color: #1C1810; font-weight: 600; }
+  .art-body h2, .art-body h3 { font-family: 'Playfair Display', Didot, Georgia, serif; font-style: italic; color: #1C1810; margin: 40px 0 16px; line-height: 1.3; }
+  .art-body h2 { font-size: clamp(22px,3vw,30px); }
+  .art-body h3 { font-size: clamp(18px,2.5vw,24px); }
+  .art-body ul, .art-body ol { padding-left: 24px; margin-bottom: 24px; }
+  .art-body li { margin-bottom: 10px; }
+  .art-body img { max-width: 100%; height: auto; margin: 32px 0; display: block; }
+  .art-body a { color: #7A5C20; text-decoration: underline; text-decoration-color: #C4B49E; }
+  .art-body a:hover { color: #1C1810; }
+  .art-body blockquote { border-left: 3px solid #C8A060; padding: 16px 24px; margin: 32px 0; background: #E6DCCB; font-style: italic; color: #5C5040; }
+
+  /* META */
+  .art-meta { display: flex; align-items: center; gap: 16px; padding: 24px 0; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; margin-bottom: 48px; flex-wrap: wrap; }
+  .art-meta-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
+  .art-meta-value { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #5C5040; }
+  .art-meta-dot { color: #C4B49E; }
+
+  /* IDENTIFY CTA */
+  .art-cta { background: #1C1810; padding: 40px; margin: 56px 0; text-align: center; }
+  .art-cta-eye { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 12px; }
+  .art-cta-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,28px); font-style: italic; color: #EFE7D9; margin-bottom: 10px; }
+  .art-cta-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: rgba(239,231,217,.6); margin-bottom: 24px; line-height: 1.7; }
+  .art-cta-btn { display: inline-block; background: #B8860B; color: #fff; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 14px 32px; text-decoration: none; }
+
+  /* RELATED */
+  .art-related-title { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+  .art-related-title::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .art-related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #C4B49E; }
+  @media (max-width: 600px) { .art-related-grid { grid-template-columns: 1fr; } }
+  .art-related-card { background: #EFE7D9; text-decoration: none; color: #1C1810; transition: background .15s; display: block; }
+  .art-related-card:hover { background: #E6DCCB; }
+  .art-related-img { width: 100%; height: 140px; object-fit: cover; background: #E6DCCB; display: block; }
+  .art-related-img-placeholder { width: 100%; height: 140px; background: #E6DCCB; }
+  .art-related-body { padding: 16px; }
+  .art-related-cat { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
+  .art-related-t { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; font-style: italic; color: #1C1810; line-height: 1.3; }
+
+  /* BREADCRUMB */
+  .art-breadcrumb { display: flex; align-items: center; gap: 8px; padding: 20px 40px; background: #EFE7D9; border-bottom: 1px solid #C4B49E; flex-wrap: wrap; }
+  @media (max-width: 600px) { .art-breadcrumb { padding: 16px 20px; } }
+  .art-bc-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
+  .art-bc-sep { color: #C4B49E; font-size: 12px; }
+  .art-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: #8A7A66; text-transform: uppercase; }
+</style>
+
+<!-- BREADCRUMB -->
+<nav class="art-breadcrumb">
+  <a href="/explore" class="art-bc-link">Explore</a>
+  <span class="art-bc-sep">›</span>
+  <a href={`/categories/${catSlug}`} class="art-bc-link">{article.category}</a>
+  <span class="art-bc-sep">›</span>
+  <span class="art-bc-cur">{article.title.slice(0, 40)}{article.title.length > 40 ? '…' : ''}</span>
+</nav>
+
+<!-- HERO -->
+<div class="art-hero">
+  {article.image_url && <div class="art-hero-img" style={`background-image:url('${article.image_url}')`}></div>}
+  <div class="art-hero-overlay"></div>
+  <div class="art-hero-content">
+    <div class="art-hero-eyebrow">
+      <a href={`/categories/${catSlug}`} class="art-hero-cat">{article.category}</a>
+      <span class="art-hero-sep">·</span>
+      <span class="art-hero-date">{date}</span>
+    </div>
+    <h1 class="art-hero-title">{article.title}</h1>
+    {article.excerpt && <p class="art-hero-excerpt">{article.excerpt}</p>}
+  </div>
+</div>
+
+<!-- ARTICLE BODY -->
+<div class="art-wrap">
+  <div class="art-meta">
+    <span class="art-meta-label">By</span>
+    <span class="art-meta-value">{article.author}</span>
+    <span class="art-meta-dot">·</span>
+    <span class="art-meta-label">Category</span>
+    <a href={`/categories/${catSlug}`} style="text-decoration:none">
+      <span class="art-meta-value" style="color:#7A5C20">{article.category}</span>
+    </a>
+  </div>
+
+  <div class="art-body" set:html={article.body} />
+
+  <!-- IDENTIFY CTA -->
+  <div class="art-cta">
+    <div class="art-cta-eye">Free Identification</div>
+    <div class="art-cta-title">Have a piece to identify?</div>
+    <div class="art-cta-sub">Upload a photograph — our AI identifies maker, period, condition and estimated value in seconds.</div>
+    <a href="/" class="art-cta-btn">Identify Free →</a>
+  </div>
+
+  <!-- RELATED -->
+  {related && related.length > 0 && (
+    <div>
+      <div class="art-related-title">More from {article.category}</div>
+      <div class="art-related-grid">
+        {related.map(r => (
+          <a href={`/learn/${r.slug}`} class="art-related-card">
+            {r.image_url
+              ? <img class="art-related-img" src={r.image_url} alt={r.title} loading="lazy" />
+              : <div class="art-related-img-placeholder"></div>
+            }
+            <div class="art-related-body">
+              <div class="art-related-cat">{r.category}</div>
+              <div class="art-related-t">{r.title}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+</PublicShell>
