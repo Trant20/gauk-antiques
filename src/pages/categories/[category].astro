@@ -13,33 +13,33 @@ const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
 const { category } = Astro.params
 if (!category) return Astro.redirect('/explore')
 
-const CATEGORY_META: Record<string, { title: string; headline: string; sub: string; ask: string }> = {
-  pottery:   { title: 'Pottery & Ceramics', headline: 'The world of Pottery & Ceramics', sub: 'From Art Pottery to fine porcelain — one of the most collected and valued categories in the antiques world.', ask: 'Ask anything about pottery & ceramics...' },
-  ceramics:  { title: 'Ceramics', headline: 'The world of Ceramics', sub: 'Studio pieces, factory porcelain and everything between — ceramics span centuries of craft and invention.', ask: 'Ask anything about ceramics...' },
-  glass:     { title: 'Glass & Crystal', headline: 'The world of Glass & Crystal', sub: 'From Venetian blown glass to Victorian pressed crystal — a category of extraordinary depth and variety.', ask: 'Ask anything about glass & crystal...' },
-  jewellery: { title: 'Jewellery', headline: 'The world of Antique Jewellery', sub: 'Georgian mourning rings to Art Nouveau brooches — jewellery carries history, sentiment and significant value.', ask: 'Ask anything about antique jewellery...' },
-  silver:    { title: 'Silver & Metalware', headline: 'The world of Silver & Metalware', sub: 'Hallmarked silver tells a story of maker, date and place — one of the most precisely documented categories in antiques.', ask: 'Ask anything about silver & metalware...' },
-  furniture: { title: 'Furniture', headline: 'The world of Antique Furniture', sub: 'From Georgian mahogany to Arts and Crafts oak — furniture defines the rooms and the eras it came from.', ask: 'Ask anything about antique furniture...' },
-  art:       { title: 'Art & Paintings', headline: 'The world of Art & Paintings', sub: 'Oils, watercolours, prints and sculpture — the art market rewards knowledge, provenance and a good eye.', ask: 'Ask anything about antique art & paintings...' },
-  clocks:    { title: 'Clocks & Watches', headline: 'The world of Clocks & Watches', sub: 'Bracket clocks, longcase clocks, pocket watches — mechanical precision meets decorative art.', ask: 'Ask anything about clocks & watches...' },
-  textiles:  { title: 'Textiles', headline: 'The world of Antique Textiles', sub: 'Samplers, tapestries, quilts and lace — textiles are among the most fragile and most personal of antiques.', ask: 'Ask anything about antique textiles...' },
-  books:     { title: 'Books & Manuscripts', headline: 'The world of Antique Books', sub: 'First editions, illuminated manuscripts, maps and ephemera — the printed word holds extraordinary value.', ask: 'Ask anything about antique books & manuscripts...' },
-  toys:      { title: 'Toys & Collectables', headline: 'The world of Antique Toys', sub: 'Steiff bears, Dinky cars, tin toys and games — childhood nostalgia commands serious collector interest.', ask: 'Ask anything about antique toys & collectables...' },
-  militaria: { title: 'Militaria', headline: 'The world of Militaria', sub: 'Medals, uniforms, weapons and memorabilia — militaria connects collectors to the defining moments of history.', ask: 'Ask anything about militaria...' },
-  other:     { title: 'Other Antiques', headline: 'Antiques & Curiosities', sub: 'Scientific instruments, tribal art, folk objects — the antiques world rewards curiosity about the unexpected.', ask: 'Ask anything about antiques & curiosities...' },
-}
-
-const meta = CATEGORY_META[category.toLowerCase()] || CATEGORY_META.other
 const dbCategory = category.charAt(0).toUpperCase() + category.slice(1)
 
-// Hero image from site_settings
-const { data: heroSetting } = await supabase
+// Load all category settings from DB in one query
+const { data: allSettings } = await supabase
   .from('site_settings')
-  .select('value')
+  .select('key, value')
   .eq('site_id', SITE_ID)
-  .eq('key', `category_hero_${category}`)
-  .single()
-const heroImage = heroSetting?.value || ''
+  .in('key', [
+    `category_hero_${category}`,
+    `category_title_${category}`,
+    `category_subtitle_${category}`,
+  ])
+
+const settingsMap: Record<string, string> = {}
+allSettings?.forEach(s => { settingsMap[s.key] = s.value })
+
+const heroImage = settingsMap[`category_hero_${category}`] || ''
+const heroTitle = settingsMap[`category_title_${category}`] || `The world of ${dbCategory}`
+const heroSubtitle = settingsMap[`category_subtitle_${category}`] || `Explore ${dbCategory.toLowerCase()} — identification, valuation, auction results and collector guides.`
+const askPlaceholder = `Ask anything about ${dbCategory.toLowerCase()}...`
+
+const meta = {
+  title: dbCategory,
+  headline: heroTitle,
+  sub: heroSubtitle,
+  ask: askPlaceholder
+}
 
 // Recent identifications
 const { data: recent, count } = await supabase
@@ -94,7 +94,7 @@ const { data: external } = await supabase
   .order('published_at', { ascending: false })
   .limit(4)
 ---
-<PublicShell title={`${meta.title} — GAUK Antiques`}>
+<PublicShell title={`${meta.title} — GAUK Antiques`} description={meta.sub} ogImage={heroImage}>
 <style>
   /* HERO */
   .cat-hero {
