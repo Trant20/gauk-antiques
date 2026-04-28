@@ -77,10 +77,36 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   .art-body img { max-width: 100%; height: auto; margin: 32px 0; display: block; }
   .art-body a { color: #7A5C20; text-decoration: underline; text-decoration-color: #C4B49E; }
   .art-body a:hover { color: #1C1810; }
-  .art-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 32px 0 40px; }
-  .art-gallery img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; }
-  .art-gallery img:hover { opacity: 0.85; }
-  .art-gallery-single img { max-width: 100%; height: auto; max-height: 480px; object-fit: contain; border-radius: 4px; display: block; margin: 0 auto; }
+  /* GALLERY */
+  .art-gallery { columns: 3; column-gap: 10px; margin: 40px 0 48px; }
+  @media (max-width: 768px) { .art-gallery { columns: 2; } }
+  @media (max-width: 480px) { .art-gallery { columns: 1; } }
+  .art-gallery-item { break-inside: avoid; margin-bottom: 10px; position: relative; overflow: hidden; border-radius: 4px; cursor: pointer; }
+  .art-gallery-item img { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
+  .art-gallery-item:hover img { transform: scale(1.03); }
+  .art-gallery-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(28,24,16,0.82)); color: #F5EFE6; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 24px 12px 10px; opacity: 0; transition: opacity 0.3s ease; letter-spacing: 0.04em; }
+  .art-gallery-item:hover .art-gallery-caption { opacity: 1; }
+  .art-gallery-single { margin: 40px 0 48px; border-radius: 4px; overflow: hidden; }
+  .art-gallery-single img { width: 100%; height: auto; max-height: 600px; object-fit: contain; display: block; background: #1C1810; }
+  /* LIGHTBOX */
+  .lb { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(15,12,8,0.97); flex-direction: column; align-items: center; justify-content: center; }
+  .lb.open { display: flex; }
+  .lb-main { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 40px; box-sizing: border-box; }
+  .lb-img-wrap { position: relative; max-width: 90vw; max-height: 80vh; overflow: hidden; }
+  .lb-img-wrap img { max-width: 90vw; max-height: 80vh; object-fit: contain; display: block; transition: transform 0.3s ease; transform-origin: center; cursor: zoom-in; border-radius: 2px; }
+  .lb-img-wrap img.zoomed { transform: scale(2); cursor: zoom-out; }
+  .lb-prev, .lb-next { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #F5EFE6; font-size: 20px; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10; }
+  .lb-prev:hover, .lb-next:hover { background: rgba(255,255,255,0.18); }
+  .lb-prev { left: 12px; }
+  .lb-next { right: 12px; }
+  .lb-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: rgba(245,239,230,0.6); font-size: 28px; cursor: pointer; line-height: 1; transition: color 0.2s; z-index: 10; }
+  .lb-close:hover { color: #F5EFE6; }
+  .lb-caption { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,239,230,0.55); letter-spacing: 0.06em; padding: 12px 40px 8px; text-align: center; min-height: 36px; }
+  .lb-counter { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(245,239,230,0.3); letter-spacing: 0.1em; padding-bottom: 16px; text-align: center; }
+  .lb-thumbs { display: flex; gap: 8px; padding: 12px 40px 24px; overflow-x: auto; justify-content: center; scrollbar-width: none; }
+  .lb-thumbs::-webkit-scrollbar { display: none; }
+  .lb-thumb { width: 56px; height: 42px; object-fit: cover; border-radius: 2px; cursor: pointer; opacity: 0.45; transition: opacity 0.2s; border: 1px solid transparent; flex-shrink: 0; }
+  .lb-thumb.active { opacity: 1; border-color: #C8A060; }
 
   .art-body blockquote { border-left: 3px solid #C8A060; padding: 16px 24px; margin: 32px 0; background: #E6DCCB; font-style: italic; color: #5C5040; }
 
@@ -148,12 +174,107 @@ const catSlug = CAT_SLUG[article.category] || 'other'
 
   {(() => {
     const raw = article.gallery ? (typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery) : []
-    const imgs = raw.map((i: any) => typeof i === 'string' ? i : i.url).filter(Boolean)
-    if (!imgs.length) return null
-    return imgs.length === 1
-      ? <div class="art-gallery-single"><img src={imgs[0]} alt={article.title} /></div>
-      : <div class="art-gallery">{imgs.map((src: string) => <img src={src} alt={article.title} />)}</div>
+    const items: {url: string, caption: string}[] = raw.map((i: any) => typeof i === 'string' ? {url: i, caption: ''} : {url: i.url, caption: i.caption || ''}).filter((i: any) => i.url)
+    if (!items.length) return null
+    if (items.length === 1) return (
+      <div class="art-gallery-single" data-gallery={JSON.stringify(items)} onclick="lbOpen(0,this)">
+        <img src={items[0].url} alt={items[0].caption || article.title} />
+      </div>
+    )
+    return (
+      <div class="art-gallery" data-gallery={JSON.stringify(items)}>
+        {items.map((item: {url: string, caption: string}, i: number) => (
+          <div class="art-gallery-item" onclick={`lbOpen(${i},this.closest('[data-gallery]'))`}>
+            <img src={item.url} alt={item.caption || article.title} loading="lazy" />
+            {item.caption && <div class="art-gallery-caption">{item.caption}</div>}
+          </div>
+        ))}
+      </div>
+    )
   })()}
+
+  <!-- LIGHTBOX -->
+  <div class="lb" id="lb" role="dialog" aria-modal="true">
+    <button class="lb-close" onclick="lbClose()" aria-label="Close">×</button>
+    <div class="lb-main">
+      <button class="lb-prev" onclick="lbNav(-1)" aria-label="Previous">‹</button>
+      <div class="lb-img-wrap" id="lb-img-wrap">
+        <img id="lb-img" src="" alt="" onclick="lbZoom(this)" />
+      </div>
+      <button class="lb-next" onclick="lbNav(1)" aria-label="Next">›</button>
+    </div>
+    <div class="lb-caption" id="lb-caption"></div>
+    <div class="lb-counter" id="lb-counter"></div>
+    <div class="lb-thumbs" id="lb-thumbs"></div>
+  </div>
+
+  <script>
+    let _items: {url: string, caption: string}[] = []
+    let _idx = 0
+
+    function lbOpen(i: number, el: Element | null) {
+      const raw = el?.getAttribute('data-gallery')
+      if (!raw) return
+      _items = JSON.parse(raw)
+      _idx = i
+      lbRender()
+      document.getElementById('lb')!.classList.add('open')
+      document.body.style.overflow = 'hidden'
+    }
+
+    function lbClose() {
+      document.getElementById('lb')!.classList.remove('open')
+      document.body.style.overflow = ''
+      const img = document.getElementById('lb-img') as HTMLImageElement
+      img.classList.remove('zoomed')
+    }
+
+    function lbNav(dir: number) {
+      _idx = (_idx + dir + _items.length) % _items.length
+      const img = document.getElementById('lb-img') as HTMLImageElement
+      img.classList.remove('zoomed')
+      lbRender()
+    }
+
+    function lbZoom(img: HTMLImageElement) {
+      img.classList.toggle('zoomed')
+    }
+
+    function lbRender() {
+      const item = _items[_idx]
+      const img = document.getElementById('lb-img') as HTMLImageElement
+      img.src = item.url
+      img.alt = item.caption || ''
+      document.getElementById('lb-caption')!.textContent = item.caption || ''
+      document.getElementById('lb-counter')!.textContent = `${_idx + 1} / ${_items.length}`
+      const thumbs = document.getElementById('lb-thumbs')!
+      thumbs.innerHTML = _items.map((t, i) =>
+        `<img class="lb-thumb${i === _idx ? ' active' : ''}" src="${t.url}" alt="" onclick="lbOpen(${i}, document.querySelector('[data-gallery]'))" />`
+      ).join('')
+    }
+
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      const lb = document.getElementById('lb')!
+      if (!lb.classList.contains('open')) return
+      if (e.key === 'ArrowRight') lbNav(1)
+      if (e.key === 'ArrowLeft') lbNav(-1)
+      if (e.key === 'Escape') lbClose()
+    })
+
+    // Touch swipe
+    let _tx = 0
+    const lbEl = document.getElementById('lb')!
+    lbEl.addEventListener('touchstart', (e: TouchEvent) => { _tx = e.touches[0].clientX })
+    lbEl.addEventListener('touchend', (e: TouchEvent) => {
+      const diff = _tx - e.changedTouches[0].clientX
+      if (Math.abs(diff) > 50) lbNav(diff > 0 ? 1 : -1)
+    })
+
+    (window as any).lbOpen = lbOpen
+    (window as any).lbClose = lbClose
+    (window as any).lbNav = lbNav
+    (window as any).lbZoom = lbZoom
+  </script>
 
   <div class="art-body" set:html={
     article.body.includes('<p>') || article.body.includes('<strong>') || article.body.includes('<ul>')
