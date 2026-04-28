@@ -129,44 +129,6 @@ const catSlug = article.category
   </div>
 </div>
 
-<div id="art-toc" style="position:fixed;top:64px;left:0;right:0;z-index:90;background:#EFE7D9;border-bottom:1px solid #C4B49E;overflow-x:auto;scrollbar-width:none;transform:translateY(-110%);transition:transform .25s ease;display:flex;align-items:stretch;flex-wrap:nowrap;">
-  <span style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;padding:14px 20px;border-right:1px solid #C4B49E;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;">On this page</span>
-</div>
-
-<script is:inline>
-document.addEventListener('DOMContentLoaded', function(){
-  var toc = document.getElementById('art-toc');
-  var hero = document.querySelector('.art-hero');
-  var body = document.querySelector('.art-body');
-  if (!toc || !body) return;
-  var headings = body.querySelectorAll('h2, h3');
-  if (!headings.length) return;
-  headings.forEach(function(h, i) {
-    var id = 'toc-' + i;
-    h.id = id;
-    var a = document.createElement('a');
-    a.href = '#' + id;
-    a.textContent = h.textContent;
-    a.style.cssText = 'font-family:Prata,Georgia,serif;font-size:11px;color:#5C5040;text-decoration:none;padding:14px 20px;border-right:1px solid #C4B49E;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;cursor:pointer;';
-    a.addEventListener('mouseover', function(){ this.style.background='#E6DCCB';this.style.color='#7A5C20'; });
-    a.addEventListener('mouseout', function(){ this.style.background='';this.style.color='#5C5040'; });
-    a.addEventListener('click', function(e) {
-      e.preventDefault();
-      var el = document.getElementById(id);
-      if (!el) return;
-      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
-    });
-    toc.appendChild(a);
-  });
-  if (hero) {
-    new IntersectionObserver(function(entries) {
-      toc.style.transform = entries[0].isIntersecting ? 'translateY(-110%)' : 'translateY(0)';
-    }, { threshold: 0 }).observe(hero);
-  } else {
-    toc.style.transform = 'translateY(0)';
-  }
-});
-</script>
 
 <!-- ARTICLE BODY -->
 
