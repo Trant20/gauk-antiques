@@ -172,6 +172,7 @@ const catSlug = CAT_SLUG[article.category] || 'other'
       var a = document.createElement('a');
       a.href = '#' + id;
       a.className = 'art-toc-link' + (h.tagName === 'H3' ? ' h3' : '');
+      a.style.whiteSpace = 'nowrap';
       a.textContent = h.textContent;
       a.addEventListener('click', function(e) {
         e.preventDefault();
