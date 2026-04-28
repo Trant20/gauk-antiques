@@ -47,6 +47,11 @@ if (!validSlugs.includes(normalisedSlug)) {
   return Astro.redirect('/explore', 302)
 }
 
+// Canonical redirect — if URL isn't the clean slug, redirect to it
+if (category !== normalisedSlug) {
+  return Astro.redirect(`/categories/${normalisedSlug}`, 301)
+}
+
 // Load all category settings from DB in one query
 const { data: allSettings } = await supabase
   .from('site_settings')
