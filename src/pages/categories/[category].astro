@@ -128,7 +128,7 @@ const { data: external } = await supabase
   .limit(4)
 ---
 <PublicShell title={`${heroTitle} — GAUK Antiques`} description={heroSubtitle} ogImage={heroImage}>
-<link rel="canonical" href={`https://gaukantiques.com/categories/${category}`} slot="head" />
+<link rel="canonical" href={`https://gaukantiques.com/categories/${cleanSlug}`} slot="head" />
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -309,7 +309,7 @@ const { data: external } = await supabase
     <div class="cat-cap">From the archive</div>
     <h2 class="cat-heading">Essential reading</h2>
     <p class="cat-sub">Guides, histories and collector reference for {dbCategory.toLowerCase()}.</p>
-    <a href={`/categories/${category}/articles`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all articles →</a>
+    <a href={`/categories/${cleanSlug}/articles`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all articles →</a>
     {articles && articles.length > 0 ? (
       <div class="story-stack">
         {articles.map((a, i) => (
@@ -344,7 +344,7 @@ const { data: external } = await supabase
       <div class="cat-cap">Community</div>
       <h2 class="cat-heading">Recently identified</h2>
       <p class="cat-sub">Real pieces identified this week — values are AI market estimates.</p>
-      <a href={`/categories/${category}/recent`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all →</a>
+      <a href={`/categories/${cleanSlug}/recent`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all →</a>
       <div class="id-strip">
         {recent.slice(0, 4).map(item => {
           const r = item.result_json || {}
@@ -370,7 +370,7 @@ const { data: external } = await supabase
     <div class="cat-cap">Auction Watch</div>
     <h2 class="cat-heading">Recent results</h2>
     <p class="cat-sub">Real prices from the major auction houses — updated as results come in.</p>
-    <a href={`/categories/${category}/auctions`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all results →</a>
+    <a href={`/categories/${cleanSlug}/auctions`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all results →</a>
     {auctions && auctions.length > 0 ? (
       <div class="auction-grid">
         {auctions.map(a => (
@@ -395,7 +395,7 @@ const { data: external } = await supabase
       <div class="cat-cap">Notable Makers</div>
       <h2 class="cat-heading">The names collectors know</h2>
       <p class="cat-sub">The most identified makers in our collection — click to explore their history, marks and values.</p>
-      <a href={`/categories/${category}/makers`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all makers →</a>
+      <a href={`/categories/${cleanSlug}/makers`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all makers →</a>
       <div class="makers-grid">
         {makers.map(([maker, count]) => (
           <a href={`/makers/${maker.toLowerCase().replace(/\s+/g, '-')}`} class="maker-card">
