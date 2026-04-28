@@ -15,7 +15,6 @@ if (!category) return Astro.redirect('/explore')
 
 // Normalise slug — decode URI and clean
 const decodedCategory = decodeURIComponent(category)
-const dbCategory = decodedCategory.charAt(0).toUpperCase() + decodedCategory.slice(1)
 
 // Validate category exists in the list
 const { data: catListSetting } = await supabase
@@ -30,6 +29,11 @@ const validSlugs = validCategories.map((c: string) =>
   c.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 )
 const normalisedSlug = decodedCategory.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+// Look up display name from categories list — preserves 'Clocks & Watches' etc
+const dbCategory = validCategories.find((c: string) =>
+  c.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === normalisedSlug
+) || decodedCategory.charAt(0).toUpperCase() + decodedCategory.slice(1)
 
 // Check for redirect (renamed categories)
 const { data: redirectSetting } = await supabase
