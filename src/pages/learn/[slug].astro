@@ -95,13 +95,6 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   .art-meta-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
   .art-meta-value { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #5C5040; }
   .art-meta-dot { color: #C4B49E; }
-  .art-toc { display: flex; align-items: stretch; gap: 0; padding: 0; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; overflow-x: auto; scrollbar-width: none; background: #EFE7D9; flex-wrap: nowrap; position: fixed; top: 64px; left: 0; right: 0; z-index: 40; width: 100vw; box-sizing: border-box; }
-  .art-toc::-webkit-scrollbar { display: none; }
-  .art-toc-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding: 14px 16px; white-space: nowrap; border-right: 1px solid #C4B49E; flex-shrink: 0; }
-  .art-toc-link { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #5C5040; text-decoration: none; padding: 14px 16px; white-space: nowrap; border-right: 1px solid #C4B49E; transition: color .15s, background .15s; flex-shrink: 0; }
-  .art-toc a, .art-toc-link { color: #5C5040 !important; text-decoration: none !important; }
-  .art-toc-link:hover { color: #7A5C20 !important; background: #E6DCCB; }
-  .art-toc-link.h3 { padding-left: 24px; font-size: 10px; color: #8A7A66; }
 
   /* IDENTIFY CTA */
   .art-cta { background: #1C1810; padding: 40px; margin: 56px 0; text-align: center; }
@@ -130,10 +123,7 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   .art-bc-sep { color: #C4B49E; font-size: 12px; }
   .art-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: #8A7A66; text-transform: uppercase; }
 </style>
-<style is:global>
-  #art-toc a { color: #5C5040 !important; text-decoration: none !important; }
-  #art-toc a:hover { color: #7A5C20 !important; background: #E6DCCB; }
-</style>
+
 
 <!-- HERO -->
 <div class="art-hero">
@@ -151,8 +141,6 @@ const catSlug = CAT_SLUG[article.category] || 'other'
 </div>
 
 <!-- ARTICLE BODY -->
-<div class="art-toc" id="art-toc" style="display:none;"><span class="art-toc-label">On this page</span></div>
-<div id="art-toc-spacer" style="display:none;height:49px;"></div>
 
 <div class="art-wrap">
   <div class="art-meta">
@@ -164,37 +152,6 @@ const catSlug = CAT_SLUG[article.category] || 'other'
       <span class="art-meta-value" style="color:#7A5C20">{article.category}</span>
     </a>
   </div>
-
-  <script is:inline>
-  document.addEventListener('DOMContentLoaded', function(){
-    var toc = document.getElementById('art-toc');
-    var body = document.querySelector('.art-body');
-    if (!toc || !body) return;
-    var headings = body.querySelectorAll('h2, h3');
-    if (headings.length < 1) return;
-    headings.forEach(function(h, i) {
-      var id = 'section-' + i;
-      h.id = id;
-      var a = document.createElement('a');
-      a.href = '#' + id;
-      a.className = 'art-toc-link' + (h.tagName === 'H3' ? ' h3' : '');
-      a.textContent = h.textContent;
-      a.style.cssText = 'white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;padding:12px 20px;border-right:1px solid #C4B49E;font-family:Prata,Georgia,serif;font-size:11px;letter-spacing:.03em;text-decoration:none;color:#5C5040;transition:background .15s;cursor:pointer;';
-      a.addEventListener('click', function(e) {
-        e.preventDefault();
-        var el = document.getElementById(id);
-        if (!el) return;
-        var offset = 80;
-        var top = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: top, behavior: 'smooth' });
-      });
-      toc.appendChild(a);
-    });
-    toc.style.display = 'flex';
-    var spacer = document.getElementById('art-toc-spacer');
-    if (spacer) spacer.style.display = 'block';
-  });
-  </script>
 
 
   {(() => {
