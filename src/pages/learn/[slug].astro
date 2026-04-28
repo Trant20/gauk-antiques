@@ -177,8 +177,8 @@ const catSlug = CAT_SLUG[article.category] || 'other'
       var a = document.createElement('a');
       a.href = '#' + id;
       a.className = 'art-toc-link' + (h.tagName === 'H3' ? ' h3' : '');
-      a.style.whiteSpace = 'nowrap';
       a.textContent = h.textContent;
+      a.style.cssText = 'white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;padding:12px 20px;border-right:1px solid #C4B49E;font-family:Prata,Georgia,serif;font-size:11px;letter-spacing:.03em;text-decoration:none;color:#5C5040;transition:background .15s;cursor:pointer;';
       a.addEventListener('click', function(e) {
         e.preventDefault();
         var el = document.getElementById(id);
