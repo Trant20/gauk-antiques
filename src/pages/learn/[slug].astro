@@ -147,7 +147,8 @@ const catSlug = CAT_SLUG[article.category] || 'other'
 
 
   {(() => {
-    const imgs: string[] = article.gallery ? (typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery) : []
+    const raw = article.gallery ? (typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery) : []
+    const imgs = raw.map((i: any) => typeof i === 'string' ? i : i.url).filter(Boolean)
     if (!imgs.length) return null
     return imgs.length === 1
       ? <div class="art-gallery-single"><img src={imgs[0]} alt={article.title} /></div>
