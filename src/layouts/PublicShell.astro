@@ -21,6 +21,7 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
 ---
 <Layout title={title}>
 <style is:global>
+  html, body { overflow-x: hidden; max-width: 100%; }
   /* PUBLIC NAV */
   .pub-nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
