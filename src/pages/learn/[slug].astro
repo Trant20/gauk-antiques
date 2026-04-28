@@ -148,6 +148,13 @@ const catSlug = article.category
     </a>
   </div>
 
+  <!-- FEATURED IMAGE -->
+  {article.image_url && (
+    <div style="margin-bottom:40px;border-radius:4px;overflow:hidden;">
+      <img src={article.image_url} alt={article.title} style="width:100%;height:auto;display:block;" />
+    </div>
+  )}
+
   <!-- TOC + BACK TO TOP -->
   <div id="art-toc-wrap" style="display:none;margin-bottom:40px;">
     <div style="margin-bottom:12px;">
