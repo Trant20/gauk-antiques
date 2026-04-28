@@ -146,9 +146,8 @@ const catSlug = article.category
 
   <!-- TOC + BACK TO TOP -->
   <div id="art-toc-wrap" style="display:none;margin-bottom:40px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div style="margin-bottom:12px;">
       <span style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;">On this page</span>
-      <button id="art-top-btn" style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#7A5C20;background:none;border:none;cursor:pointer;padding:0;">↑ Top</button>
     </div>
     <div id="art-toc-links" style="display:flex;flex-direction:column;gap:0;border-top:1px solid #C4B49E;border-bottom:1px solid #C4B49E;"></div>
   </div>
@@ -157,7 +156,6 @@ const catSlug = article.category
   document.addEventListener('DOMContentLoaded', function(){
     var wrap = document.getElementById('art-toc-wrap');
     var linksEl = document.getElementById('art-toc-links');
-    var topBtn = document.getElementById('art-top-btn');
     var artBody = document.querySelector('.art-body');
     if (!wrap || !linksEl || !artBody) return;
     var headings = artBody.querySelectorAll('h2, h3');
@@ -180,9 +178,16 @@ const catSlug = article.category
       linksEl.appendChild(a);
     });
     wrap.style.display = 'block';
-    topBtn.addEventListener('click', function(){
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    // Floating back to top
+    var fab = document.createElement('button');
+    fab.textContent = '↑';
+    fab.title = 'Back to top';
+    fab.style.cssText = 'position:fixed;bottom:32px;right:32px;width:44px;height:44px;border-radius:50%;background:#1C1810;color:#EFE7D9;font-size:18px;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.3);transition:opacity .2s;';
+    fab.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    document.body.appendChild(fab);
+    window.addEventListener('scroll', function(){
+      fab.style.display = window.scrollY > 400 ? 'flex' : 'none';
+    }, { passive: true });
   });
   </script>
 
