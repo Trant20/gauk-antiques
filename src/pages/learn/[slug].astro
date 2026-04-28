@@ -208,72 +208,64 @@ const catSlug = CAT_SLUG[article.category] || 'other'
     <div class="lb-thumbs" id="lb-thumbs"></div>
   </div>
 
-  <script>
-    let _items: {url: string, caption: string}[] = []
-    let _idx = 0
+  <script is:inline>
+    var _items = []
+    var _idx = 0
 
-    function lbOpen(i: number, el: Element | null) {
-      const raw = el?.getAttribute('data-gallery')
+    function lbOpen(i, el) {
+      var raw = el ? el.getAttribute('data-gallery') : null
       if (!raw) return
       _items = JSON.parse(raw)
       _idx = i
       lbRender()
-      document.getElementById('lb')!.classList.add('open')
+      document.getElementById('lb').classList.add('open')
       document.body.style.overflow = 'hidden'
     }
 
     function lbClose() {
-      document.getElementById('lb')!.classList.remove('open')
+      document.getElementById('lb').classList.remove('open')
       document.body.style.overflow = ''
-      const img = document.getElementById('lb-img') as HTMLImageElement
-      img.classList.remove('zoomed')
+      document.getElementById('lb-img').classList.remove('zoomed')
     }
 
-    function lbNav(dir: number) {
+    function lbNav(dir) {
       _idx = (_idx + dir + _items.length) % _items.length
-      const img = document.getElementById('lb-img') as HTMLImageElement
-      img.classList.remove('zoomed')
+      document.getElementById('lb-img').classList.remove('zoomed')
       lbRender()
     }
 
-    function lbZoom(img: HTMLImageElement) {
+    function lbZoom(img) {
       img.classList.toggle('zoomed')
     }
 
     function lbRender() {
-      const item = _items[_idx]
-      const img = document.getElementById('lb-img') as HTMLImageElement
+      var item = _items[_idx]
+      var img = document.getElementById('lb-img')
       img.src = item.url
       img.alt = item.caption || ''
-      document.getElementById('lb-caption')!.textContent = item.caption || ''
-      document.getElementById('lb-counter')!.textContent = `${_idx + 1} / ${_items.length}`
-      const thumbs = document.getElementById('lb-thumbs')!
-      thumbs.innerHTML = _items.map((t, i) =>
-        `<img class="lb-thumb${i === _idx ? ' active' : ''}" src="${t.url}" alt="" onclick="lbOpen(${i}, document.querySelector('[data-gallery]'))" />`
-      ).join('')
+      document.getElementById('lb-caption').textContent = item.caption || ''
+      document.getElementById('lb-counter').textContent = (_idx + 1) + ' / ' + _items.length
+      var thumbs = document.getElementById('lb-thumbs')
+      thumbs.innerHTML = _items.map(function(t, i) {
+        return '<img class="lb-thumb' + (i === _idx ? ' active' : '') + '" src="' + t.url + '" alt="" onclick="lbOpen(' + i + ', document.querySelector('[data-gallery]'))" />'
+      }).join('')
     }
 
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      const lb = document.getElementById('lb')!
+    document.addEventListener('keydown', function(e) {
+      var lb = document.getElementById('lb')
       if (!lb.classList.contains('open')) return
       if (e.key === 'ArrowRight') lbNav(1)
       if (e.key === 'ArrowLeft') lbNav(-1)
       if (e.key === 'Escape') lbClose()
     })
 
-    // Touch swipe
-    let _tx = 0
-    const lbEl = document.getElementById('lb')!
-    lbEl.addEventListener('touchstart', (e: TouchEvent) => { _tx = e.touches[0].clientX })
-    lbEl.addEventListener('touchend', (e: TouchEvent) => {
-      const diff = _tx - e.changedTouches[0].clientX
+    var _tx = 0
+    var lbEl = document.getElementById('lb')
+    lbEl.addEventListener('touchstart', function(e) { _tx = e.touches[0].clientX })
+    lbEl.addEventListener('touchend', function(e) {
+      var diff = _tx - e.changedTouches[0].clientX
       if (Math.abs(diff) > 50) lbNav(diff > 0 ? 1 : -1)
     })
-
-    (window as any).lbOpen = lbOpen
-    (window as any).lbClose = lbClose
-    (window as any).lbNav = lbNav
-    (window as any).lbZoom = lbZoom
   </script>
 
   <div class="art-body" set:html={
