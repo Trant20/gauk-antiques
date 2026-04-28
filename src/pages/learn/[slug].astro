@@ -71,6 +71,10 @@ const catSlug = article.category
   .art-body ul, .art-body ol { padding-left: 24px; margin-bottom: 24px; }
   .art-body li { margin-bottom: 10px; }
   .art-body img { max-width: 100%; height: auto; margin: 32px 0; display: block; }
+  .art-body img[style*='float: left'], .art-body img[style*='float:left'] { float: left; margin: 8px 24px 16px 0; display: inline; max-width: 45%; }
+  .art-body img[style*='float: right'], .art-body img[style*='float:right'] { float: right; margin: 8px 0 16px 24px; display: inline; max-width: 45%; }
+  .art-body p { clear: none; }
+  .art-body h2, .art-body h3 { clear: both; }
   .art-body a { color: #7A5C20; text-decoration: underline; text-decoration-color: #C4B49E; }
   .art-body a:hover { color: #1C1810; }
   .art-gallery { columns: 3; column-gap: 10px; margin: 40px 0 48px; }
