@@ -301,4 +301,86 @@ const catSlug = article.category
     </div>
   )}
 </div>
+
+<style is:global>
+  #art-toc {
+    display: none;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: #EFE7D9;
+    border-bottom: 1px solid #C4B49E;
+    flex-direction: row;
+    align-items: stretch;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #art-toc::-webkit-scrollbar { display: none; }
+  #art-toc-label {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #8A7A66;
+    padding: 14px 20px;
+    border-right: 1px solid #C4B49E;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+  #art-toc a {
+    font-family: 'Prata', Georgia, serif;
+    font-size: 11px;
+    color: #5C5040 !important;
+    text-decoration: none !important;
+    padding: 14px 20px;
+    border-right: 1px solid #C4B49E;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    transition: background .15s, color .15s;
+    cursor: pointer;
+  }
+  #art-toc a:hover { background: #E6DCCB; color: #7A5C20 !important; }
+  #art-toc a.active { color: #7A5C20 !important; background: #E6DCCB; }
+  #art-toc-spacer { height: 49px; display: none; }
+</style>
+
+<div id="art-toc-spacer"></div>
+<div id="art-toc">
+  <span id="art-toc-label">On this page</span>
+</div>
+
+<script is:inline>
+(function(){
+  var toc = document.getElementById('art-toc');
+  var spacer = document.getElementById('art-toc-spacer');
+  var body = document.querySelector('.art-body');
+  if (!toc || !body) return;
+  var headings = body.querySelectorAll('h2, h3');
+  if (!headings.length) return;
+  headings.forEach(function(h, i) {
+    var id = 'toc-' + i;
+    h.id = id;
+    var a = document.createElement('a');
+    a.href = '#' + id;
+    a.textContent = h.textContent;
+    if (h.tagName === 'H3') a.style.paddingLeft = '28px';
+    a.addEventListener('click', function(e) {
+      e.preventDefault();
+      var el = document.getElementById(id);
+      if (!el) return;
+      var top = el.getBoundingClientRect().top + window.scrollY - 120;
+      window.scrollTo({ top: top, behavior: 'smooth' });
+    });
+    toc.appendChild(a);
+  });
+  toc.style.display = 'flex';
+  spacer.style.display = 'block';
+})();
+</script>
 </PublicShell>
