@@ -134,7 +134,7 @@ const catSlug = article.category
 </div>
 
 <script is:inline>
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   var toc = document.getElementById('art-toc');
   var body = document.querySelector('.art-body');
   if (!toc || !body) return;
@@ -157,7 +157,7 @@ const catSlug = article.category
     toc.appendChild(a);
   });
   toc.style.display = 'block';
-})();
+});
 </script>
 
 <!-- ARTICLE BODY -->
