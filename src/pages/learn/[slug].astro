@@ -129,40 +129,6 @@ const catSlug = article.category
   </div>
 </div>
 
-<div id="art-toc" style="position:fixed;top:64px;left:0;right:0;z-index:99;background:#EFE7D9;border-bottom:1px solid #C4B49E;overflow-x:auto;scrollbar-width:none;display:none;align-items:stretch;flex-wrap:nowrap;">
-  <span style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;padding:14px 20px;border-right:1px solid #C4B49E;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;">On this page</span>
-</div>
-<script is:inline>
-document.addEventListener('DOMContentLoaded', function(){
-  var toc = document.getElementById('art-toc');
-  var hero = document.querySelector('.art-hero');
-  var artBody = document.querySelector('.art-body');
-  if (!toc || !artBody) return;
-  var headings = artBody.querySelectorAll('h2, h3');
-  if (!headings.length) return;
-  headings.forEach(function(h, i) {
-    var id = 'toc-' + i;
-    h.id = id;
-    var a = document.createElement('a');
-    a.href = '#' + id;
-    a.textContent = h.textContent;
-    a.style.cssText = 'font-family:Prata,Georgia,serif;font-size:11px;color:#5C5040;text-decoration:none;padding:14px 20px;border-right:1px solid #C4B49E;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;cursor:pointer;';
-    a.addEventListener('mouseover', function(){ this.style.background='#E6DCCB';this.style.color='#7A5C20'; });
-    a.addEventListener('mouseout', function(){ this.style.background='';this.style.color='#5C5040'; });
-    a.addEventListener('click', function(e) {
-      e.preventDefault();
-      var el = document.getElementById(id);
-      if (!el) return;
-      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
-    });
-    toc.appendChild(a);
-  });
-  window.addEventListener('scroll', function() {
-    var heroBottom = hero ? hero.getBoundingClientRect().bottom : 0;
-    toc.style.display = heroBottom <= 64 ? 'flex' : 'none';
-  }, { passive: true });
-});
-</script>
 
 
 <!-- ARTICLE BODY -->
@@ -178,6 +144,47 @@ document.addEventListener('DOMContentLoaded', function(){
     </a>
   </div>
 
+  <!-- TOC + BACK TO TOP -->
+  <div id="art-toc-wrap" style="display:none;margin-bottom:40px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;">On this page</span>
+      <button id="art-top-btn" style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#7A5C20;background:none;border:none;cursor:pointer;padding:0;">↑ Top</button>
+    </div>
+    <div id="art-toc-links" style="display:flex;flex-direction:column;gap:0;border-top:1px solid #C4B49E;border-bottom:1px solid #C4B49E;"></div>
+  </div>
+
+  <script is:inline>
+  document.addEventListener('DOMContentLoaded', function(){
+    var wrap = document.getElementById('art-toc-wrap');
+    var linksEl = document.getElementById('art-toc-links');
+    var topBtn = document.getElementById('art-top-btn');
+    var artBody = document.querySelector('.art-body');
+    if (!wrap || !linksEl || !artBody) return;
+    var headings = artBody.querySelectorAll('h2, h3');
+    if (!headings.length) return;
+    headings.forEach(function(h, i) {
+      var id = 'toc-' + i;
+      h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.style.cssText = 'font-family:Prata,Georgia,serif;font-size:13px;color:#5C5040;text-decoration:none;padding:10px 0 10px ' + (h.tagName==='H3'?'16px':'0') + ';border-bottom:1px solid #E6DCCB;display:block;transition:color .15s;';
+      a.addEventListener('mouseover', function(){ this.style.color='#7A5C20'; });
+      a.addEventListener('mouseout', function(){ this.style.color='#5C5040'; });
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var el = document.getElementById(id);
+        if (!el) return;
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' });
+      });
+      linksEl.appendChild(a);
+    });
+    wrap.style.display = 'block';
+    topBtn.addEventListener('click', function(){
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  </script>
 
   {(() => {
     const raw = article.gallery ? (typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery) : []
