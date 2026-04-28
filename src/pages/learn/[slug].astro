@@ -77,10 +77,16 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   .art-body img { max-width: 100%; height: auto; margin: 32px 0; display: block; }
   .art-body a { color: #7A5C20; text-decoration: underline; text-decoration-color: #C4B49E; }
   .art-body a:hover { color: #1C1810; }
-  .art-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 32px 0 40px; }
-  .art-gallery img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; }
-  .art-gallery img:hover { opacity: 0.85; }
-  .art-gallery-single img { max-width: 100%; height: auto; max-height: 480px; object-fit: contain; border-radius: 4px; display: block; margin: 0 auto; }
+  .art-gallery { columns: 3; column-gap: 10px; margin: 40px 0 48px; }
+  @media (max-width: 768px) { .art-gallery { columns: 2; } }
+  @media (max-width: 480px) { .art-gallery { columns: 1; } }
+  .art-gallery-item { break-inside: avoid; margin-bottom: 10px; position: relative; overflow: hidden; border-radius: 4px; cursor: pointer; }
+  .art-gallery-item img { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
+  .art-gallery-item:hover img { transform: scale(1.03); }
+  .art-gallery-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(28,24,16,0.82)); color: #F5EFE6; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 24px 12px 10px; opacity: 0; transition: opacity 0.3s ease; letter-spacing: 0.04em; }
+  .art-gallery-item:hover .art-gallery-caption { opacity: 1; }
+  .art-gallery-single { margin: 40px 0 48px; border-radius: 4px; overflow: hidden; }
+  .art-gallery-single img { width: 100%; height: auto; max-height: 600px; object-fit: contain; display: block; background: #1C1810; }
 
   .art-body blockquote { border-left: 3px solid #C8A060; padding: 16px 24px; margin: 32px 0; background: #E6DCCB; font-style: italic; color: #5C5040; }
 
