@@ -167,7 +167,7 @@ const catSlug = CAT_SLUG[article.category] || 'other'
     var body = document.querySelector('.art-body');
     if (!toc || !body) return;
     var headings = body.querySelectorAll('h2, h3');
-    if (headings.length < 2) return;
+    if (headings.length < 1) return;
     headings.forEach(function(h, i) {
       var id = 'section-' + i;
       h.id = id;
