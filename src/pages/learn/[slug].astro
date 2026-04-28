@@ -1,191 +1,19 @@
 ---
 import PublicShell from '../../layouts/PublicShell.astro'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-)
-
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-const { slug } = Astro.params
-
-const { data: article } = await supabase
-  .from('articles')
-  .select('*')
-  .eq('site_id', SITE_ID)
-  .eq('slug', slug)
-  .eq('published', true)
-  .single()
-
-if (!article) return Astro.redirect('/explore')
-
-const { data: related } = await supabase
-  .from('articles')
-  .select('id, title, slug, excerpt, image_url, category')
-  .eq('site_id', SITE_ID)
-  .eq('category', article.category)
-  .eq('published', true)
-  .neq('slug', slug)
-  .limit(3)
-
-const date = article.published_at
-  ? new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-  : new Date(article.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-
-const CAT_SLUG: Record<string, string> = {
-  'Pottery': 'pottery', 'Ceramics': 'pottery', 'Glass': 'glass',
-  'Silver': 'silver', 'Furniture': 'furniture', 'Art': 'art',
-  'Jewellery': 'jewellery', 'Clocks': 'clocks', 'Textiles': 'textiles',
-  'Books': 'books', 'Toys': 'toys', 'Militaria': 'militaria', 'Other': 'other'
-}
-const catSlug = CAT_SLUG[article.category] || 'other'
----
-<PublicShell title={`${article.title} — GAUK Antiques`}>
-<style>
-  /* HERO */
-  .art-hero {
-    position: relative; width: 100%;
-    min-height: 50vh; display: flex; align-items: flex-end;
-    background: #1C1810; overflow: hidden;
-  }
-  .art-hero-img { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(.5); }
-  .art-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.95) 0%, rgba(13,8,4,.3) 100%); }
-  .art-hero-content { position: relative; z-index: 2; max-width: 800px; margin: 0 auto; padding: 48px 40px; width: 100%; }
-  @media (max-width: 600px) { .art-hero-content { padding: 32px 20px; } }
-  .art-hero-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-  .art-hero-cat { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; text-decoration: none; }
-  .art-hero-cat:hover { color: #EFE7D9; }
-  .art-hero-sep { color: rgba(239,231,217,.3); }
-  .art-hero-date { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; color: rgba(239,231,217,.5); }
-  .art-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,5vw,52px); font-weight: 400; color: #EFE7D9; line-height: 1.15; margin-bottom: 16px; }
-  .art-hero-excerpt { font-family: 'Prata', Georgia, serif; font-size: 17px; color: rgba(239,231,217,.7); line-height: 1.8; max-width: 640px; }
-
-  /* BODY */
-  .art-wrap { max-width: 800px; margin: 0 auto; padding: 56px 40px 80px; }
-  @media (max-width: 600px) { .art-wrap { padding: 40px 20px 60px; } }
-
-  /* ARTICLE CONTENT */
-  .art-body { font-family: 'Prata', Georgia, serif; font-size: 17px; color: #3C3028; line-height: 2; }
-  .art-body p { margin-bottom: 24px; }
-  .art-body strong, .art-body b { color: #1C1810; font-weight: 600; }
-  .art-body h2, .art-body h3 { font-family: 'Playfair Display', Didot, Georgia, serif; font-style: italic; color: #1C1810; margin: 40px 0 16px; line-height: 1.3; }
-  .art-body h2 { font-size: clamp(22px,3vw,30px); }
-  .art-body h3 { font-size: clamp(18px,2.5vw,24px); }
-  .art-body ul, .art-body ol { padding-left: 24px; margin-bottom: 24px; }
-  .art-body li { margin-bottom: 10px; }
-  .art-body img { max-width: 100%; height: auto; margin: 32px 0; display: block; }
-  .art-body a { color: #7A5C20; text-decoration: underline; text-decoration-color: #C4B49E; }
-  .art-body a:hover { color: #1C1810; }
-  /* GALLERY */
-  .art-gallery { columns: 3; column-gap: 10px; margin: 40px 0 48px; }
-  @media (max-width: 768px) { .art-gallery { columns: 2; } }
-  @media (max-width: 480px) { .art-gallery { columns: 1; } }
-  .art-gallery-item { break-inside: avoid; margin-bottom: 10px; position: relative; overflow: hidden; border-radius: 4px; cursor: pointer; }
-  .art-gallery-item img { width: 100%; height: auto; display: block; transition: transform 0.4s ease; }
-  .art-gallery-item:hover img { transform: scale(1.03); }
-  .art-gallery-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(28,24,16,0.82)); color: #F5EFE6; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 24px 12px 10px; opacity: 0; transition: opacity 0.3s ease; letter-spacing: 0.04em; }
-  .art-gallery-item:hover .art-gallery-caption { opacity: 1; }
-  .art-gallery-single { margin: 40px 0 48px; border-radius: 4px; overflow: hidden; }
-  .art-gallery-single img { width: 100%; height: auto; max-height: 600px; object-fit: contain; display: block; background: #1C1810; }
-  /* LIGHTBOX */
-  .lb { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(15,12,8,0.97); flex-direction: column; align-items: center; justify-content: center; }
-  .lb.open { display: flex; }
-  .lb-main { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 40px; box-sizing: border-box; }
-  .lb-img-wrap { position: relative; max-width: 90vw; max-height: 80vh; overflow: hidden; }
-  .lb-img-wrap img { max-width: 90vw; max-height: 80vh; object-fit: contain; display: block; transition: transform 0.3s ease; transform-origin: center; cursor: zoom-in; border-radius: 2px; }
-  .lb-img-wrap img.zoomed { transform: scale(2); cursor: zoom-out; }
-  .lb-prev, .lb-next { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #F5EFE6; font-size: 20px; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10; }
-  .lb-prev:hover, .lb-next:hover { background: rgba(255,255,255,0.18); }
-  .lb-prev { left: 12px; }
-  .lb-next { right: 12px; }
-  .lb-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: rgba(245,239,230,0.6); font-size: 28px; cursor: pointer; line-height: 1; transition: color 0.2s; z-index: 10; }
-  .lb-close:hover { color: #F5EFE6; }
-  .lb-caption { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,239,230,0.55); letter-spacing: 0.06em; padding: 12px 40px 8px; text-align: center; min-height: 36px; }
-  .lb-counter { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(245,239,230,0.3); letter-spacing: 0.1em; padding-bottom: 16px; text-align: center; }
-  .lb-thumbs { display: flex; gap: 8px; padding: 12px 40px 24px; overflow-x: auto; justify-content: center; scrollbar-width: none; }
-  .lb-thumbs::-webkit-scrollbar { display: none; }
-  .lb-thumb { width: 56px; height: 42px; object-fit: cover; border-radius: 2px; cursor: pointer; opacity: 0.45; transition: opacity 0.2s; border: 1px solid transparent; flex-shrink: 0; }
-  .lb-thumb.active { opacity: 1; border-color: #C8A060; }
-
-  .art-body blockquote { border-left: 3px solid #C8A060; padding: 16px 24px; margin: 32px 0; background: #E6DCCB; font-style: italic; color: #5C5040; }
-
-  /* META */
-  .art-meta { display: flex; align-items: center; gap: 16px; padding: 24px 0; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; margin-bottom: 48px; flex-wrap: wrap; }
-  .art-meta-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
-  .art-meta-value { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #5C5040; }
-  .art-meta-dot { color: #C4B49E; }
-
-  /* IDENTIFY CTA */
-  .art-cta { background: #1C1810; padding: 40px; margin: 56px 0; text-align: center; }
-  .art-cta-eye { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 12px; }
-  .art-cta-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,28px); font-style: italic; color: #EFE7D9; margin-bottom: 10px; }
-  .art-cta-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: rgba(239,231,217,.6); margin-bottom: 24px; line-height: 1.7; }
-  .art-cta-btn { display: inline-block; background: #B8860B; color: #fff; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 14px 32px; text-decoration: none; }
-
-  /* RELATED */
-  .art-related-title { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
-  .art-related-title::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
-  .art-related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #C4B49E; }
-  @media (max-width: 600px) { .art-related-grid { grid-template-columns: 1fr; } }
-  .art-related-card { background: #EFE7D9; text-decoration: none; color: #1C1810; transition: background .15s; display: block; }
-  .art-related-card:hover { background: #E6DCCB; }
-  .art-related-img { width: 100%; height: 140px; object-fit: cover; background: #E6DCCB; display: block; }
-  .art-related-img-placeholder { width: 100%; height: 140px; background: #E6DCCB; }
-  .art-related-body { padding: 16px; }
-  .art-related-cat { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
-  .art-related-t { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; font-style: italic; color: #1C1810; line-height: 1.3; }
-
-  /* BREADCRUMB */
-  .art-breadcrumb { display: flex; align-items: center; gap: 8px; padding: 20px 40px; background: #EFE7D9; border-bottom: 1px solid #C4B49E; flex-wrap: wrap; }
-  @media (max-width: 600px) { .art-breadcrumb { padding: 16px 20px; } }
-  .art-bc-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
-  .art-bc-sep { color: #C4B49E; font-size: 12px; }
-  .art-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: #8A7A66; text-transform: uppercase; }
-</style>
-
-<!-- HERO -->
-<div class="art-hero">
-  {article.image_url && <div class="art-hero-img" style={`background-image:url('${article.image_url}')`}></div>}
-  <div class="art-hero-overlay"></div>
-  <div class="art-hero-content">
-    <div class="art-hero-eyebrow">
-      <a href={`/categories/${catSlug}`} class="art-hero-cat">{article.category}</a>
-      <span class="art-hero-sep">·</span>
-      <span class="art-hero-date">{date}</span>
-    </div>
-    <h1 class="art-hero-title">{article.title}</h1>
-    {article.excerpt && <p class="art-hero-excerpt">{article.excerpt}</p>}
-  </div>
-</div>
-
-<!-- ARTICLE BODY -->
-<div class="art-wrap">
-  <div class="art-meta">
-    <span class="art-meta-label">By</span>
-    <span class="art-meta-value">{article.author}</span>
-    <span class="art-meta-dot">·</span>
-    <span class="art-meta-label">Category</span>
-    <a href={`/categories/${catSlug}`} style="text-decoration:none">
-      <span class="art-meta-value" style="color:#7A5C20">{article.category}</span>
-    </a>
-  </div>
-
-
-  {(() => {
+import   {(() => {
     const raw = article.gallery ? (typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery) : []
-    const items: {url: string, caption: string}[] = raw.map((i: any) => typeof i === 'string' ? {url: i, caption: ''} : {url: i.url, caption: i.caption || ''}).filter((i: any) => i.url)
+    const items = raw.map((i) => typeof i === 'string' ? {url: i, caption: ''} : {url: i.url || '', caption: i.caption || ''}).filter((i) => i.url)
     if (!items.length) return null
     if (items.length === 1) return (
-      <div class="art-gallery-single" data-gallery={JSON.stringify(items)} onclick="lbOpen(0,this)">
-        <img src={items[0].url} alt={items[0].caption || article.title} />
+      <div class="art-gallery-single" id="art-gallery" data-items={JSON.stringify(items)}>
+        <img src={items[0].url} alt={items[0].caption || article.title} data-idx="0" class="gallery-trigger" style="cursor:pointer" />
       </div>
     )
     return (
-      <div class="art-gallery" data-gallery={JSON.stringify(items)}>
-        {items.map((item: {url: string, caption: string}, i: number) => (
-          <div class="art-gallery-item" onclick={`lbOpen(${i},this.closest('[data-gallery]'))`}>
-            <img src={item.url} alt={item.caption || article.title} loading="lazy" />
+      <div class="art-gallery" id="art-gallery" data-items={JSON.stringify(items)}>
+        {items.map((item, i) => (
+          <div class="art-gallery-item">
+            <img src={item.url} alt={item.caption || article.title} loading="lazy" data-idx={String(i)} class="gallery-trigger" />
             {item.caption && <div class="art-gallery-caption">{item.caption}</div>}
           </div>
         ))}
@@ -195,13 +23,13 @@ const catSlug = CAT_SLUG[article.category] || 'other'
 
   <!-- LIGHTBOX -->
   <div class="lb" id="lb" role="dialog" aria-modal="true">
-    <button class="lb-close" onclick="lbClose()" aria-label="Close">×</button>
+    <button class="lb-close" id="lb-close" aria-label="Close">&times;</button>
     <div class="lb-main">
-      <button class="lb-prev" onclick="lbNav(-1)" aria-label="Previous">‹</button>
+      <button class="lb-prev" id="lb-prev" aria-label="Previous">&#8249;</button>
       <div class="lb-img-wrap" id="lb-img-wrap">
-        <img id="lb-img" src="" alt="" onclick="lbZoom(this)" />
+        <img id="lb-img" src="" alt="" />
       </div>
-      <button class="lb-next" onclick="lbNav(1)" aria-label="Next">›</button>
+      <button class="lb-next" id="lb-next" aria-label="Next">&#8250;</button>
     </div>
     <div class="lb-caption" id="lb-caption"></div>
     <div class="lb-counter" id="lb-counter"></div>
@@ -209,69 +37,96 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   </div>
 
   <script is:inline>
-  document.addEventListener('DOMContentLoaded', function() {
-    var _items = []
-    var _idx = 0
+    (function() {
+      var _items = [];
+      var _idx = 0;
 
-    function lbOpen(i, el) {
-      var raw = el ? el.getAttribute('data-gallery') : null
-      if (!raw) return
-      _items = JSON.parse(raw)
-      _idx = i
-      lbRender()
-      document.getElementById('lb').classList.add('open')
-      document.body.style.overflow = 'hidden'
-    }
+      function lbRender() {
+        var item = _items[_idx];
+        var img = document.getElementById('lb-img');
+        img.src = item.url;
+        img.alt = item.caption || '';
+        img.classList.remove('zoomed');
+        document.getElementById('lb-caption').textContent = item.caption || '';
+        document.getElementById('lb-counter').textContent = (_idx + 1) + ' / ' + _items.length;
+        var thumbsEl = document.getElementById('lb-thumbs');
+        thumbsEl.innerHTML = '';
+        _items.forEach(function(t, i) {
+          var th = document.createElement('img');
+          th.className = 'lb-thumb' + (i === _idx ? ' active' : '');
+          th.src = t.url;
+          th.alt = '';
+          th.setAttribute('data-thumb-idx', String(i));
+          thumbsEl.appendChild(th);
+        });
+      }
 
-    function lbClose() {
-      document.getElementById('lb').classList.remove('open')
-      document.body.style.overflow = ''
-      document.getElementById('lb-img').classList.remove('zoomed')
-    }
+      function lbOpen(i, items) {
+        _items = items;
+        _idx = i;
+        lbRender();
+        document.getElementById('lb').classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
 
-    function lbNav(dir) {
-      _idx = (_idx + dir + _items.length) % _items.length
-      document.getElementById('lb-img').classList.remove('zoomed')
-      lbRender()
-    }
+      function lbClose() {
+        document.getElementById('lb').classList.remove('open');
+        document.body.style.overflow = '';
+      }
 
-    function lbZoom(img) {
-      img.classList.toggle('zoomed')
-    }
+      function lbNav(dir) {
+        _idx = (_idx + dir + _items.length) % _items.length;
+        lbRender();
+      }
 
-    function lbRender() {
-      var item = _items[_idx]
-      var img = document.getElementById('lb-img')
-      img.src = item.url
-      img.alt = item.caption || ''
-      document.getElementById('lb-caption').textContent = item.caption || ''
-      document.getElementById('lb-counter').textContent = (_idx + 1) + ' / ' + _items.length
-      var thumbs = document.getElementById('lb-thumbs')
-      thumbs.innerHTML = _items.map(function(t, i) {
-        return '<img class="lb-thumb' + (i === _idx ? ' active' : '') + '" src="' + t.url + '" alt="" onclick="lbOpen(' + i + ', document.querySelector('[data-gallery]'))" />'
-      }).join('')
-    }
+      // Gallery click — open lightbox
+      document.addEventListener('click', function(e) {
+        // Gallery image trigger
+        var trigger = e.target.closest('.gallery-trigger');
+        if (trigger) {
+          var gallery = document.getElementById('art-gallery');
+          if (!gallery) return;
+          var items = JSON.parse(gallery.getAttribute('data-items') || '[]');
+          var idx = parseInt(trigger.getAttribute('data-idx') || '0', 10);
+          lbOpen(idx, items);
+          return;
+        }
+        // Lightbox close button
+        if (e.target.id === 'lb-close' || e.target === document.getElementById('lb')) { lbClose(); return; }
+        // Lightbox prev/next
+        if (e.target.id === 'lb-prev') { lbNav(-1); return; }
+        if (e.target.id === 'lb-next') { lbNav(1); return; }
+        // Zoom on main image
+        if (e.target.id === 'lb-img') { e.target.classList.toggle('zoomed'); return; }
+        // Thumbnail click
+        var thumb = e.target.closest('[data-thumb-idx]');
+        if (thumb) {
+          _idx = parseInt(thumb.getAttribute('data-thumb-idx'), 10);
+          lbRender();
+          return;
+        }
+      });
 
-    document.addEventListener('keydown', function(e) {
-      var lb = document.getElementById('lb')
-      if (!lb.classList.contains('open')) return
-      if (e.key === 'ArrowRight') lbNav(1)
-      if (e.key === 'ArrowLeft') lbNav(-1)
-      if (e.key === 'Escape') lbClose()
-    })
+      // Keyboard
+      document.addEventListener('keydown', function(e) {
+        var lb = document.getElementById('lb');
+        if (!lb || !lb.classList.contains('open')) return;
+        if (e.key === 'ArrowRight') lbNav(1);
+        if (e.key === 'ArrowLeft') lbNav(-1);
+        if (e.key === 'Escape') lbClose();
+      });
 
-    var _tx = 0
-    var lbEl = document.getElementById('lb')
-    lbEl.addEventListener('touchstart', function(e) { _tx = e.touches[0].clientX })
-    lbEl.addEventListener('touchend', function(e) {
-      var diff = _tx - e.changedTouches[0].clientX
-      if (Math.abs(diff) > 50) lbNav(diff > 0 ? 1 : -1)
-    })
-    window.lbOpen = lbOpen
-    window.lbClose = lbClose
-    window.lbNav = lbNav
-    window.lbZoom = lbZoom
-  })
+      // Touch swipe
+      var _tx = 0;
+      document.addEventListener('touchstart', function(e) {
+        if (document.getElementById('lb').classList.contains('open')) _tx = e.touches[0].clientX;
+      }, {passive: true});
+      document.addEventListener('touchend', function(e) {
+        if (!document.getElementById('lb').classList.contains('open')) return;
+        var diff = _tx - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) lbNav(diff > 0 ? 1 : -1);
+      });
+    })();
   </script>
 
   <div class="art-body" set:html={
