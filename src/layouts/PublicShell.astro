@@ -197,7 +197,7 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
       <button class="pub-nav-dropdown-trigger">Categories ▾</button>
       <div class="pub-nav-dropdown-menu">
         {categories.map((cat: string) => {
-          const slug = cat.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+          const slug = cat.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
           return <a href={`/categories/${slug}`} class="pub-nav-dropdown-item">{cat}</a>
         })}
         <div class="pub-nav-dropdown-divider"></div>
@@ -214,7 +214,7 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
 <!-- MOBILE DRAWER -->
 <div class="pub-drawer" id="pub-drawer">
   {categories.map((cat: string) => {
-    const slug = cat.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const slug = cat.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     return <a href={`/categories/${slug}`} class="pub-drawer-link">{cat}</a>
   })}
   <a href="/pricing" class="pub-drawer-link">Pricing</a>
