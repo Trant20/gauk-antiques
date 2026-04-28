@@ -209,6 +209,7 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   </div>
 
   <script is:inline>
+  document.addEventListener('DOMContentLoaded', function() {
     var _items = []
     var _idx = 0
 
@@ -266,6 +267,11 @@ const catSlug = CAT_SLUG[article.category] || 'other'
       var diff = _tx - e.changedTouches[0].clientX
       if (Math.abs(diff) > 50) lbNav(diff > 0 ? 1 : -1)
     })
+    window.lbOpen = lbOpen
+    window.lbClose = lbClose
+    window.lbNav = lbNav
+    window.lbZoom = lbZoom
+  })
   </script>
 
   <div class="art-body" set:html={
