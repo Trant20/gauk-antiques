@@ -95,7 +95,7 @@ const catSlug = CAT_SLUG[article.category] || 'other'
   .art-meta-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
   .art-meta-value { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #5C5040; }
   .art-meta-dot { color: #C4B49E; }
-  .art-toc { display: flex; align-items: stretch; gap: 0; padding: 0; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; overflow-x: auto; scrollbar-width: none; background: #EFE7D9; flex-wrap: nowrap; position: sticky; top: 0; z-index: 40; width: 100%; max-width: 100vw; box-sizing: border-box; }
+  .art-toc { display: flex; align-items: stretch; gap: 0; padding: 0; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; overflow-x: auto; scrollbar-width: none; background: #EFE7D9; flex-wrap: nowrap; position: fixed; top: 64px; left: 0; right: 0; z-index: 40; width: 100vw; box-sizing: border-box; }
   .art-toc::-webkit-scrollbar { display: none; }
   .art-toc-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding: 14px 16px; white-space: nowrap; border-right: 1px solid #C4B49E; flex-shrink: 0; }
   .art-toc-link { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #5C5040; text-decoration: none; padding: 14px 16px; white-space: nowrap; border-right: 1px solid #C4B49E; transition: color .15s, background .15s; flex-shrink: 0; }
@@ -152,6 +152,7 @@ const catSlug = CAT_SLUG[article.category] || 'other'
 
 <!-- ARTICLE BODY -->
 <div class="art-toc" id="art-toc" style="display:none;"><span class="art-toc-label">On this page</span></div>
+<div id="art-toc-spacer" style="display:none;height:49px;"></div>
 
 <div class="art-wrap">
   <div class="art-meta">
@@ -190,6 +191,8 @@ const catSlug = CAT_SLUG[article.category] || 'other'
       toc.appendChild(a);
     });
     toc.style.display = 'flex';
+    var spacer = document.getElementById('art-toc-spacer');
+    if (spacer) spacer.style.display = 'block';
   });
   </script>
 
