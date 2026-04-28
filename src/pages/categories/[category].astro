@@ -72,8 +72,8 @@ allSettings?.forEach(s => { settingsMap[s.key] = s.value })
 
 const cleanSlug = decodedCategory.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const heroImage = settingsMap[`category_hero_${cleanSlug}`] || settingsMap[`category_hero_${category}`] || ''
-const heroTitle = settingsMap[`category_title_${cleanSlug}`] || settingsMap[`category_title_${category}`] || `The world of ${dbCategory}`
-const heroSubtitle = settingsMap[`category_subtitle_${cleanSlug}`] || settingsMap[`category_subtitle_${category}`] || `Explore ${dbCategory.toLowerCase()} — identification, valuation, auction results and collector guides.`
+const heroTitle = settingsMap[`category_title_${cleanSlug}`] || settingsMap[`category_title_${category}`] || `The World of ${dbCategory}`
+const heroSubtitle = settingsMap[`category_subtitle_${cleanSlug}`] || settingsMap[`category_subtitle_${category}`] || `Explore ${dbCategory} — identification, valuation, auction results and collector guides.`
 const askPlaceholder = `Ask anything about ${dbCategory.toLowerCase()}...`
 
 const meta = {
