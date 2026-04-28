@@ -211,6 +211,16 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
   </div>
 </nav>
 
+<!-- MOBILE DRAWER -->
+<div class="pub-drawer" id="pub-drawer">
+  {categories.map((cat: string) => {
+    const slug = cat.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    return <a href={`/categories/${slug}`} class="pub-drawer-link">{cat}</a>
+  })}
+  <a href="/pricing" class="pub-drawer-link">Pricing</a>
+  <a href="/auth/signup" class="pub-drawer-cta">Start Your Catalogue</a>
+</div>
+
 <!-- BODY -->
 <div class="pub-body">
   <slot />
