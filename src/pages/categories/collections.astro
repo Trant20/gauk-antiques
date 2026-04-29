@@ -590,6 +590,18 @@ async function showArtistDetailFromObject(a, returnObj, panel) {
 
   extra.innerHTML = html || ''
 
+  // View all button
+  const viewAllBtn = panel.querySelector('.col-viewall-btn')
+  if (viewAllBtn) {
+    viewAllBtn.addEventListener('click', () => {
+      const items = works.filter(w => w.nga_thumb_url).map(w => ({
+        url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
+        caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
+      }))
+      if (items.length) window._lbOpen(0, items)
+    })
+  }
+
   // Wire works to go back to object detail
   panel.querySelectorAll('.col-work-row').forEach(row => {
     row.addEventListener('click', () => {
@@ -709,6 +721,18 @@ async function showArtistDetail(a) {
   }
 
   extra.innerHTML = html || ''
+
+  // View all button
+  const viewAllBtn = panel.querySelector('.col-viewall-btn')
+  if (viewAllBtn) {
+    viewAllBtn.addEventListener('click', () => {
+      const items = works.filter(w => w.nga_thumb_url).map(w => ({
+        url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
+        caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
+      }))
+      if (items.length) window._lbOpen(0, items)
+    })
+  }
 
   // Wire up work rows — open object detail inside artist panel, no tab switch
   panel.querySelectorAll('.col-work-row').forEach(row => {
