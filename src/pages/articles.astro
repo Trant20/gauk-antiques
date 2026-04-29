@@ -1,0 +1,180 @@
+---
+import PublicShell from '../layouts/PublicShell.astro'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+)
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+const { data: heroSetting } = await supabase
+  .from('site_settings').select('value')
+  .eq('site_id', SITE_ID).eq('key', 'articles_index_hero').single()
+const { data: heroTitleSetting } = await supabase
+  .from('site_settings').select('value')
+  .eq('site_id', SITE_ID).eq('key', 'articles_index_title').single()
+const { data: heroSubSetting } = await supabase
+  .from('site_settings').select('value')
+  .eq('site_id', SITE_ID).eq('key', 'articles_index_subtitle').single()
+
+const heroImage = heroSetting?.value || ''
+const heroTitle = heroTitleSetting?.value || 'The Knowledge Library'
+const heroSubtitle = heroSubSetting?.value || 'Guides, histories and collector reference — everything you need to buy, sell and identify antiques with confidence.'
+
+const { data: catSetting } = await supabase
+  .from('site_settings').select('value')
+  .eq('site_id', SITE_ID).eq('key', 'categories').single()
+const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
+
+function slugify(s: string) {
+  return s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+const categoryArticles: Record<string, any[]> = {}
+await Promise.all(
+  categories.map(async (cat) => {
+    const { data } = await supabase
+      .from('articles')
+      .select('id, title, slug, excerpt, image_url, category, published_at')
+      .eq('site_id', SITE_ID)
+      .eq('category', cat)
+      .eq('published', true)
+      .order('published_at', { ascending: false })
+      .limit(4)
+    if (data && data.length > 0) categoryArticles[cat] = data
+  })
+)
+
+const { data: latest } = await supabase
+  .from('articles')
+  .select('id, title, slug, excerpt, image_url, category, published_at')
+  .eq('site_id', SITE_ID)
+  .eq('published', true)
+  .order('published_at', { ascending: false })
+  .limit(5)
+
+const featuredArticles = latest?.slice(1, 5) || []
+---
+<PublicShell title={`${heroTitle} — GAUK Antiques`} description={heroSubtitle} ogImage={heroImage}>
+<style is:global>
+  .art-idx-hero { position: relative; min-height: 60vh; display: flex; align-items: flex-end; overflow: hidden; background: #1C1810; }
+  .art-idx-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .art-idx-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.97) 0%, rgba(13,8,4,.4) 60%, rgba(13,8,4,.1) 100%); }
+  .art-idx-hero-content { position: relative; z-index: 2; width: 100%; max-width: 1100px; margin: 0 auto; padding: 60px 40px; }
+  .art-idx-hero-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: #C8A060; margin-bottom: 16px; }
+  .art-idx-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(36px,6vw,68px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.1; margin-bottom: 16px; max-width: 700px; }
+  .art-idx-hero-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: rgba(239,231,217,.6); line-height: 1.8; max-width: 560px; }
+
+  .art-latest-strip { background: #1C1810; border-top: 1px solid rgba(255,255,255,.08); }
+  .art-latest-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); }
+  .art-latest-item { padding: 20px 24px; border-right: 1px solid rgba(255,255,255,.08); text-decoration: none; color: #EFE7D9; transition: background .15s; display: block; }
+  .art-latest-item:last-child { border-right: none; }
+  .art-latest-item:hover { background: rgba(255,255,255,.04); }
+  .art-latest-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #C8A060; margin-bottom: 6px; }
+  .art-latest-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 14px; font-style: italic; color: #EFE7D9; line-height: 1.4; }
+
+  .art-idx-body { background: #EFE7D9; }
+  .art-cat-section { max-width: 1100px; margin: 0 auto; padding: 56px 40px; border-bottom: 1px solid #C4B49E; }
+  .art-cat-section:last-child { border-bottom: none; }
+  .art-cat-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 32px; }
+  .art-cat-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(24px,4vw,40px); font-weight: 400; font-style: italic; color: #1C1810; }
+  .art-cat-link { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-decoration: none; border-bottom: 1px solid #C4B49E; padding-bottom: 2px; white-space: nowrap; }
+  .art-cat-link:hover { color: #1C1810; border-color: #1C1810; }
+
+  .art-broadsheet { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; }
+  .art-broadsheet-hero { grid-column: 1 / -1; background: #EFE7D9; display: flex; text-decoration: none; color: #1C1810; transition: background .15s; }
+  .art-broadsheet-hero:hover { background: #E6DCCB; }
+  .art-broadsheet-hero-img { width: 420px; height: 280px; object-fit: cover; flex-shrink: 0; background: #E6DCCB; display: block; }
+  .art-broadsheet-hero-img-placeholder { width: 420px; height: 280px; background: #E6DCCB; flex-shrink: 0; }
+  .art-broadsheet-hero-body { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
+  .art-broadsheet-hero-num { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 64px; color: #C4B49E; line-height: 1; margin-bottom: 16px; }
+  .art-broadsheet-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,30px); font-style: italic; color: #1C1810; line-height: 1.3; margin-bottom: 12px; }
+  .art-broadsheet-hero-excerpt { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; line-height: 1.8; }
+
+  .art-broadsheet-card { background: #EFE7D9; text-decoration: none; color: #1C1810; transition: background .15s; display: flex; flex-direction: column; }
+  .art-broadsheet-card:hover { background: #E6DCCB; }
+  .art-broadsheet-card-img { width: 100%; height: 180px; object-fit: cover; display: block; background: #E6DCCB; }
+  .art-broadsheet-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+  .art-broadsheet-card-num { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 32px; color: #C4B49E; line-height: 1; margin-bottom: 8px; }
+  .art-broadsheet-card-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; font-style: italic; color: #1C1810; line-height: 1.3; margin-bottom: 8px; }
+  .art-broadsheet-card-excerpt { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; line-height: 1.7; }
+
+  .art-idx-cta { background: #1C1810; padding: 56px 40px; text-align: center; }
+  .art-idx-cta-eye { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 12px; }
+  .art-idx-cta-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(24px,4vw,40px); font-style: italic; color: #EFE7D9; margin-bottom: 10px; }
+  .art-idx-cta-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: rgba(239,231,217,.6); margin-bottom: 28px; line-height: 1.7; }
+  .art-idx-cta-btn { display: inline-block; background: #B8860B; color: #fff; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 14px 36px; text-decoration: none; }
+</style>
+
+<div class="art-idx-hero">
+  {heroImage && <div class="art-idx-hero-bg" style={`background-image:url('${heroImage}')`}></div>}
+  <div class="art-idx-hero-overlay"></div>
+  <div class="art-idx-hero-content">
+    <div class="art-idx-hero-eyebrow">The Knowledge Library</div>
+    <h1 class="art-idx-hero-title">{heroTitle}</h1>
+    <p class="art-idx-hero-sub">{heroSubtitle}</p>
+  </div>
+</div>
+
+{featuredArticles.length > 0 && (
+  <div class="art-latest-strip">
+    <div class="art-latest-inner">
+      {featuredArticles.map(a => (
+        <a href={`/learn/${a.slug}`} class="art-latest-item">
+          <div class="art-latest-cat">{a.category}</div>
+          <div class="art-latest-title">{a.title}</div>
+        </a>
+      ))}
+    </div>
+  </div>
+)}
+
+<div class="art-idx-body">
+  {categories.filter(cat => categoryArticles[cat]?.length > 0).map((cat) => {
+    const arts = categoryArticles[cat]
+    const heroArt = arts[0]
+    const restArts = arts.slice(1)
+    const catSlug = slugify(cat)
+    return (
+      <div class="art-cat-section">
+        <div class="art-cat-header">
+          <div class="art-cat-name">{cat}</div>
+          <a href={`/categories/${catSlug}/articles`} class="art-cat-link">All {cat} articles</a>
+        </div>
+        <div class="art-broadsheet">
+          <a href={`/learn/${heroArt.slug}`} class="art-broadsheet-hero">
+            {heroArt.image_url
+              ? <img class="art-broadsheet-hero-img" src={heroArt.image_url} alt={heroArt.title} loading="lazy" />
+              : <div class="art-broadsheet-hero-img-placeholder"></div>
+            }
+            <div class="art-broadsheet-hero-body">
+              <div class="art-broadsheet-hero-num">01</div>
+              <div class="art-broadsheet-hero-title">{heroArt.title}</div>
+              {heroArt.excerpt && <div class="art-broadsheet-hero-excerpt">{heroArt.excerpt.slice(0, 160)}…</div>}
+            </div>
+          </a>
+          {restArts.map((a, i) => (
+            <a href={`/learn/${a.slug}`} class="art-broadsheet-card">
+              {a.image_url && <img class="art-broadsheet-card-img" src={a.image_url} alt={a.title} loading="lazy" />}
+              <div class="art-broadsheet-card-body">
+                <div class="art-broadsheet-card-num">0{i + 2}</div>
+                <div class="art-broadsheet-card-title">{a.title}</div>
+                {a.excerpt && <div class="art-broadsheet-card-excerpt">{a.excerpt.slice(0, 100)}…</div>}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    )
+  })}
+
+  <div class="art-idx-cta">
+    <div class="art-idx-cta-eye">Free Identification</div>
+    <div class="art-idx-cta-title">Have a piece to identify?</div>
+    <div class="art-idx-cta-sub">Upload a photograph — our AI identifies maker, period, condition and estimated value in seconds.</div>
+    <a href="/" class="art-idx-cta-btn">Identify Free</a>
+  </div>
+</div>
+</PublicShell>
