@@ -42,7 +42,7 @@ await Promise.all(
       .eq('category', cat)
       .eq('published', true)
       .order('published_at', { ascending: false })
-      .limit(4)
+      .limit(5)
     if (data && data.length > 0) categoryArticles[cat] = data
   })
 )
