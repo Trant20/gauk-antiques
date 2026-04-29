@@ -590,22 +590,22 @@ async function showArtistDetailFromObject(a, returnObj, panel) {
 
   extra.innerHTML = html || ''
 
-  // Wire thumb images to open lightbox
+  // Delegated thumb click on artist-from-object panel
   const _artWorks2 = works
-  panel.querySelectorAll('.col-work-thumb').forEach(img => {
-    img.style.cursor = 'pointer'
-    img.addEventListener('click', e => {
-      e.stopPropagation()
-      const row = img.closest('.col-work-row')
-      const o = JSON.parse(row.dataset.obj)
-      const items = _artWorks2.filter(w => w.nga_thumb_url).map(w => ({
-        url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
-        caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
-      }))
-      const startIdx = _artWorks2.filter(w => w.nga_thumb_url).findIndex(w => w.object_id === o.object_id)
-      window._lbOpen(Math.max(0, startIdx), items)
-    })
-  })
+  panel.addEventListener('click', e => {
+    const thumb = e.target.closest('.col-work-thumb')
+    if (!thumb) return
+    e.stopPropagation()
+    const row = thumb.closest('.col-work-row')
+    if (!row) return
+    const o = JSON.parse(row.dataset.obj)
+    const items = _artWorks2.filter(w => w.nga_thumb_url).map(w => ({
+      url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
+      caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
+    }))
+    const startIdx = _artWorks2.filter(w => w.nga_thumb_url).findIndex(w => w.object_id === o.object_id)
+    window._lbOpen(Math.max(0, startIdx), items)
+  }, true)
 
   // Wire works to go back to object detail
   panel.querySelectorAll('.col-work-row').forEach(row => {
