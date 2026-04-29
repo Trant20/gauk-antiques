@@ -465,18 +465,59 @@ async function showArtistDetail(a) {
 
   extra.innerHTML = html || ''
 
-  // Wire up work rows to open object detail
+  // Wire up work rows — open object detail inside artist panel, no tab switch
   panel.querySelectorAll('.col-work-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const obj = JSON.parse(row.dataset.obj)
-      // Switch to objects tab
-      document.querySelectorAll('.col-tab').forEach(t => t.classList.remove('active'))
-      document.querySelectorAll('.col-tab')[0].classList.add('active')
-      document.getElementById('tab-objects').classList.remove('col-hidden')
-      document.getElementById('tab-artists').classList.add('col-hidden')
-      // Open detail
-      selObjId = obj.object_id
-      showObjDetail(obj)
+    row.addEventListener('click', async () => {
+      const o = JSON.parse(row.dataset.obj)
+      panel.innerHTML = `
+        <div class="col-detail-header">
+          <button class="col-close" id="art-back">← Back to artist</button>
+          <button class="col-close" id="art-obj-close">✕</button>
+        </div>
+        ${o.nga_thumb_url ? `<img class="col-detail-img" src="${iiif(o.nga_thumb_url)}" alt=""/>` : ''}
+        <div class="col-detail-title">${o.title || 'Untitled'}</div>
+        ${o.attribution ? `<div class="col-detail-attr">${o.attribution}</div>` : ''}
+        ${o.display_date ? `<div class="col-detail-date">${o.display_date}</div>` : ''}
+        <div style="margin-bottom:16px">
+          ${badge(o.classification, classColor(o.classification))}
+          ${o.subclassification ? badge(o.subclassification, 'gray') : ''}
+          ${o.on_view ? badge('On view','green') : ''}
+        </div>
+        <div class="col-field-grid">
+          ${o.accession_num ? `<div><div class="col-field-label">Accession</div><div class="col-field-val">${o.accession_num}</div></div>` : ''}
+          ${o.department_abbr ? `<div><div class="col-field-label">Department</div><div class="col-field-val">${o.department_abbr}</div></div>` : ''}
+          ${o.medium ? `<div><div class="col-field-label">Medium</div><div class="col-field-val">${o.medium}</div></div>` : ''}
+          ${o.dimensions ? `<div><div class="col-field-label">Dimensions</div><div class="col-field-val">${o.dimensions}</div></div>` : ''}
+        </div>
+        ${o.credit_line ? `<div class="col-section-label">Credit line</div><div class="col-field-val" style="margin-bottom:8px">${o.credit_line}</div>` : ''}
+        ${o.wikidata_id ? `<div style="margin-top:8px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${o.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>` : ''}
+        <div id="art-obj-extra"><div class="col-section-label">Loading detail…</div></div>`
+
+      document.getElementById('art-back').addEventListener('click', () => showArtistDetail(a))
+      document.getElementById('art-obj-close').addEventListener('click', () => {
+        panel.classList.add('col-hidden')
+        selArtId = null
+        const list = document.getElementById('art-list')
+        list.classList.replace('narrow','full')
+        list.querySelectorAll('.col-artist-row').forEach(r => r.classList.remove('selected'))
+      })
+
+      const { terms, texts, dimensions, historical } = await fetchObjDetail(o.object_id)
+      const extra = document.getElementById('art-obj-extra')
+      if (!extra) return
+      let html = ''
+      if (terms.length) {
+        const g = terms.reduce((a,t) => { (a[t.term_type]=a[t.term_type]||[]).push(t.term); return a }, {})
+        html += Object.entries(g).map(([type,ts]) => `<div class="col-section-label">${type}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px">${ts.map(t=>badge(t,'gray')).join('')}</div>`).join('')
+      }
+      if (historical.length) {
+        html += `<div class="col-section-label">Attribution history</div>${historical.map(h => `<div class="col-hist-block"><div class="col-hist-text">${h.forward_text}</div>${h.effective_date?`<div class="col-hist-meta">${h.data_type} · ${h.effective_date}</div>`:''}</div>`).join('')}`
+      }
+      if (texts.length) {
+        const g = texts.reduce((a,t) => { (a[t.text_type]=a[t.text_type]||[]).push(t); return a }, {})
+        html += Object.entries(g).map(([type,entries]) => `<div class="col-section-label">${type.replace(/_/g,' ')}</div>${entries.map(e=>`<div class="col-text-block">${e.year?`<span style="color:var(--text3);margin-right:6px">${e.year}</span>`:''}${e.text}</div>`).join('')}`).join('')
+      }
+      extra.innerHTML = html || ''
     })
   })
 }
