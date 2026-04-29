@@ -318,7 +318,7 @@ const { data: external } = await supabase
     <div class="cat-cap">From the archive</div>
     <h2 class="cat-heading">Essential reading</h2>
     <p class="cat-sub">Guides, histories and collector reference for {dbCategory.toLowerCase()}.</p>
-    <a href={`/categories/${cleanSlug}/articles`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all articles →</a>
+    <a href={`/category/${cleanSlug}/articles`} class="cat-view-all" style="display:inline-block;margin-bottom:24px;">View all articles →</a>
     {articles && articles.length > 0 ? (
       <div class="story-stack">
         {articles.map((a, i) => (
