@@ -175,7 +175,7 @@ const heroImage = heroSetting?.value || ''
       </div>
       <div class="col-stat">
         <div class="col-stat-label">With image</div>
-        <div class="col-stat-value">{Math.round(stats.withImage / stats.objects * 100)}%</div>
+        <div class="col-stat-value">{stats.withImage.toLocaleString()}</div>
       </div>
     </div>
 
