@@ -69,16 +69,31 @@ const { data: initialArticles, count } = await supabase
   .cat-art-loading { text-align: center; padding: 32px; font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; display: none; }
   .cat-art-end { text-align: center; padding: 32px; font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #C4B49E; display: none; }
   .cat-art-sentinel { height: 1px; }
+  .cat-art-breadcrumb { background: #EFE7D9; border-bottom: 1px solid #C4B49E; }
+  .cat-art-breadcrumb-inner { max-width: 1100px; margin: 0 auto; padding: 12px 40px; display: flex; align-items: center; gap: 8px; }
+  .cat-art-breadcrumb-link { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #7A5C20; text-decoration: none; letter-spacing: 1px; }
+  .cat-art-breadcrumb-link:hover { color: #1C1810; }
+  .cat-art-breadcrumb-sep { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #C4B49E; }
+  .cat-art-breadcrumb-current { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; letter-spacing: 1px; }
 </style>
 
 <div class="cat-art-hero">
   {heroImage && <div class="cat-art-hero-bg" style={`background-image:url('${heroImage}')`}></div>}
   <div class="cat-art-hero-overlay"></div>
   <div class="cat-art-hero-content">
-    <a href={`/categories/${slug}`} class="cat-art-hero-back">Back to {dbCategory}</a>
     <div class="cat-art-hero-eyebrow">Articles</div>
     <h1 class="cat-art-hero-title">{heroTitle}</h1>
     <p class="cat-art-hero-sub">{heroSubtitle}</p>
+  </div>
+</div>
+
+<div class="cat-art-breadcrumb">
+  <div class="cat-art-breadcrumb-inner">
+    <a href="/articles" class="cat-art-breadcrumb-link">Articles</a>
+    <span class="cat-art-breadcrumb-sep">›</span>
+    <a href={`/categories/${slug}`} class="cat-art-breadcrumb-link">{dbCategory}</a>
+    <span class="cat-art-breadcrumb-sep">›</span>
+    <span class="cat-art-breadcrumb-current">All articles</span>
   </div>
 </div>
 
@@ -95,7 +110,7 @@ const { data: initialArticles, count } = await supabase
           <div class="cat-art-card-body">
             <div class="cat-art-card-title">{a.title}</div>
             {a.excerpt && <div class="cat-art-card-excerpt">{a.excerpt.slice(0,120)}...</div>}
-            {a.published_at && <div class="cat-art-card-date">{new Date(a.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+            {a.published_at && new Date(a.published_at).getFullYear() >= 2024 && <div class="cat-art-card-date">{new Date(a.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
           </div>
         </a>
       ))}

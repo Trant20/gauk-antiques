@@ -29,9 +29,11 @@ const { data: related } = await supabase
   .neq('slug', slug)
   .limit(3)
 
-const date = article.published_at
-  ? new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-  : new Date(article.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+const pubDate = article.published_at || article.created_at
+const dateYear = new Date(pubDate).getFullYear()
+const date = dateYear >= 2024
+  ? new Date(pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null
 
 const catSlug = article.category
   ? article.category.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
