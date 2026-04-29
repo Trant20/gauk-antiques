@@ -326,7 +326,7 @@ async function showObjDetail(o) {
     </div>
     ${(o.nga_thumb_url) ? `<img class="col-detail-img" src="${iiif(o.nga_thumb_url)}" alt=""/>` : ''}
     <div class="col-detail-title">${o.title || 'Untitled'}</div>
-    ${o.attribution ? `<div class="col-detail-attr">${o.attribution}</div>` : ''}
+    ${o.attribution ? `<div class="col-detail-attr" id="obj-artist-link" data-attribution="${o.attribution}" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px">${o.attribution}</div>` : ''}
     ${o.display_date ? `<div class="col-detail-date">${o.display_date}</div>` : ''}
     <div style="margin-bottom:16px">
       ${badge(o.classification, classColor(o.classification))}
@@ -350,6 +350,22 @@ async function showObjDetail(o) {
     list.classList.replace('narrow', 'full')
     list.querySelectorAll('.col-row').forEach(r => r.classList.remove('selected'))
   })
+
+  // Artist name click — find artist and open in panel with back breadcrumb
+  const artistLink = document.getElementById('obj-artist-link')
+  if (artistLink) {
+    artistLink.addEventListener('click', async () => {
+      const name = artistLink.dataset.attribution
+      // Search constituents for this name
+      const res = await fetch(`${SUPA_URL}/rest/v1/nga_constituents?preferred_name=eq.${encodeURIComponent(name)}&select=constituent_id,preferred_name,forward_name,last_name,display_date,nationality,constituent_type,ulan_id,wikidata_id&limit=1`, { headers: H })
+      const matches = await res.json()
+      if (!matches.length) return
+      const artist = matches[0]
+      // Show artist detail with back button to this object
+      const savedObj = o
+      await showArtistDetailFromObject(artist, savedObj, panel)
+    })
+  }
 
   const { terms, texts, dimensions, historical } = await fetchObjDetail(o.object_id)
   const extra = document.getElementById('obj-extra')
@@ -375,6 +391,63 @@ async function showObjDetail(o) {
   }
 
   extra.innerHTML = html || ''
+}
+
+async function showArtistDetailFromObject(a, returnObj, panel) {
+  panel.innerHTML = `
+    <div class="col-detail-header">
+      <button class="col-close" id="art-back-to-obj">← Back to object</button>
+      <button class="col-close" id="art-from-obj-close">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${(a.last_name||a.preferred_name||'?').charAt(0)}</div>
+      <div>
+        <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:16px;font-style:italic;color:#EFE7D9">${a.preferred_name||''}</div>
+        <div style="font-family:'Prata',Georgia,serif;font-size:11px;color:rgba(239,231,217,.4);margin-top:3px">${[a.nationality,a.display_date].filter(Boolean).join(' · ')}</div>
+      </div>
+    </div>
+    <div class="col-field-grid">
+      ${a.constituent_type?`<div><div class="col-field-label">Type</div><div class="col-field-val">${a.constituent_type}</div></div>`:''}
+      ${a.ulan_id?`<div><div class="col-field-label">ULAN ID</div><div class="col-field-val">${a.ulan_id}</div></div>`:''}
+    </div>
+    ${a.wikidata_id?`<div style="margin-bottom:16px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${a.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>`:''}
+    <div id="art-from-obj-extra"><div class="col-section-label">Loading…</div></div>`
+
+  document.getElementById('art-back-to-obj').addEventListener('click', () => showObjDetail(returnObj))
+  document.getElementById('art-from-obj-close').addEventListener('click', () => {
+    panel.classList.add('col-hidden')
+    selObjId = null
+    const list = document.getElementById('obj-list')
+    list.classList.replace('narrow','full')
+    list.querySelectorAll('.col-row').forEach(r => r.classList.remove('selected'))
+  })
+
+  const [detail, works] = await Promise.all([fetchArtistDetail(a.constituent_id), fetchArtistWorks(a.constituent_id)])
+  const extra = document.getElementById('art-from-obj-extra')
+  if (!extra) return
+  let html = ''
+
+  if (detail.altnames.length) {
+    html += `<div class="col-section-label">Also known as</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${detail.altnames.map(n=>badge(`${n.display_name} (${n.name_type})`,'gray')).join('')}</div>`
+  }
+
+  if (works.length) {
+    html += `<div style="border-top:1px solid var(--border);padding-top:16px"><div class="col-section-label">Works in collection</div>${works.map(w=>`<div class="col-work-row" data-obj='${JSON.stringify(w).replace(/'/g,"\u0027")}'>${w.nga_thumb_url?`<img class="col-work-thumb" src="${w.nga_thumb_url}" alt="" loading="lazy"/>`:''}<div style="flex:1;min-width:0"><div class="col-work-title">${w.title||'Untitled'}</div><div class="col-work-meta">${w.display_date||''} · ${w.classification||''}</div></div></div>`).join('')}</div>`
+  }
+
+  if (detail.texts.length) {
+    html += `<div class="col-section-label">Bibliography (${detail.texts.length})</div><div style="max-height:200px;overflow-y:auto">${detail.texts.map(t=>`<div class="col-text-block">${t.year?`<span style="color:var(--text3);margin-right:6px">${t.year}</span>`:''}${t.text}</div>`).join('')}</div>`
+  }
+
+  extra.innerHTML = html || ''
+
+  // Wire works to go back to object detail
+  panel.querySelectorAll('.col-work-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const obj = JSON.parse(row.dataset.obj)
+      showObjDetail(obj)
+    })
+  })
 }
 
 async function refreshObjs() {
@@ -498,7 +571,7 @@ async function showArtistDetail(a) {
         </div>
         ${o.nga_thumb_url ? `<img class="col-detail-img" src="${iiif(o.nga_thumb_url)}" alt=""/>` : ''}
         <div class="col-detail-title">${o.title || 'Untitled'}</div>
-        ${o.attribution ? `<div class="col-detail-attr">${o.attribution}</div>` : ''}
+        ${o.attribution ? `<div class="col-detail-attr" id="obj-artist-link" data-attribution="${o.attribution}" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px">${o.attribution}</div>` : ''}
         ${o.display_date ? `<div class="col-detail-date">${o.display_date}</div>` : ''}
         <div style="margin-bottom:16px">
           ${badge(o.classification, classColor(o.classification))}
