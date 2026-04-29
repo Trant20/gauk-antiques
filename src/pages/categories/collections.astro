@@ -156,6 +156,12 @@ const initialCount = stats.objects
 
   .col-empty { padding: 32px; text-align: center; font-family: var(--prata); font-size: 12px; color: var(--text3); }
   .col-hidden { display: none; }
+
+  /* ALPHABET BAR */
+  .col-alpha-bar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+  .col-alpha { font-family: var(--prata); font-size: 10px; letter-spacing: 0.08em; padding: 4px 8px; background: transparent; border: 1px solid var(--border); color: var(--text3); cursor: pointer; transition: all .15s; border-radius: var(--radius); min-width: 28px; text-align: center; }
+  .col-alpha:hover { border-color: var(--t1); color: var(--t1); }
+  .col-alpha.active { background: var(--tglow); border-color: var(--t1); color: var(--t1); }
 </style>
 
 <!-- HERO -->
@@ -216,6 +222,12 @@ const initialCount = stats.objects
         <input class="col-search" id="art-search" placeholder="Search artist name, nationality..." autocomplete="off" />
         <div class="col-count" id="art-count"></div>
       </div>
+      <div class="col-alpha-bar" id="col-alpha-bar">
+        <button class="col-alpha active" data-letter="">All</button>
+        {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
+          <button class="col-alpha" data-letter={l}>{l}</button>
+        ))}
+      </div>
       <div class="col-layout">
         <div class="col-list full" id="art-list"><div class="col-empty">Loading…</div></div>
         <div class="col-detail col-hidden" id="art-detail"></div>
@@ -261,7 +273,7 @@ document.querySelectorAll('.col-tab').forEach(tab => {
     const target = tab.dataset.tab
     document.getElementById('tab-objects').classList.toggle('col-hidden', target !== 'objects')
     document.getElementById('tab-artists').classList.toggle('col-hidden', target !== 'artists')
-    if (target === 'artists' && document.getElementById('art-list').querySelector('.col-empty')) fetchArtists('')
+    if (target === 'artists' && document.getElementById('art-list').querySelector('.col-empty')) fetchArtists('', artLetter)
   })
 })
 
@@ -465,9 +477,10 @@ document.querySelectorAll('.col-pill').forEach(p => p.addEventListener('click', 
 }))
 
 // ── ARTISTS ───────────────────────────────────────────────────
-async function fetchArtists(q) {
+async function fetchArtists(q, letter = '') {
   const p = new URLSearchParams({ select: 'constituent_id,preferred_name,forward_name,last_name,display_date,nationality,constituent_type,ulan_id,wikidata_id', limit: '50', order: 'last_name.asc.nullslast' })
   if (q) p.append('search_vector', `fts.${encodeURIComponent(q)}`)
+  if (letter) p.append('last_name', `ilike.${letter}*`)
   const res = await fetch(`${SUPA_URL}/rest/v1/nga_constituents?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
   const data = await res.json()
   const total = res.headers.get('content-range')?.split('/')[1] || '?'
@@ -618,7 +631,19 @@ async function showArtistDetail(a) {
 }
 
 document.getElementById('art-search').addEventListener('input', e => {
-  clearTimeout(artTimer); artTimer = setTimeout(() => fetchArtists(e.target.value.trim()), 350)
+  clearTimeout(artTimer); artTimer = setTimeout(() => fetchArtists(e.target.value.trim(), artLetter), 350)
+})
+
+// Alphabet filter
+let artLetter = ''
+document.querySelectorAll('.col-alpha').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.col-alpha').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    artLetter = btn.dataset.letter
+    const q = document.getElementById('art-search').value.trim()
+    fetchArtists(q, artLetter)
+  })
 })
 
 // ── INIT WITH SERVER DATA ────────────────────────────────────
