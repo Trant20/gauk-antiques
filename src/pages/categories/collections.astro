@@ -34,6 +34,23 @@ const { data: heroSetting } = await supabase
 
 const heroImage = heroSetting?.value || ''
 
+const { data: titleSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', 'category_title_collections')
+  .single()
+
+const { data: subtitleSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', 'category_subtitle_collections')
+  .single()
+
+const heroTitle = titleSetting?.value || 'The Museum Collection'
+const heroSubtitle = subtitleSetting?.value || 'Search 116,000 works from the National Gallery of Art — paintings, sculpture, decorative arts and more.'
+
 // Preload first 50 objects server-side — zero JS fetch on first paint
 const { data: initialObjects } = await supabase
   .from('nga_objects')
@@ -170,8 +187,8 @@ const initialCount = stats.objects
   <div class="col-hero-overlay"></div>
   <div class="col-hero-content">
     <div class="col-hero-eyebrow">Museum Collection</div>
-    <h1 class="col-hero-title">The Museum Collection</h1>
-    <p class="col-hero-sub">Search 116,000 works from the National Gallery of Art — paintings, sculpture, decorative arts and more.</p>
+    <h1 class="col-hero-title">{heroTitle}</h1>
+    <p class="col-hero-sub">{heroSubtitle}</p>
   </div>
 </div>
 
