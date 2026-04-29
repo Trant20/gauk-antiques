@@ -33,6 +33,15 @@ const { data: heroSetting } = await supabase
   .single()
 
 const heroImage = heroSetting?.value || ''
+
+// Preload first 50 objects server-side — zero JS fetch on first paint
+const { data: initialObjects } = await supabase
+  .from('nga_objects')
+  .select('object_id,title,display_date,attribution,classification,subclassification,nga_thumb_url,medium,accession_num,dimensions,credit_line,on_view,wikidata_id,department_abbr')
+  .order('begin_year', { ascending: true, nullsFirst: false })
+  .limit(50)
+
+const initialCount = stats.objects
 ---
 <PublicShell title="Museum Collection — GAUK Antiques" description="Search 116,000 works from the National Gallery of Art">
 
@@ -160,6 +169,7 @@ const heroImage = heroSetting?.value || ''
   </div>
 </div>
 
+<div id="col-initial-data" data-objects={JSON.stringify(initialObjects || [])} data-count={initialCount} style="display:none"></div>
 <div class="col-body">
   <div class="col-inner">
 
@@ -217,6 +227,10 @@ const heroImage = heroSetting?.value || ''
 </PublicShell>
 
 <script>
+// ── CACHE & STATE ────────────────────────────────────────────
+const searchCache = new Map()
+const detailCache = new Map()
+
 const SUPA_URL = import.meta.env.PUBLIC_SUPABASE_URL
 const SUPA_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 const H = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
@@ -253,23 +267,31 @@ document.querySelectorAll('.col-tab').forEach(tab => {
 
 // ── OBJECTS ───────────────────────────────────────────────────
 async function fetchObjects(q, cls) {
+  const cacheKey = `${q}__${cls}`
+  if (searchCache.has(cacheKey)) return searchCache.get(cacheKey)
   const p = new URLSearchParams({ select: 'object_id,title,display_date,attribution,classification,subclassification,nga_thumb_url,medium,accession_num,dimensions,credit_line,on_view,wikidata_id,department_abbr', limit: '50', order: 'begin_year.asc.nullslast' })
   if (cls) p.append('classification', `eq.${cls}`)
   if (q) p.append('search_vector', `fts.${encodeURIComponent(q)}`)
   const res = await fetch(`${SUPA_URL}/rest/v1/nga_objects?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
   const data = await res.json()
   const total = res.headers.get('content-range')?.split('/')[1] || '?'
-  return { data: Array.isArray(data) ? data : [], total }
+  const result = { data: Array.isArray(data) ? data : [], total }
+  if (searchCache.size >= 20) searchCache.delete(searchCache.keys().next().value)
+  searchCache.set(cacheKey, result)
+  return result
 }
 
 async function fetchObjDetail(id) {
+  if (detailCache.has(id)) return detailCache.get(id)
   const [terms, texts, dimensions, historical] = await Promise.all([
     fetch(`${SUPA_URL}/rest/v1/nga_object_terms?object_id=eq.${id}&select=term_type,term`, { headers: H }).then(r => r.json()),
     fetch(`${SUPA_URL}/rest/v1/nga_object_texts?object_id=eq.${id}&select=text_type,text,year`, { headers: H }).then(r => r.json()),
     fetch(`${SUPA_URL}/rest/v1/nga_object_dimensions?object_id=eq.${id}&select=element,dimension_type,dimension,unit_name`, { headers: H }).then(r => r.json()),
     fetch(`${SUPA_URL}/rest/v1/nga_object_historical?object_id=eq.${id}&select=data_type,forward_text,remarks,effective_date&order=display_order.asc`, { headers: H }).then(r => r.json()),
   ])
-  return { terms, texts, dimensions, historical }
+  const result = { terms, texts, dimensions, historical }
+  detailCache.set(id, result)
+  return result
 }
 
 function renderObjList(objects) {
@@ -526,5 +548,28 @@ document.getElementById('art-search').addEventListener('input', e => {
   clearTimeout(artTimer); artTimer = setTimeout(() => fetchArtists(e.target.value.trim()), 350)
 })
 
-refreshObjs()
+// ── INIT WITH SERVER DATA ────────────────────────────────────
+const initialEl = document.getElementById('col-initial-data')
+if (initialEl) {
+  const preloaded = JSON.parse(initialEl.dataset.objects || '[]')
+  const preloadedCount = parseInt(initialEl.dataset.count || '0')
+  if (preloaded.length) {
+    // Seed cache so first search is instant
+    searchCache.set('__', { data: preloaded, total: String(preloadedCount) })
+    document.getElementById('obj-count').textContent = `${preloadedCount.toLocaleString()} objects`
+    renderObjList(preloaded)
+  } else {
+    refreshObjs()
+  }
+} else {
+  refreshObjs()
+}
+
+// ── HOVER PRELOAD ─────────────────────────────────────────────
+document.getElementById('obj-list').addEventListener('mouseover', e => {
+  const row = e.target.closest('.col-row')
+  if (!row || !row.dataset.obj) return
+  const o = JSON.parse(row.dataset.obj)
+  if (!detailCache.has(o.object_id)) fetchObjDetail(o.object_id)
+})
 </script>
