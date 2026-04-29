@@ -437,7 +437,7 @@ async function showObjDetail(o) {
       <div class="col-detail-label-sm">Object detail</div>
       <button class="col-close" id="obj-close">✕</button>
     </div>
-    ${(o.nga_thumb_url) ? `<img class="col-detail-img" src="${iiif(o.nga_thumb_url)}" alt=""/>` : ''}
+    ${(o.nga_thumb_url) ? `<img class="col-detail-img" id="obj-hero-img" src="${iiif(o.nga_thumb_url)}" alt="" style="cursor:pointer" title="Click to view all works by this artist"/>` : ''}
     <div class="col-detail-title">${o.title || 'Untitled'}</div>
     ${o.attribution ? `<div class="col-detail-attr" id="obj-artist-link" data-attribution="${o.attribution}" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px">${o.attribution}</div>` : ''}
     ${o.display_date ? `<div class="col-detail-date">${o.display_date}</div>` : ''}
@@ -463,6 +463,33 @@ async function showObjDetail(o) {
     list.classList.replace('narrow', 'full')
     list.querySelectorAll('.col-row').forEach(r => r.classList.remove('selected'))
   })
+
+  // Image click — open lightbox with all works by linked artist(s)
+  const heroImg = document.getElementById('obj-hero-img')
+  if (heroImg) {
+    heroImg.addEventListener('click', async () => {
+      // Get all constituents linked to this object
+      const linksRes = await fetch(`${SUPA_URL}/rest/v1/nga_object_constituents?object_id=eq.${o.object_id}&select=constituent_id&limit=5`, { headers: H })
+      const links = await linksRes.json()
+      if (!links.length) {
+        // No artist — just show this image alone
+        window._lbOpen(0, [{ url: o.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'), caption: o.title }])
+        return
+      }
+      // Fetch all works by the primary artist
+      const works = await fetchArtistWorks(links[0].constituent_id)
+      const items = works
+        .filter(w => w.nga_thumb_url)
+        .map(w => ({
+          url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
+          caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
+        }))
+      if (!items.length) return
+      // Open at current object's position
+      const startIdx = works.findIndex(w => w.object_id === o.object_id)
+      window._lbOpen(Math.max(0, startIdx), items)
+    })
+  }
 
   // Artist name click — find artist and open in panel with back breadcrumb
   const artistLink = document.getElementById('obj-artist-link')
