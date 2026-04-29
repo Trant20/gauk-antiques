@@ -590,23 +590,6 @@ async function showArtistDetailFromObject(a, returnObj, panel) {
 
   extra.innerHTML = html || ''
 
-  // Delegated thumb click on artist-from-object panel
-  const _artWorks2 = works
-  panel.addEventListener('click', e => {
-    const thumb = e.target.closest('.col-work-thumb')
-    if (!thumb) return
-    e.stopPropagation()
-    const row = thumb.closest('.col-work-row')
-    if (!row) return
-    const o = JSON.parse(row.dataset.obj)
-    const items = _artWorks2.filter(w => w.nga_thumb_url).map(w => ({
-      url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
-      caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
-    }))
-    const startIdx = _artWorks2.filter(w => w.nga_thumb_url).findIndex(w => w.object_id === o.object_id)
-    window._lbOpen(Math.max(0, startIdx), items)
-  }, true)
-
   // Wire works to go back to object detail
   panel.querySelectorAll('.col-work-row').forEach(row => {
     row.addEventListener('click', () => {
@@ -615,6 +598,18 @@ async function showArtistDetailFromObject(a, returnObj, panel) {
     })
   })
 }
+
+// ── LIGHTBOX TRIGGER — document level, capture phase ─────────
+document.addEventListener('click', e => {
+  const thumb = e.target.closest('[data-lightbox="1"]')
+  if (!thumb) return
+  e.stopPropagation()
+  e.preventDefault()
+  const items = JSON.parse(thumb.dataset.works || '[]')
+  const oid = parseInt(thumb.dataset.oid)
+  const startIdx = items.findIndex(i => i.oid === oid)
+  window._lbOpen(Math.max(0, startIdx), items)
+}, true)
 
 async function refreshObjs() {
   const q = document.getElementById('obj-search').value.trim()
