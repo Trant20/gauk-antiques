@@ -581,7 +581,7 @@ async function showArtistDetailFromObject(a, returnObj, panel) {
   }
 
   if (works.length) {
-    html += `<div style="border-top:1px solid var(--border);padding-top:16px"><div class="col-section-label">Works in collection</div>${works.map(w=>`<div class="col-work-row" data-obj='${JSON.stringify(w).replace(/'/g,"\u0027")}'>${w.nga_thumb_url?`<img class="col-work-thumb" src="${w.nga_thumb_url}" alt="" loading="lazy"/>`:''}<div style="flex:1;min-width:0"><div class="col-work-title">${w.title||'Untitled'}</div><div class="col-work-meta">${w.display_date||''} · ${w.classification||''}</div></div></div>`).join('')}</div>`
+    html += `<div style="border-top:1px solid var(--border);padding-top:16px"><div class="col-section-label">Works in collection</div>${works.map(w=>`<div class="col-work-row" data-obj='${JSON.stringify(w).replace(/'/g,"\u0027")}'>${w.nga_thumb_url?`<img class="col-work-thumb" data-lightbox="1" data-oid="${w.object_id}" data-works='${JSON.stringify(works.filter(x=>x.nga_thumb_url).map(x=>({url:x.nga_thumb_url.replace(/\/full\/![^/]+\//,"/full/!1200,1200/"),caption:[x.title,x.display_date,x.classification].filter(Boolean).join(" · "),oid:x.object_id}))).replace(/'/g,"\u0027")}' src="${w.nga_thumb_url}" alt="" loading="lazy" style="cursor:zoom-in"/>`:''}<div style="flex:1;min-width:0"><div class="col-work-title">${w.title||'Untitled'}</div><div class="col-work-meta">${w.display_date||''} · ${w.classification||''}</div></div></div>`).join('')}</div>`
   }
 
   if (detail.texts.length) {
@@ -717,7 +717,7 @@ async function showArtistDetail(a) {
   }
 
   if (works.length) {
-    html += `<div style="border-top:1px solid var(--border);padding-top:16px"><div class="col-section-label">Works in collection</div>${works.map(w=>`<div class="col-work-row" data-obj='${JSON.stringify(w).replace(/'/g,'\u0027')}'>${w.nga_thumb_url?`<img class="col-work-thumb" src="${w.nga_thumb_url}" alt="" loading="lazy"/>`:''}<div style="flex:1;min-width:0"><div class="col-work-title">${w.title||'Untitled'}</div><div class="col-work-meta">${w.display_date||''} · ${w.classification||''}</div></div></div>`).join('')}</div>`
+    html += `<div style="border-top:1px solid var(--border);padding-top:16px"><div class="col-section-label">Works in collection</div>${works.map(w=>`<div class="col-work-row" data-obj='${JSON.stringify(w).replace(/'/g,'\u0027')}'>${w.nga_thumb_url?`<img class="col-work-thumb" data-lightbox="1" data-oid="${w.object_id}" data-works='${JSON.stringify(works.filter(x=>x.nga_thumb_url).map(x=>({url:x.nga_thumb_url.replace(/\/full\/![^/]+\//,"/full/!1200,1200/"),caption:[x.title,x.display_date,x.classification].filter(Boolean).join(" · "),oid:x.object_id}))).replace(/'/g,"\u0027")}' src="${w.nga_thumb_url}" alt="" loading="lazy" style="cursor:zoom-in"/>`:''}<div style="flex:1;min-width:0"><div class="col-work-title">${w.title||'Untitled'}</div><div class="col-work-meta">${w.display_date||''} · ${w.classification||''}</div></div></div>`).join('')}</div>`
   }
 
   extra.innerHTML = html || ''
