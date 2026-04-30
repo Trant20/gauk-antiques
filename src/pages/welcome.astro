@@ -1,13 +1,8 @@
 ---
 import PublicShell from '../layouts/PublicShell.astro'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-)
 
 const { data: plan } = await supabase
   .from('plans')
