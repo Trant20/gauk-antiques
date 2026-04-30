@@ -1,13 +1,8 @@
 ---
 import AppShell from '../../layouts/AppShell.astro'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 const { id } = Astro.params
-
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-)
 
 const { data: item } = await supabase
   .from('identifications')

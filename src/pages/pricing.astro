@@ -1,9 +1,9 @@
 ---
 import PublicShell from '../layouts/PublicShell.astro'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+
 const { data: plans } = await supabase.from('plans').select('*').eq('site_id', SITE_ID).eq('active', true).order('sort_order')
 const subs = plans?.filter(p => p.plan_type === 'subscription') || []
 const topups = plans?.filter(p => p.plan_type === 'topup') || []

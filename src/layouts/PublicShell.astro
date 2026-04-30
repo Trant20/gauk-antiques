@@ -1,12 +1,7 @@
 ---
 const { title, description = 'AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.', ogImage = '' } = Astro.props
 import Layout from './Layout.astro'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-)
+import { supabase } from '../lib/supabase'
 
 const { data: catSetting } = await supabase
   .from('site_settings')
