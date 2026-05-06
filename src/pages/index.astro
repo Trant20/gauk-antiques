@@ -31,26 +31,6 @@ const firstWords = words.slice(0, -1).join(' ')
 ---
 <PublicShell title="GAUK Antiques — AI Antique Identification & Valuation">
   <style>
-    .site-header {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 40px;
-      background: linear-gradient(to bottom, rgba(13,11,9,.7), transparent);
-    }
-    .site-header.hidden { display: none !important; }
-    .site-logo {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--text);
-    }
-    .site-logo span { color: var(--goldHi); }
-    .header-actions { display: flex; align-items: center; gap: 24px; }
-    .header-link {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--textDim); text-decoration: none; transition: color .2s;
-    }
-    .header-link:hover { color: var(--text); }
 
 
     /* ─── HERO ─── */
@@ -410,23 +390,6 @@ const firstWords = words.slice(0, -1).join(' ')
       font-family: 'Prata', Georgia, serif;
       font-size: 18px; line-height: 1.8; color: var(--textMute);
     }
-
-    /* ─── BOTTOM NAV ─── */
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(13,11,9,.93); backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border); display: flex;
-    }
-    .nav-tab {
-      flex: 1; padding: 12px 0 10px; background: none; border: none; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-      color: var(--textMute); text-decoration: none;
-      font-family: 'Prata', Georgia, serif;
-      font-size: 9px; letter-spacing: 2px; text-transform: uppercase; transition: color .2s;
-    }
-    .nav-tab.active, .nav-tab:hover { color: var(--goldHi); }
-    @media (min-width: 768px) { .bottom-nav { display: none; } }
-    @media (max-width: 767px) { .site-header .header-actions { display: none; } }
   </style>
 
 
@@ -563,31 +526,6 @@ const firstWords = words.slice(0, -1).join(' ')
       </div>
     </div>
   </section>
-
-  <nav class="bottom-nav">
-    <a href="/" class="nav-tab active">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-        <rect x="3" y="3" width="18" height="18" rx="0"/>
-        <circle cx="8.5" cy="8.5" r="1.5"/>
-        <polyline points="21 15 16 10 5 21"/>
-      </svg>
-      Identify
-    </a>
-    <a href="/library" class="nav-tab">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-      </svg>
-      Library
-    </a>
-    <a href="/auth/signin" class="nav-tab" id="account-tab">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-        <circle cx="12" cy="7" r="4"/>
-      </svg>
-      Account
-    </a>
-  </nav>
 </PublicShell>
 
 <script>
@@ -600,12 +538,6 @@ const firstWords = words.slice(0, -1).join(' ')
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
-    // Hide logged-out header
-    const header = document.getElementById('site-header') as HTMLElement
-    if (header) header.classList.add('hidden')
-
-    const accountTab = document.getElementById('account-tab')
-    if (accountTab) accountTab.setAttribute('href', '/account')
   }
 
   const zonePrimary = document.getElementById('zone-primary') as HTMLElement

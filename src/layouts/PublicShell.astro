@@ -13,6 +13,11 @@ const { data: catSetting } = await supabase
 const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : [
   'Pottery','Ceramics','Glass','Jewellery','Silver','Furniture','Art','Clocks','Textiles','Books','Toys','Militaria','Other'
 ]
+
+const path = Astro.url.pathname
+const isIdentify = path === '/'
+const isLibrary  = path.startsWith('/library')
+const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
 ---
 <Layout title={title}>
 <style is:global>
@@ -116,8 +121,24 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
     .pub-nav-links .pub-nav-account { display: none; }
   }
 
-  /* PAGE BODY — offset for fixed nav */
+  /* PAGE BODY */
   .pub-body { padding-top: 0; }
+
+  /* BOTTOM NAV — mobile only */
+  .pub-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,11,9,.93); backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border); display: flex;
+  }
+  .pub-bottom-tab {
+    flex: 1; padding: 12px 0 10px; background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    color: var(--textMute); text-decoration: none;
+    font-family: 'Prata', Georgia, serif;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase; transition: color .2s;
+  }
+  .pub-bottom-tab.active, .pub-bottom-tab:hover { color: var(--goldHi); }
+  @media (min-width: 768px) { .pub-bottom-nav { display: none; } }
 
   /* PUBLIC FOOTER */
   .pub-footer {
@@ -161,7 +182,7 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
     font-size: 11px; color: #8A7A66;
   }
 
-  /* Logged-in state — hide CTA, show account link */
+  /* Logged-in state */
   .pub-nav-cta.hidden { display: none; }
   .pub-nav-account {
     font-family: 'Prata', Georgia, serif;
@@ -248,9 +269,36 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
   </div>
 </footer>
 
+<!-- BOTTOM NAV — mobile only -->
+<nav class="pub-bottom-nav">
+  <a href="/" class={`pub-bottom-tab${isIdentify ? ' active' : ''}`}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <rect x="3" y="3" width="18" height="18" rx="0"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <polyline points="21 15 16 10 5 21"/>
+    </svg>
+    Identify
+  </a>
+  <a href="/library" class={`pub-bottom-tab${isLibrary ? ' active' : ''}`}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    </svg>
+    Library
+  </a>
+  <a href="/auth/signin" class={`pub-bottom-tab${isAccount ? ' active' : ''}`} id="pub-account-tab">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+    Account
+  </a>
+</nav>
+
 <script>
   import { createClient } from '@supabase/supabase-js'
   const sb = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+
   const ham = document.getElementById('pub-ham')
   const drawer = document.getElementById('pub-drawer')
   ham?.addEventListener('click', () => {
@@ -258,7 +306,7 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
     drawer?.classList.toggle('open')
   })
 
-  // Scroll behaviour — darken and hide nav on scroll
+  // Scroll behaviour
   const nav = document.querySelector('.pub-nav')
   let lastY = 0
   window.addEventListener('scroll', () => {
@@ -275,9 +323,11 @@ const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : 
     const cta = document.getElementById('pub-cta')
     const signin = document.getElementById('pub-signin')
     const account = document.getElementById('pub-account')
+    const accountTab = document.getElementById('pub-account-tab')
     if (cta) cta.classList.add('hidden')
     if (signin) signin.style.display = 'none'
     if (account) account.classList.add('visible')
+    if (accountTab) accountTab.setAttribute('href', '/account')
   }
 </script>
 </Layout>
