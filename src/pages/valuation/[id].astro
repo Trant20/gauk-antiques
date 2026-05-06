@@ -47,6 +47,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
     border-bottom: 1px solid #C4B49E;
   }
+  @media (max-width: 767px) { .card-header { padding-left: 56px; } }
   .card-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
   .card-logo span { color: #7A5C20; }
   .card-date { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
@@ -105,6 +106,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   /* GAUGES */
   .gauges { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 480px) { .gauges { grid-template-columns: 1fr 1fr; gap: 16px; } }
   .gauge { text-align: center; }
   .gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
   .gauge-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
@@ -170,7 +172,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     max-width: 100%; margin: 0 auto;
     background: rgba(239,231,217,.96); backdrop-filter: blur(20px);
     border-top: 1px solid #C4B49E;
-    padding: 12px 20px 24px;
+    padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
     display: flex; gap: 8px;
   }
   .action-btn {
