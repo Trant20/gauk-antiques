@@ -34,7 +34,34 @@ const catSlug = article.category
   ? article.category.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   : 'other'
 ---
-<PublicShell title={`${article.title} — GAUK Antiques`}>
+<PublicShell
+  title={`${article.title} — GAUK Antiques`}
+  description={article.excerpt || `${article.title} — collector guide from GAUK Antiques.`}
+  ogImage={article.image_url || ''}
+>
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": article.title,
+  "description": article.excerpt || article.title,
+  "image": article.image_url || undefined,
+  "author": {
+    "@type": "Organization",
+    "name": article.author || "GAUK Antiques"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "GAUK Antiques",
+    "url": "https://gaukantiques.com"
+  },
+  "datePublished": article.published_at || article.created_at,
+  "dateModified": article.updated_at || article.published_at || article.created_at,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": `https://gaukantiques.com/learn/${slug}`
+  },
+  "articleSection": article.category || "Antiques"
+})} />
 <style is:global>
   /* HERO */
   .art-hero {

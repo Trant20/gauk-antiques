@@ -132,7 +132,6 @@ const { data: external } = await supabase
   .limit(4)
 ---
 <PublicShell title={`${heroTitle} — GAUK Antiques`} description={heroSubtitle} ogImage={heroImage}>
-<link rel="canonical" href={`https://gaukantiques.com/categories/${cleanSlug}`} slot="head" />
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
   "@context": "https://schema.org",
   "@type": "CollectionPage",
