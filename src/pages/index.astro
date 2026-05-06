@@ -29,7 +29,24 @@ const words = heroHeadline.split(' ')
 const lastWord = words.slice(-1)[0]
 const firstWords = words.slice(0, -1).join(' ')
 ---
-<PublicShell title="GAUK Antiques — AI Antique Identification & Valuation">
+<PublicShell title="GAUK Antiques — AI Antique Identification & Valuation" description="Upload a photograph and our AI identifies your antique in seconds — maker, period, condition and estimated market value. Free to try, no account required.">
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "GAUK Antiques — AI Antique Identification & Valuation",
+  "description": "Upload a photograph and our AI identifies your antique in seconds — maker, period, condition and estimated market value.",
+  "url": "https://gaukantiques.com",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "GBP",
+    "description": "Free identification — no account required"
+  },
+  "publisher": { "@type": "Organization", "name": "GAUK Antiques", "url": "https://gaukantiques.com" }
+})} />
+
   <style>
 
 

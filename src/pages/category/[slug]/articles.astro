@@ -38,6 +38,15 @@ const { data: initialArticles, count } = await supabase
   .range(0, 11)
 ---
 <PublicShell title={`${dbCategory} Articles — GAUK Antiques`} description={heroSubtitle} ogImage={heroImage}>
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": `${displayName} Articles — GAUK Antiques`,
+  "description": `Collector guides, histories and reference articles for ${displayName.toLowerCase()}.`,
+  "url": `https://gaukantiques.com/category/${slug}/articles`,
+  "publisher": { "@type": "Organization", "name": "GAUK Antiques", "url": "https://gaukantiques.com" }
+})} />
+
 <style is:global>
   .cat-art-hero { position: relative; min-height: 40vh; display: flex; align-items: flex-end; overflow: hidden; background: #1C1810; }
   .cat-art-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }

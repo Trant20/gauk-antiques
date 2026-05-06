@@ -48,7 +48,16 @@ const CAT_SLUGS: Record<string, string> = {
   'Books': 'books', 'Toys': 'toys', 'Militaria': 'militaria',
 }
 ---
-<PublicShell title="Explore — GAUK Antiques">
+<PublicShell title="Explore — GAUK Antiques" description="Explore antiques by category — ceramics, glass, jewellery, furniture and more. Browse recent identifications and discover the GAUK Antiques knowledge base.">
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Explore Antiques — GAUK Antiques",
+  "description": "Explore antiques by category — ceramics, glass, jewellery, furniture and more.",
+  "url": "https://gaukantiques.com/explore",
+  "publisher": { "@type": "Organization", "name": "GAUK Antiques", "url": "https://gaukantiques.com" }
+})} />
+
 <style>
   .exp-hero {
     background: #1C1810; padding: 80px 24px 64px;

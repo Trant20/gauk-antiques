@@ -1,5 +1,6 @@
 ---
-const { title, description = 'AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.', ogImage = '' } = Astro.props
+const { title, description = 'AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.', ogImage = '', canonical = '' } = Astro.props
+const canonicalURL = canonical || ('https://gaukantiques.com' + Astro.url.pathname)
 import Layout from './Layout.astro'
 import { supabase } from '../lib/supabase'
 
@@ -199,6 +200,8 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
 <meta property="og:description" content={description} />
 {ogImage && <meta property="og:image" content={ogImage} />}
 <meta property="og:type" content="website" />
+<meta property="og:url" content={canonicalURL} />
+<link rel="canonical" href={canonicalURL} />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />

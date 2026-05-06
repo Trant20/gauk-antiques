@@ -9,7 +9,7 @@ const subs = plans?.filter(p => p.plan_type === 'subscription') || []
 const topups = plans?.filter(p => p.plan_type === 'topup') || []
 const url = Astro.url.searchParams.get('payment')
 ---
-<PublicShell title="Pricing — GAUK Antiques">
+<PublicShell title="Pricing — GAUK Antiques" description="Simple, transparent pricing for AI antique identification and valuation. Free identifications, credit top-ups and monthly subscription plans.">
 <style>
   body { background: #EFE7D9; color: #1C1810; }
   .pricing-section-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; }
