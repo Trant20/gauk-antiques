@@ -8,7 +8,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const chunkSize = 8192
   for (let i = 0; i < bytes.length; i += chunkSize) {
     const chunk = bytes.subarray(i, i + chunkSize)
-    binary += String.fromCharCode(...chunk)
+    binary += String.fromCodePoint(...chunk)
   }
   return btoa(binary)
 }
@@ -37,8 +37,8 @@ export const POST: APIRoute = async ({ request }) => {
     const arrayBuffer = await object.arrayBuffer()
     const base64 = arrayBufferToBase64(arrayBuffer)
     const rawContentType = object.httpMetadata?.contentType || 'image/jpeg'
-    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    const contentType = allowed.includes(rawContentType) ? rawContentType : 'image/jpeg'
+    const allowed = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+    const contentType = allowed.has(rawContentType) ? rawContentType : 'image/jpeg'
 
     // Optional second image (back, base, maker mark)
     let secondary: { base64: string; contentType: string } | null = null
@@ -49,7 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
         const secRaw = secObject.httpMetadata?.contentType || 'image/jpeg'
         secondary = {
           base64: arrayBufferToBase64(secBuffer),
-          contentType: allowed.includes(secRaw) ? secRaw : 'image/jpeg'
+          contentType: allowed.has(secRaw) ? secRaw : 'image/jpeg'
         }
       }
     }
@@ -126,11 +126,11 @@ Only include the relevant category_specific sub-object for the identified catego
           content: [
             {
               type: 'image',
-              source: { type: 'base64', media_type: contentType as any, data: base64 }
+              source: { type: 'base64' as const, media_type: contentType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: base64 }
             },
             ...(secondary ? [{
               type: 'image' as const,
-              source: { type: 'base64' as const, media_type: secondary.contentType as any, data: secondary.base64 }
+              source: { type: 'base64' as const, media_type: secondary.contentType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: secondary.base64 }
             }] : []),
             {
               type: 'text',
@@ -144,7 +144,7 @@ Only include the relevant category_specific sub-object for the identified catego
     })
 
     const raw = response.content[0].type === 'text' ? response.content[0].text : ''
-    const clean = raw.replace(/```json|```/g, '').trim()
+    const clean = raw.replaceAll('```json', '').replaceAll('```', '').trim()
     const result = JSON.parse(clean)
 
     const supabase = await import('@supabase/supabase-js').then(m =>
