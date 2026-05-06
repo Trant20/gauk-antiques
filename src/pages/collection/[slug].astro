@@ -1,0 +1,338 @@
+---
+import PublicShell from '../../layouts/PublicShell.astro'
+import { supabase } from '../../lib/supabase'
+
+function nameToSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+const { slug } = Astro.params
+if (!slug) return Astro.redirect('/categories/collections')
+
+// slug is accession_num with dots replaced by hyphens: 1963-15-26 → 1963.15.26
+const accessionNum = slug.replace(/-/g, '.')
+
+// Breadcrumb — read ?from=artist-slug if arriving from an artist profile
+const fromSlug = new URL(Astro.request.url).searchParams.get('from') || null
+let fromArtistName: string | null = null
+if (fromSlug) {
+  const { data: fromArtist } = await supabase
+    .from('nga_constituents')
+    .select('preferred_name')
+    .eq('slug', fromSlug)
+    .single()
+  fromArtistName = fromArtist?.preferred_name || null
+}
+
+const { data: obj } = await supabase
+  .from('nga_objects')
+  .select('object_id,accession_num,title,display_date,begin_year,end_year,medium,dimensions,classification,subclassification,department_abbr,attribution,credit_line,provenance_text,nga_image_url,nga_thumb_url,on_view,wikidata_id')
+  .eq('accession_num', accessionNum)
+  .single()
+
+if (!obj) return Astro.redirect('/categories/collections', 302)
+
+// Rich detail tables
+const [terms, texts, dimensions, historical, constituentLinks] = await Promise.all([
+  supabase.from('nga_object_terms').select('term_type,term').eq('object_id', obj.object_id),
+  supabase.from('nga_object_texts').select('text_type,text,year').eq('object_id', obj.object_id),
+  supabase.from('nga_object_dimensions').select('element,dimension_type,dimension,unit_name').eq('object_id', obj.object_id),
+  supabase.from('nga_object_historical').select('data_type,forward_text,remarks,effective_date').eq('object_id', obj.object_id).order('display_order', { ascending: true }),
+  supabase.from('nga_object_constituents').select('constituent_id,role_type').eq('object_id', obj.object_id).limit(5),
+])
+
+// Artist lookup
+const artistIds = (constituentLinks.data || []).map(l => l.constituent_id)
+const { data: artists } = artistIds.length
+  ? await supabase
+      .from('nga_constituents')
+      .select('constituent_id,preferred_name,display_date,nationality,portrait_url,wikidata_id')
+      .in('constituent_id', artistIds)
+      .neq('constituent_type', 'anonymous')
+  : { data: [] }
+
+const primaryArtist = artists?.[0] || null
+const heroImage = obj.nga_image_url
+  ? obj.nga_image_url + '/full/!1200,1200/0/default.jpg'
+  : null
+const thumbImage = obj.nga_thumb_url || null
+
+const pageTitle = `${obj.title}${obj.attribution ? ' — ' + obj.attribution : ''}`
+const pageDesc = [obj.medium, obj.display_date, obj.classification].filter(Boolean).join(', ')
+
+// Group terms by type
+const termGroups = (terms.data || []).reduce((acc: Record<string, string[]>, t) => {
+  acc[t.term_type] = acc[t.term_type] || []
+  acc[t.term_type].push(t.term)
+  return acc
+}, {})
+
+// Group texts by type
+const textGroups = (texts.data || []).reduce((acc: Record<string, {text: string, year: string}[]>, t) => {
+  acc[t.text_type] = acc[t.text_type] || []
+  acc[t.text_type].push(t)
+  return acc
+}, {})
+
+// JSON-LD VisualArtwork schema
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'VisualArtwork',
+  name: obj.title,
+  ...(obj.attribution && { creator: { '@type': 'Person', name: obj.attribution } }),
+  ...(obj.medium && { artMedium: obj.medium }),
+  ...(obj.classification && { artform: obj.classification }),
+  ...(obj.display_date && { dateCreated: obj.display_date }),
+  ...(thumbImage && { image: thumbImage }),
+  ...(obj.credit_line && { creditText: obj.credit_line }),
+  isPartOf: { '@type': 'Museum', name: 'National Gallery of Art', url: 'https://www.nga.gov' },
+  ...(obj.wikidata_id && { sameAs: `https://www.wikidata.org/wiki/${obj.wikidata_id}` }),
+}
+---
+
+<PublicShell title={pageTitle} description={pageDesc}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </Fragment>
+
+<style is:global>
+  :root {
+    --pc: #1C1810;
+    --card: rgba(239,231,217,.04);
+    --border: rgba(200,160,96,.2);
+    --surface: rgba(239,231,217,.03);
+    --text: #EFE7D9;
+    --text2: rgba(239,231,217,.7);
+    --text3: rgba(239,231,217,.4);
+    --t1: #C8A060;
+    --tglow: rgba(200,160,96,.08);
+    --radius: 4px;
+    --prata: 'Prata', Georgia, serif;
+    --playfair: 'Playfair Display', Didot, Georgia, serif;
+  }
+
+  .op-body { background: var(--pc); min-height: 100vh; }
+
+  /* HERO */
+  .op-hero { background: var(--pc); border-bottom: 1px solid var(--border); }
+  .op-hero-inner { max-width: 1100px; margin: 0 auto; padding: 80px 40px 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  @media (max-width: 767px) { .op-hero-inner { grid-template-columns: 1fr; padding: 80px 16px 32px; gap: 24px; } }
+
+  .op-image-wrap { position: relative; }
+  .op-image { width: 100%; max-height: 520px; object-fit: contain; border-radius: var(--radius); border: 1px solid var(--border); display: block; background: var(--surface); cursor: zoom-in; }
+  .op-image-placeholder { width: 100%; aspect-ratio: 4/5; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 48px; }
+  .op-on-view { position: absolute; top: 12px; left: 12px; font-family: var(--prata); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 8px; background: rgba(99,153,34,.2); border: 1px solid rgba(99,153,34,.4); color: #9FD46A; border-radius: var(--radius); }
+
+  .op-meta { padding-top: 8px; }
+  .op-eyebrow { font-family: var(--prata); font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--t1); margin-bottom: 12px; }
+  .op-title { font-family: var(--playfair); font-size: clamp(24px, 4vw, 40px); font-weight: 400; font-style: italic; color: var(--text); line-height: 1.2; margin-bottom: 8px; }
+  .op-attribution { font-family: var(--playfair); font-size: 16px; font-style: italic; color: var(--t1); margin-bottom: 4px; text-decoration: none; display: block; }
+  .op-attribution:hover { text-decoration: underline; }
+  .op-date { font-family: var(--prata); font-size: 12px; color: var(--text3); margin-bottom: 20px; letter-spacing: 0.05em; }
+
+  .op-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .op-field-label { font-family: var(--prata); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .op-field-val { font-family: var(--prata); font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  .op-links { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .op-link { font-family: var(--prata); font-size: 11px; letter-spacing: 0.08em; color: var(--t1); text-decoration: none; }
+  .op-link:hover { text-decoration: underline; }
+
+  /* ARTIST CARD */
+  .op-artist-card { display: flex; gap: 12px; align-items: center; padding: 12px; background: var(--tglow); border: 1px solid rgba(200,160,96,.3); border-radius: var(--radius); margin-bottom: 20px; text-decoration: none; transition: border-color .15s; }
+  .op-artist-card:hover { border-color: var(--t1); }
+  .op-artist-avatar { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--playfair); font-style: italic; font-size: 18px; color: var(--t1); }
+  .op-artist-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .op-artist-name { font-family: var(--playfair); font-size: 14px; font-style: italic; color: var(--text); }
+  .op-artist-meta { font-family: var(--prata); font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* CONTENT */
+  .op-content { max-width: 1100px; margin: 0 auto; padding: 48px 40px; }
+  @media (max-width: 767px) { .op-content { padding: 32px 16px; } }
+
+  .op-section-label { font-family: var(--prata); font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--t1); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .op-section { margin-bottom: 40px; }
+
+  .op-text-block { font-family: var(--prata); font-size: 12px; color: var(--text2); line-height: 1.7; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; }
+  .op-text-year { color: var(--text3); margin-right: 8px; }
+
+  .op-hist-block { padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; }
+  .op-hist-text { font-family: var(--playfair); font-size: 13px; font-style: italic; color: var(--text); }
+  .op-hist-meta { font-family: var(--prata); font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+  .op-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .op-tag { font-family: var(--prata); font-size: 10px; padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text3); }
+
+  .op-dim-line { font-family: var(--prata); font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+</style>
+
+<div class="op-body">
+  <!-- HERO -->
+  <div class="op-hero">
+    <div class="op-hero-inner">
+      <!-- IMAGE -->
+      <div class="op-image-wrap">
+        {heroImage
+          ? <img id="op-hero-img" class="op-image" src={heroImage} alt={obj.title} />
+          : <div class="op-image-placeholder">◻</div>
+        }
+        {obj.on_view && <div class="op-on-view">On view</div>}
+      </div>
+
+      <!-- META -->
+      <div class="op-meta">
+        <div class="op-eyebrow">{obj.classification || 'Work'}</div>
+        <h1 class="op-title">{obj.title}</h1>
+
+        {primaryArtist ? (
+          <a class="op-artist-card" href={`/artists/${nameToSlug(primaryArtist.preferred_name)}`}>
+            <div class="op-artist-avatar">
+              {primaryArtist.portrait_url
+                ? <img src={primaryArtist.portrait_url} alt={primaryArtist.preferred_name} />
+                : (primaryArtist.preferred_name || '?').charAt(0)
+              }
+            </div>
+            <div>
+              <div class="op-artist-name">{primaryArtist.preferred_name}</div>
+              <div class="op-artist-meta">{[primaryArtist.nationality, primaryArtist.display_date].filter(Boolean).join(' · ')}</div>
+            </div>
+          </a>
+        ) : obj.attribution ? (
+          <div class="op-attribution">{obj.attribution}</div>
+        ) : null}
+
+        {obj.display_date && <div class="op-date">{obj.display_date}</div>}
+
+        <div class="op-field-grid">
+          {obj.medium && (
+            <div>
+              <div class="op-field-label">Medium</div>
+              <div class="op-field-val">{obj.medium}</div>
+            </div>
+          )}
+          {obj.dimensions && (
+            <div>
+              <div class="op-field-label">Dimensions</div>
+              <div class="op-field-val">{obj.dimensions}</div>
+            </div>
+          )}
+          {obj.accession_num && (
+            <div>
+              <div class="op-field-label">Accession</div>
+              <div class="op-field-val">{obj.accession_num}</div>
+            </div>
+          )}
+          {obj.department_abbr && (
+            <div>
+              <div class="op-field-label">Department</div>
+              <div class="op-field-val">{obj.department_abbr}</div>
+            </div>
+          )}
+        </div>
+
+        {obj.credit_line && (
+          <div style="margin-bottom:16px">
+            <div class="op-field-label">Credit</div>
+            <div class="op-field-val">{obj.credit_line}</div>
+          </div>
+        )}
+
+        <div class="op-links">
+          
+          <a class="op-link" href={fromSlug ? '/artists/' + fromSlug : '/categories/collections'}>
+            {fromSlug && fromArtistName ? fromArtistName : 'Collections'}
+          </a>
+
+          <span style="color:var(--text3);margin:0 6px">/</span>
+          <span style="color:var(--text2);font-family:var(--prata);font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">{obj.title}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="op-content">
+
+    <!-- TERMS / TAGS -->
+    {Object.keys(termGroups).length > 0 && (
+      <div class="op-section">
+        <div class="op-section-label">Classification</div>
+        {Object.entries(termGroups).map(([type, terms]) => (
+          <div style="margin-bottom:12px">
+            <div class="op-field-label" style="margin-bottom:6px">{type}</div>
+            <div class="op-tags">
+              {terms.map(t => <span class="op-tag">{t}</span>)}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    <!-- PROVENANCE -->
+    {obj.provenance_text && (
+      <div class="op-section">
+        <div class="op-section-label">Provenance</div>
+        <div class="op-text-block">{obj.provenance_text}</div>
+      </div>
+    )}
+
+    <!-- ATTRIBUTION HISTORY -->
+    {historical.data && historical.data.length > 0 && (
+      <div class="op-section">
+        <div class="op-section-label">Attribution history</div>
+        {historical.data.map(h => (
+          <div class="op-hist-block">
+            <div class="op-hist-text">{h.forward_text}</div>
+            <div class="op-hist-meta">
+              {[h.data_type, h.effective_date].filter(Boolean).join(' · ')}
+              {h.remarks && <span style="font-style:italic"> — {h.remarks}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    <!-- DIMENSIONS (STRUCTURED) -->
+    {dimensions.data && dimensions.data.length > 0 && (
+      <div class="op-section">
+        <div class="op-section-label">Dimensions (structured)</div>
+        {dimensions.data.map(d => (
+          <div class="op-dim-line">
+            {[d.element, d.dimension_type].filter(Boolean).join(' · ')} — {d.dimension} {d.unit_name}
+          </div>
+        ))}
+      </div>
+    )}
+
+    <!-- TEXTS -->
+    {Object.entries(textGroups).map(([type, entries]) => (
+      <div class="op-section">
+        <div class="op-section-label">{type.replace(/_/g, ' ')}</div>
+        {entries.map(e => (
+          <div class="op-text-block">
+            {e.year && <span class="op-text-year">{e.year}</span>}
+            {e.text}
+          </div>
+        ))}
+      </div>
+    ))}
+
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<script is:inline>
+(function(){
+  const img = document.getElementById('op-hero-img')
+  if (!img) return
+  let zoomed = false
+  img.addEventListener('click', () => {
+    zoomed = !zoomed
+    img.style.transform = zoomed ? 'scale(1.8)' : ''
+    img.style.cursor = zoomed ? 'zoom-out' : 'zoom-in'
+    img.style.zIndex = zoomed ? '10' : ''
+    img.style.position = zoomed ? 'relative' : ''
+  })
+})()
+</script>
+</PublicShell>
