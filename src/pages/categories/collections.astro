@@ -518,8 +518,9 @@ async function showArtistDetailFromObject(a, returnObj, panel) {
       <button class="col-close" id="art-back-to-obj">← Back to object</button>
       <button class="col-close" id="art-from-obj-close">✕</button>
     </div>
+    ${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="max-height:200px;width:auto;max-width:100%;object-fit:contain;display:block;margin:0 auto 16px;border-radius:4px;" loading="lazy"/>' : ''}
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${(a.last_name||a.preferred_name||'?').charAt(0)}</div>
+      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0;overflow:hidden;">${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>' : (a.last_name||a.preferred_name||'?').charAt(0)}</div>
       <div>
         <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:16px;font-style:italic;color:#EFE7D9">${a.preferred_name||''}</div>
         <div style="font-family:'Prata',Georgia,serif;font-size:11px;color:rgba(239,231,217,.4);margin-top:3px">${[a.nationality,a.display_date].filter(Boolean).join(' · ')}</div>
@@ -530,6 +531,7 @@ async function showArtistDetailFromObject(a, returnObj, panel) {
       ${a.ulan_id?`<div><div class="col-field-label">ULAN ID</div><div class="col-field-val">${a.ulan_id}</div></div>`:''}
     </div>
     ${a.wikidata_id?`<div style="margin-bottom:16px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${a.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>`:''}
+    ${a.signature_url ? '<div style="margin-bottom:20px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center;"><div class="col-field-label" style="margin-bottom:8px">Signature</div><img src="' + a.signature_url + '" alt="Signature" style="max-height:48px;max-width:100%;object-fit:contain;filter:invert(1) opacity(0.7);" loading="lazy"/></div>' : ''}
     <div id="art-from-obj-extra"><div class="col-section-label">Loading…</div></div>`
 
   document.getElementById('art-back-to-obj').addEventListener('click', () => showObjDetail(returnObj))
@@ -597,7 +599,7 @@ document.querySelectorAll('.col-pill').forEach(p => p.addEventListener('click', 
 
 // ── ARTISTS ───────────────────────────────────────────────────
 async function fetchArtists(q, letter = '') {
-  const p = new URLSearchParams({ select: 'constituent_id,preferred_name,forward_name,last_name,display_date,nationality,constituent_type,ulan_id,wikidata_id', limit: '50', order: 'last_name.asc.nullslast' })
+  const p = new URLSearchParams({ select: 'constituent_id,preferred_name,forward_name,last_name,display_date,nationality,constituent_type,ulan_id,wikidata_id,portrait_url,signature_url', limit: '50', order: 'last_name.asc.nullslast' })
   if (q) p.append('search_vector', `fts.${encodeURIComponent(q)}`)
   if (letter) p.append('last_name', `ilike.${letter}*`)
   const res = await fetch(`${SUPA_URL}/rest/v1/nga_constituents?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
@@ -627,7 +629,7 @@ function renderArtistList(artists) {
   if (!artists.length) { list.innerHTML = '<div class="col-empty">No results</div>'; return }
   list.innerHTML = artists.map(a => `
     <div class="col-artist-row${a.constituent_id===selArtId?' selected':''}" data-id="${a.constituent_id}" data-art='${JSON.stringify(a).replace(/'/g,'\u0027')}'>
-      <div class="col-avatar">${(a.last_name||a.preferred_name||'?').charAt(0)}</div>
+      <div class="col-avatar">${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>' : (a.last_name||a.preferred_name||'?').charAt(0)}</div>
       <div style="flex:1;min-width:0">
         <div class="col-artist-name">${a.preferred_name||a.forward_name||''}</div>
         <div class="col-artist-meta">${[a.nationality,a.display_date].filter(Boolean).join(' · ')}</div>
@@ -651,8 +653,9 @@ async function showArtistDetail(a) {
       <div class="col-detail-label-sm">Artist detail</div>
       <button class="col-close" id="art-close">✕</button>
     </div>
+    ${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="max-height:200px;width:auto;max-width:100%;object-fit:contain;display:block;margin:0 auto 16px;border-radius:4px;" loading="lazy"/>' : ''}
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${(a.last_name||a.preferred_name||'?').charAt(0)}</div>
+      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0;overflow:hidden;">${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>' : (a.last_name||a.preferred_name||'?').charAt(0)}</div>
       <div>
         <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:16px;font-style:italic;color:#EFE7D9">${a.preferred_name||''}</div>
         <div style="font-family:'Prata',Georgia,serif;font-size:11px;color:rgba(239,231,217,.4);margin-top:3px">${[a.nationality,a.display_date].filter(Boolean).join(' · ')}</div>
@@ -663,6 +666,7 @@ async function showArtistDetail(a) {
       ${a.ulan_id?`<div><div class="col-field-label">ULAN ID</div><div class="col-field-val">${a.ulan_id}</div></div>`:''}
     </div>
     ${a.wikidata_id?`<div style="margin-bottom:16px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${a.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>`:''}
+    ${a.signature_url ? '<div style="margin-bottom:20px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center;"><div class="col-field-label" style="margin-bottom:8px">Signature</div><img src="' + a.signature_url + '" alt="Signature" style="max-height:48px;max-width:100%;object-fit:contain;filter:invert(1) opacity(0.7);" loading="lazy"/></div>' : ''}
     <div id="art-extra"><div class="col-section-label">Loading…</div></div>`
 
   document.getElementById('art-close').addEventListener('click', () => {
