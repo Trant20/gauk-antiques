@@ -14,6 +14,7 @@ const url = Astro.url.searchParams.get('payment')
   body { background: #EFE7D9; color: #1C1810; }
   .pricing-section-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; }
   .plan-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 28px 24px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  @media (max-width: 480px) { .plan-card { flex-direction: column; align-items: flex-start; gap: 16px; } .plan-right { text-align: left; } }
   .plan-card.featured { background: #1C1810; border-color: #1C1810; }
   .plan-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
   .plan-card.featured .plan-name { color: #EFE7D9; }
