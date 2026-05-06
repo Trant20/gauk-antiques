@@ -91,7 +91,7 @@ Be authoritative and specific. Use real knowledge about makers, periods and mark
     })
 
     const raw = response.content[0].type === 'text' ? response.content[0].text : ''
-    const clean = raw.replace(/```json|```/g, '').trim()
+    const clean = raw.replaceAll('```json', '').replaceAll('```', '').trim()
     const enrichment = JSON.parse(clean)
 
     if (identification_id) {
