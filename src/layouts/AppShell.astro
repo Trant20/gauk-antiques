@@ -5,9 +5,6 @@ const { title, pageTitle, pageSubtitle, pageCap } = Astro.props
 ---
 <Layout title={title}>
 <style is:global>
-  .snav-layout { display: flex; min-height: 100vh; }
-  .snav-main { margin-left: 220px; flex: 1; min-width: 0; width: calc(100% - 220px); }
-  @media (max-width: 767px) { .snav-main { margin-left: 0; width: 100%; } }
   .shell-wrap { max-width: 900px; padding: 40px 24px 120px; }
   .shell-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; }
   .shell-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(24px,5vw,36px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 4px; }

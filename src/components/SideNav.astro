@@ -9,10 +9,9 @@
     width: 220px; flex-shrink: 0;
     background: #E6DCCB; border-right: 1px solid #C4B49E;
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
-    display: none; flex-direction: column;
+    display: flex; flex-direction: column;
     transform: translateX(0);
   }
-  .snav-sidebar.visible { display: flex; }
   .snav-main {
     margin-left: 220px; flex: 1; min-width: 0;
   }
@@ -162,8 +161,6 @@
 
   // Auth
   const { data: { session } } = await supabase.auth.getSession()
-  sidebar.classList.add('visible')
-  sidebar.style.display = 'flex'
   if (session) {
     document.getElementById('snav-signout')!.style.display = 'block'
     document.getElementById('snav-signin')!.style.display = 'none'
