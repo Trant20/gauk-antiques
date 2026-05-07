@@ -77,6 +77,8 @@ Every new public page needs a JSON-LD block in the head slot.
 - Article pages — Article schema
 - Category and collection pages — CollectionPage schema
 - Tool and feature pages — WebApplication schema
+- Artist pages — Person schema
+- Object pages — VisualArtwork schema
 
 PublicShell auto-generates canonical URL and og:url from Astro.url.pathname against gaukantiques.com. Every page must pass a description prop to PublicShell.
 
@@ -91,6 +93,33 @@ Before shipping any new page:
 - JSON-LD schema block in head slot
 - Description prop passed to PublicShell
 
+## Wikidata Knowledge Spine
+Every nga_constituent and nga_object with a wikidata_id is linked to the wikidata_entities table.
+- wikidata_entities stores: label, description, portrait_url, signature_url, birth/death dates and places, movements, occupations, influenced_by_ids, notable_work_ids
+- nga_constituents has portrait_url and signature_url back-filled for zero-join display
+- nga_constituents has slug column for direct URL routing
+- Enrichment script: scripts/enrich-wikidata.mjs — run locally or on Hetzner
+- Matching script: /opt/gauk-wikidata/match-wikidata.mjs on Hetzner VPS (77.42.86.1) — matches unmatched constituents by name, runs with --resume flag, loops via run-all.sh
+
+## Profile Pages
+- Artist profiles: /artists/[slug] — pulls from nga_constituents + wikidata_entities + nga_objects
+- Object profiles: /collection/[slug] — slug is accession_num with dots replaced by hyphens (1963.15.26 → 1963-15-26)
+- Object pages accept ?from=[artist-slug] param to build correct breadcrumb trail
+- Both pages have Person / VisualArtwork JSON-LD schema
+
+## Museum Collection
+- NGA dataset: 116,069 objects, 24,068 artists
+- Tables: nga_objects, nga_constituents, nga_object_constituents, nga_object_terms, nga_object_texts, nga_object_dimensions, nga_object_historical, nga_constituent_altnames, nga_constituent_texts
+- nga_objects.wikidata_id and nga_constituents.wikidata_id pre-populated from NGA source data
+- Collections browser at /categories/collections — objects and artists tabs, search, alphabet filter, detail panels
+
+## Tech Debt
+- collections.astro is 812 lines — needs splitting: frontmatter, CSS, render functions, fetch functions
+- Dark theme CSS tokens duplicated across collections.astro, artists/[slug].astro, collection/[slug].astro — consolidate into Layout.astro
+- Panel HTML in collections.astro built as concatenated template strings — extract into render functions
+- wikidata_entities RLS: add explicit deny on insert/update/delete for anon role
+- publishers.type column redundant — has_rss and has_youtube replace it, remove from DB and API once stable
+
 ## Session Log
 - Session 1: Scaffold — Astro 6, Tailwind v4, Node/Cloudflare dual adapter, pushed to GitHub
 - Session 2: Supabase client connected and verified, R2 bucket created (gauk-antiques-images), wrangler project name fixed
@@ -99,3 +128,4 @@ Before shipping any new page:
 - Session 5: Supabase Auth enabled, sign-in and sign-up pages built, user_id attached to identification records, identifications table created with RLS policies
 - Sessions 7-10: Full valuation card built — parchment design, 4 condition gauges, grade bar, market value SVG chart, desirability index, maker/manufacturer/mark/glaze/firing sections, expert notes, timeline, comparables, your options. Vision card on index with typewriter description and blur gate. Enrichment switched to Haiku. Audit completed and CSS conflicts resolved.
 - Session 11 (2026-05-06): Full mobile UI audit and SEO pass. Bottom nav moved into PublicShell, duplicate homepage nav removed, category hero mobile padding fixed. AppShell duplicate CSS removed, sidebar flash fixed. Valuation page header overlap, gauges grid and safe area inset fixed. Mobile padding and grid overrides applied across all pages. Canonical URLs and og:url added to PublicShell. OG descriptions added to index, explore, pricing. Article schema on learn pages, WebApplication schema on homepage, CollectionPage schema on articles/explore/category pages. Dynamic sitemap and robots.txt added. UI standards documented.
+- Session 12 (2026-05-07): Wikidata knowledge spine built. wikidata_entities table created with RLS. Enrichment script ran — 1,000 artists enriched, 690 portraits and 164 signatures stored. nga_constituents back-filled with portrait_url, signature_url, slug columns. Artist and object profile pages built (/artists/[slug], /collection/[slug]). Breadcrumb trail with ?from= param. Collections page updated — portraits in artist list and detail panels, signatures in detail panels, View Full Profile and View Object links. Wikidata name matching script deployed to Hetzner VPS, running overnight against 11,837 unmatched constituents.
