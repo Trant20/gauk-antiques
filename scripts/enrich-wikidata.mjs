@@ -152,13 +152,28 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 /** Main */
 async function main() {
-  console.log('Fetching nga_constituents with wikidata_id…')
+  const args = process.argv.slice(2)
 
-  const { data: constituents, error } = await supabase
+  console.log(onlyNew ? 'Fetching unenriched constituents with wikidata_id…' : 'Fetching all constituents with wikidata_id…')
+
+  // Get already-enriched wikidata_ids
+  let enrichedIds = new Set()
+  if (onlyNew) {
+    const { data: existing } = await supabase
+      .from('wikidata_entities')
+      .select('wikidata_id')
+    enrichedIds = new Set((existing || []).map(e => e.wikidata_id))
+    console.log(`Already enriched: ${enrichedIds.size}`)
+  }
+
+  const { data: allConstituents, error } = await supabase
     .from('nga_constituents')
     .select('constituent_id, wikidata_id, preferred_name')
     .not('wikidata_id', 'is', null)
     .order('constituent_id', { ascending: true })
+
+  const constituents = onlyNew
+    : (allConstituents || [])
 
   if (error) throw new Error(`Supabase fetch error: ${error.message}`)
 
