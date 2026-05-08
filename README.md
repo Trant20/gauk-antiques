@@ -93,32 +93,48 @@ Before shipping any new page:
 - JSON-LD schema block in head slot
 - Description prop passed to PublicShell
 
+## Unified Collection Schema
+All museum/collection data lives in unified tables in gauk-network (deyqcxujxweiwmsiscsz):
+
+- collection_sources — nga, tate, vam, christies, sothebys
+- collection_artists — all artists from all sources, wikidata_id links across sources
+- collection_objects — all objects from all sources
+- collection_object_artists — junction table
+- collection_manufacturers — manufacturers with founding dates, locations, logos
+
+Source data stays in nga_* tables for backward compatibility. New sources go directly into collection_* tables.
+
+Current sources:
+- NGA: 24,068 artists, 116,069 objects — imported 2026-05-08
+- Tate: 3,532 artists, 69,201 objects — imported 2026-05-08
+
 ## Wikidata Knowledge Spine
-Every nga_constituent and nga_object with a wikidata_id is linked to the wikidata_entities table.
+Every artist with a wikidata_id is linked to wikidata_entities.
 - wikidata_entities stores: label, description, portrait_url, signature_url, birth/death dates and places, movements, occupations, influenced_by_ids, notable_work_ids
 - nga_constituents has portrait_url and signature_url back-filled for zero-join display
 - nga_constituents has slug column for direct URL routing
-- Enrichment script: scripts/enrich-wikidata.mjs — run locally or on Hetzner
-- Matching script: /opt/gauk-wikidata/match-wikidata.mjs on Hetzner VPS (77.42.86.1) — matches unmatched constituents by name, runs with --resume flag, loops via run-all.sh
+- Enrichment script: scripts/enrich-wikidata.mjs — reads from collection_artists, writes to wikidata_entities, back-fills collection_artists and nga_constituents
+- Matching script: /opt/gauk-wikidata/match-wikidata.mjs on Hetzner VPS (77.42.86.1)
 
 ## Profile Pages
-- Artist profiles: /artists/[slug] — pulls from nga_constituents + wikidata_entities + nga_objects
-- Object profiles: /collection/[slug] — slug is accession_num with dots replaced by hyphens (1963.15.26 → 1963-15-26)
-- Object pages accept ?from=[artist-slug] param to build correct breadcrumb trail
+- Artist profiles: /artists/[slug] — nga_constituents + wikidata_entities + nga_objects
+- Object profiles: /collection/[slug] — slug is accession_num with dots replaced by hyphens
+- Object pages accept ?from=[artist-slug] param for correct breadcrumb trail
 - Both pages have Person / VisualArtwork JSON-LD schema
 
-## Museum Collection
-- NGA dataset: 116,069 objects, 24,068 artists
-- Tables: nga_objects, nga_constituents, nga_object_constituents, nga_object_terms, nga_object_texts, nga_object_dimensions, nga_object_historical, nga_constituent_altnames, nga_constituent_texts
-- nga_objects.wikidata_id and nga_constituents.wikidata_id pre-populated from NGA source data
-- Collections browser at /categories/collections — objects and artists tabs, search, alphabet filter, detail panels
+## Scripts
+- scripts/enrich-wikidata.mjs — enriches matched artists from collection_artists
+- scripts/migrate-nga.mjs — migrated NGA data to unified collection_ tables (run once)
+- scripts/import-tate.mjs — imports Tate CSV data into collection_ tables
 
 ## Tech Debt
-- collections.astro is 812 lines — needs splitting: frontmatter, CSS, render functions, fetch functions
-- Dark theme CSS tokens duplicated across collections.astro, artists/[slug].astro, collection/[slug].astro — consolidate into Layout.astro
-- Panel HTML in collections.astro built as concatenated template strings — extract into render functions
-- wikidata_entities RLS: add explicit deny on insert/update/delete for anon role
-- publishers.type column redundant — has_rss and has_youtube replace it, remove from DB and API once stable
+- collections.astro is 812 lines — split into separate files
+- Dark theme CSS tokens duplicated across collections.astro, artists/[slug].astro, collection/[slug].astro
+- Panel HTML in collections.astro built as concatenated template strings
+- wikidata_entities RLS — add explicit deny on insert/update/delete for anon
+- publishers.type column redundant — has_rss and has_youtube replace it
+- Artist/object profile pages still read from nga_* tables — migrate to collection_* tables
+- Full Sync in GMC runs matching against all sources — needs source selector per dataset
 
 ## Session Log
 - Session 1: Scaffold — Astro 6, Tailwind v4, Node/Cloudflare dual adapter, pushed to GitHub
@@ -128,4 +144,4 @@ Every nga_constituent and nga_object with a wikidata_id is linked to the wikidat
 - Session 5: Supabase Auth enabled, sign-in and sign-up pages built, user_id attached to identification records, identifications table created with RLS policies
 - Sessions 7-10: Full valuation card built — parchment design, 4 condition gauges, grade bar, market value SVG chart, desirability index, maker/manufacturer/mark/glaze/firing sections, expert notes, timeline, comparables, your options. Vision card on index with typewriter description and blur gate. Enrichment switched to Haiku. Audit completed and CSS conflicts resolved.
 - Session 11 (2026-05-06): Full mobile UI audit and SEO pass. Bottom nav moved into PublicShell, duplicate homepage nav removed, category hero mobile padding fixed. AppShell duplicate CSS removed, sidebar flash fixed. Valuation page header overlap, gauges grid and safe area inset fixed. Mobile padding and grid overrides applied across all pages. Canonical URLs and og:url added to PublicShell. OG descriptions added to index, explore, pricing. Article schema on learn pages, WebApplication schema on homepage, CollectionPage schema on articles/explore/category pages. Dynamic sitemap and robots.txt added. UI standards documented.
-- Session 12 (2026-05-07): Wikidata knowledge spine built. wikidata_entities table created with RLS. Enrichment script ran — 1,000 artists enriched, 690 portraits and 164 signatures stored. nga_constituents back-filled with portrait_url, signature_url, slug columns. Artist and object profile pages built (/artists/[slug], /collection/[slug]). Breadcrumb trail with ?from= param. Collections page updated — portraits in artist list and detail panels, signatures in detail panels, View Full Profile and View Object links. Wikidata name matching script deployed to Hetzner VPS, running overnight against 11,837 unmatched constituents.
+- Session 12 (2026-05-08): Wikidata knowledge spine built. wikidata_entities table, enrichment and matching scripts. 11,426+ NGA artists matched, enrichment running on Hetzner (2,300+ enriched, 1,361 portraits, 261 signatures). Artist profile pages /artists/[slug] and object profile pages /collection/[slug] built with portrait, signature, movements, works grid, JSON-LD schema. Unified collection_ schema designed and built. NGA data migrated (24K artists, 116K objects). Tate collection imported (3,532 artists, 69,201 artworks). Hetzner Jobs API server deployed as systemd service on port 4000. GMC Wikidata admin built at /scrapers/wikidata — status, job controls, live log streaming, progress bars, entity browser, search importer.
