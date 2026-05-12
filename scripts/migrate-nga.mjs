@@ -222,7 +222,9 @@ async function main() {
   console.log(`Objects: ${objectCount}`)
 }
 
-main().catch(err => {
+try {
+  await main()
+} catch (err) {
   console.error('Fatal:', err)
   process.exit(1)
-})
+}
