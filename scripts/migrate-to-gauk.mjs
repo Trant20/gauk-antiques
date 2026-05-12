@@ -58,27 +58,39 @@ function dataQuality(a) {
 }
 
 /** Map classification string to GAUK category slugs */
+const CLASSIFICATION_RULES = [
+  { terms: ['painting'], sources: ['c'], cats: ['art', 'oil-paintings'] },
+  { terms: ['oil', 'acrylic'], sources: ['m'], cats: ['art', 'oil-paintings'] },
+  { terms: ['watercolour', 'watercolor'], sources: ['c', 'm'], cats: ['art', 'watercolours'] },
+  { terms: ['drawing', 'graphic'], sources: ['c'], cats: ['art', 'drawings'] },
+  { terms: ['print', 'etching', 'lithograph', 'engraving'], sources: ['c', 'm'], cats: ['art', 'prints'] },
+  { terms: ['sculpture', 'three-dimensional'], sources: ['c'], cats: ['art', 'sculpture'] },
+  { terms: ['photograph'], sources: ['c'], cats: ['art', 'photography'] },
+  { terms: ['ceramic', 'pottery', 'porcelain', 'earthenware', 'stoneware'], sources: ['c'], cats: ['ceramics'] },
+  { terms: ['porcelain'], sources: ['m'], cats: ['ceramics', 'porcelain'] },
+  { terms: ['earthenware'], sources: ['m'], cats: ['ceramics', 'earthenware'] },
+  { terms: ['stoneware'], sources: ['m'], cats: ['ceramics', 'stoneware'] },
+  { terms: ['glass'], sources: ['c'], cats: ['glass'] },
+  { terms: ['silver'], sources: ['c', 'm'], cats: ['silver'] },
+  { terms: ['jewel', 'jewelry'], sources: ['c'], cats: ['jewellery'] },
+  { terms: ['furniture'], sources: ['c'], cats: ['furniture'] },
+  { terms: ['textile', 'fabric', 'wool', 'silk'], sources: ['c', 'm'], cats: ['textiles'] },
+]
+
 function classificationToCategories(classification, medium) {
   const c = (classification || '').toLowerCase()
   const m = (medium || '').toLowerCase()
   const cats = []
 
-  if (c.includes('painting') || m.includes('oil') || m.includes('acrylic')) cats.push('art', 'oil-paintings')
-  if (c.includes('watercolour') || c.includes('watercolor') || m.includes('watercolour')) cats.push('art', 'watercolours')
-  if (c.includes('drawing') || c.includes('graphic')) cats.push('art', 'drawings')
-  if (c.includes('print') || m.includes('etching') || m.includes('lithograph') || m.includes('engraving')) cats.push('art', 'prints')
-  if (c.includes('sculpture') || c.includes('three-dimensional')) cats.push('art', 'sculpture')
-  if (c.includes('photograph')) cats.push('art', 'photography')
-  if (c.includes('ceramic') || c.includes('pottery') || c.includes('porcelain') || c.includes('earthenware') || c.includes('stoneware')) cats.push('ceramics')
-  if (m.includes('porcelain')) cats.push('ceramics', 'porcelain')
-  if (m.includes('earthenware')) cats.push('ceramics', 'earthenware')
-  if (m.includes('stoneware')) cats.push('ceramics', 'stoneware')
-  if (c.includes('glass')) cats.push('glass')
-  if (c.includes('silver') || m.includes('silver')) cats.push('silver')
-  if (c.includes('jewel') || c.includes('jewelry')) cats.push('jewellery')
-  if (c.includes('furniture')) cats.push('furniture')
-  if (c.includes('textile') || c.includes('textile') || m.includes('fabric') || m.includes('wool') || m.includes('silk')) cats.push('textiles')
-  if (c.includes('decorative') && cats.length === 0) cats.push('ceramics') // NGA "Decorative Art" default
+  for (const rule of CLASSIFICATION_RULES) {
+    const matched = rule.terms.some(t =>
+      (rule.sources.includes('c') && c.includes(t)) ||
+      (rule.sources.includes('m') && m.includes(t))
+    )
+    if (matched) cats.push(...rule.cats)
+  }
+
+  if (cats.length === 0 && c.includes('decorative')) cats.push('ceramics')
 
   return [...new Set(cats)]
 }
