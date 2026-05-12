@@ -122,14 +122,25 @@ const { data: auctions } = await supabase
   .order('sold_date', { ascending: false })
   .limit(4)
 
-// External articles
+// External articles — RSS (filter by categories array)
 const { data: external } = await supabase
   .from('external_articles')
   .select('id, title, url, source_name, published_at, image_url')
   .eq('site_id', SITE_ID)
-  .eq('category', dbCategory)
+  .eq('content_type', 'article')
+  .contains('categories', [dbCategory])
   .order('published_at', { ascending: false })
   .limit(4)
+
+// Videos — filter by categories array
+const { data: videos } = await supabase
+  .from('external_articles')
+  .select('id, title, url, video_id, thumbnail_url, published_at, source_name')
+  .eq('site_id', SITE_ID)
+  .eq('content_type', 'video')
+  .contains('categories', [dbCategory])
+  .order('published_at', { ascending: false })
+  .limit(6)
 ---
 <PublicShell title={`${heroTitle} — GAUK Antiques`} description={heroSubtitle} ogImage={heroImage}>
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
@@ -274,6 +285,18 @@ const { data: external } = await supabase
   .trade-date { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; }
   .trade-placeholder { background: #E6DCCB; border: 1px dashed #C4B49E; padding: 40px; text-align: center; }
   .trade-placeholder-text { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.7; }
+
+  /* VIDEOS */
+  .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 16px; }
+  .video-card { background: #fff; border: 1px solid #E2D9CC; border-radius: 4px; overflow: hidden; text-decoration: none; display: block; }
+  .video-card:hover { border-color: #7A5C20; }
+  .video-thumb-wrap { position: relative; aspect-ratio: 16/9; overflow: hidden; background: #E6DCCB; }
+  .video-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .video-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); }
+  .video-play-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .video-body { padding: 12px; }
+  .video-source { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8A7A66; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .video-title { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #2C1810; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* NEWSLETTER */
   .newsletter { background: #1C1810; padding: 56px 32px; text-align: center; }
@@ -449,6 +472,38 @@ const { data: external } = await supabase
       </div>
     )}
   </div>
+
+  <!-- VIDEOS -->
+  {videos && videos.length > 0 && (
+    <div class="cat-section" id="videos">
+      <div class="cat-cap">Watch</div>
+      <h2 class="cat-heading">Videos & guides</h2>
+      <p class="cat-sub">From our network of {dbCategory.toLowerCase()} experts and specialists.</p>
+      <div class="video-grid">
+        {videos.map(v => (
+          <a href={v.url} target="_blank" rel="noopener" class="video-card">
+            <div class="video-thumb-wrap">
+              {v.thumbnail_url
+                ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
+                : <div style="width:100%;height:100%;background:#E6DCCB;" />
+              }
+              <div class="video-play">
+                <div class="video-play-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M5 3l9 5-9 5V3z" fill="#7A5C20"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="video-body">
+              {v.source_name && <div class="video-source">{v.source_name}</div>}
+              <div class="video-title">{v.title}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
 
   <!-- NEWSLETTER -->
   <div class="newsletter">
