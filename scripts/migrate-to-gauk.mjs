@@ -141,6 +141,71 @@ async function fetchAllObjects() {
   return all
 }
 
+
+/** Build a merged artist record from a wikidata group */
+function buildWikidataArtist(wikidataId, group, usedSlugs) {
+  const primary = group.find(a => a.portrait_url) || group[0]
+  const externalIds = {}
+  group.forEach(a => { externalIds[a.source_id] = a.source_artist_id })
+  if (wikidataId) externalIds.wikidata = wikidataId
+  const slug = uniqueSlug(primary.slug || toSlug(primary.preferred_name), usedSlugs)
+  usedSlugs.add(slug)
+  return {
+    preferred_name: primary.preferred_name,
+    slug,
+    birth_year: primary.begin_year || null,
+    death_year: primary.end_year || null,
+    nationality: primary.nationality || null,
+    portrait_url: primary.portrait_url || null,
+    signature_url: primary.signature_url || null,
+    external_ids: externalIds,
+    sources: [...new Set(group.map(a => a.source_id))],
+    data_quality: dataQuality(primary),
+    verified: false,
+    _collection_ids: group.map(a => a.id),
+  }
+}
+
+/** Build a merged artist record from a name group */
+function buildNamedArtist(group, usedSlugs) {
+  const primary = group.find(a => a.portrait_url) || group[0]
+  const externalIds = {}
+  group.forEach(a => { externalIds[a.source_id] = a.source_artist_id })
+  const slug = uniqueSlug(primary.slug || toSlug(primary.preferred_name), usedSlugs)
+  usedSlugs.add(slug)
+  return {
+    preferred_name: primary.preferred_name,
+    slug,
+    birth_year: primary.begin_year || null,
+    death_year: primary.end_year || null,
+    nationality: primary.nationality || null,
+    portrait_url: primary.portrait_url || null,
+    signature_url: primary.signature_url || null,
+    external_ids: externalIds,
+    sources: [...new Set(group.map(a => a.source_id))],
+    data_quality: dataQuality(primary),
+    verified: false,
+    _collection_ids: group.map(a => a.id),
+  }
+}
+
+/** Build a record for an anonymous or unmatched artist */
+function buildAnonymousArtist(a, usedSlugs) {
+  const slug = uniqueSlug(`anonymous-${a.source_id}-${a.source_artist_id}`, usedSlugs)
+  usedSlugs.add(slug)
+  return {
+    preferred_name: a.preferred_name || 'Unknown',
+    slug,
+    birth_year: a.begin_year || null,
+    death_year: a.end_year || null,
+    external_ids: { [a.source_id]: a.source_artist_id },
+    sources: [a.source_id],
+    data_quality: 0,
+    verified: false,
+    _collection_ids: [a.id],
+  }
+}
+
 async function migrateArtists(artists) {
   console.log('\n── DEDUPLICATING ARTISTS ────────────────────────')
 
@@ -172,78 +237,16 @@ async function migrateArtists(artists) {
   const gaukArtists = []
   const usedSlugs = new Set()
 
-  // From wikidata groups — merge all sources into one record
   for (const [wikidataId, group] of wikidataGroups) {
-    const primary = group.find(a => a.portrait_url) || group[0]
-    const externalIds = {}
-    group.forEach(a => { externalIds[a.source_id] = a.source_artist_id })
-    if (wikidataId) externalIds.wikidata = wikidataId
-
-    const slug = uniqueSlug(
-      primary.slug || toSlug(primary.preferred_name),
-      usedSlugs
-    )
-    usedSlugs.add(slug)
-
-    gaukArtists.push({
-      preferred_name: primary.preferred_name,
-      slug,
-      birth_year: primary.begin_year || null,
-      death_year: primary.end_year || null,
-      nationality: primary.nationality || null,
-      portrait_url: primary.portrait_url || null,
-      signature_url: primary.signature_url || null,
-      external_ids: externalIds,
-      sources: [...new Set(group.map(a => a.source_id))],
-      data_quality: dataQuality(primary),
-      verified: false,
-      _collection_ids: group.map(a => a.id), // for back-fill
-    })
+    gaukArtists.push(buildWikidataArtist(wikidataId, group, usedSlugs))
   }
 
-  // From name groups — one record per unique name
-  for (const [name, group] of nameGroups) {
-    const primary = group.find(a => a.portrait_url) || group[0]
-    const externalIds = {}
-    group.forEach(a => { externalIds[a.source_id] = a.source_artist_id })
-
-    const slug = uniqueSlug(
-      primary.slug || toSlug(primary.preferred_name),
-      usedSlugs
-    )
-    usedSlugs.add(slug)
-
-    gaukArtists.push({
-      preferred_name: primary.preferred_name,
-      slug,
-      birth_year: primary.begin_year || null,
-      death_year: primary.end_year || null,
-      nationality: primary.nationality || null,
-      portrait_url: primary.portrait_url || null,
-      signature_url: primary.signature_url || null,
-      external_ids: externalIds,
-      sources: [...new Set(group.map(a => a.source_id))],
-      data_quality: dataQuality(primary),
-      verified: false,
-      _collection_ids: group.map(a => a.id),
-    })
+  for (const [, group] of nameGroups) {
+    gaukArtists.push(buildNamedArtist(group, usedSlugs))
   }
 
-  // Anonymous / no-match — one per record
   for (const a of noMatch) {
-    const slug = uniqueSlug(`anonymous-${a.source_id}-${a.source_artist_id}`, usedSlugs)
-    usedSlugs.add(slug)
-    gaukArtists.push({
-      preferred_name: a.preferred_name || 'Unknown',
-      slug,
-      birth_year: a.begin_year || null,
-      death_year: a.end_year || null,
-      external_ids: { [a.source_id]: a.source_artist_id },
-      sources: [a.source_id],
-      data_quality: 0,
-      verified: false,
-      _collection_ids: [a.id],
-    })
+    gaukArtists.push(buildAnonymousArtist(a, usedSlugs))
   }
 
   console.log(`\n  Total gauk_artists to create: ${gaukArtists.length}`)
