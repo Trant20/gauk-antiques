@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.105.3",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.1.7",
+    "dotenv": "^17.4.2",
     "node-fetch": "^3.3.2",
     "tailwindcss": "^4.2.2",
     "wrangler": "^4.83.0"
