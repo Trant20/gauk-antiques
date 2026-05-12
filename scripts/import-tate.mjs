@@ -105,4 +105,9 @@ async function main() {
   console.log(`\nComplete: ${artistCount} artists, ${objectCount} objects`)
 }
 
-main().catch(err => { console.error('Fatal:', err); process.exit(1) })
+try {
+  await main()
+} catch (err) {
+  console.error('Fatal:', err)
+  process.exit(1)
+}
