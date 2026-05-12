@@ -166,4 +166,9 @@ async function main() {
   console.log(`gauk_artists remaining: ${27491 - deleted}`)
 }
 
-main().catch(err => { console.error('Fatal:', err); process.exit(1) })
+try {
+  await main()
+} catch (err) {
+  console.error('Fatal:', err)
+  process.exit(1)
+}
