@@ -1,8 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 
-const SUPABASE_URL = 'https://deyqcxujxweiwmsiscsz.supabase.co'
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRleXFjeHVqeHdlaXdtc2lzY3N6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjEwODM5MiwiZXhwIjoyMDkxNjg0MzkyfQ.bhc9AuOvH-uqAG8lrM1iXNE7j6OEUS4vTXNHDLn3cag'
+import 'dotenv/config'
+
+const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment')
+}
 const ARTIST_CSV = `${process.env.HOME}/Desktop/collection-master/artist_data.csv`
 const ARTWORK_CSV = `${process.env.HOME}/Desktop/collection-master/artwork_data.csv`
 const BATCH = 200
