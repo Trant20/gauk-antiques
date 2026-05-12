@@ -4,9 +4,9 @@ const f = '/Users/hardone/gauk-antiques/src/pages/categories/collections.astro'
 let c = readFileSync(f, 'utf8')
 
 // 1. Fix remaining \u0027 in works loop
-const before1 = c.split('\\u0027').length - 1
-c = c.replaceAll("replace(/'/g,\"\\u0027\")", "replace(/'/g,'&#39;')")
-const after1 = c.split('\\u0027').length - 1
+const before1 = c.split(String.raw`\u0027`).length - 1
+c = c.replaceAll(String.raw`replace(/'/g,"\u0027")`, "replace(/'/g,'&#39;')")
+const after1 = c.split(String.raw`\u0027`).length - 1
 console.log(`u0027: ${before1} → ${after1} remaining`)
 
 // 2. Remove ULAN ID from both artist panels
