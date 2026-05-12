@@ -87,12 +87,11 @@ async function main() {
 
   // Build institution rows
   const usedSlugs = new Set()
-  const artistIdToInstitutionRow = new Map()
 
   const institutionRows = gaukArtists.map(ga => {
     const slug = uniqueSlug(toSlug(ga.preferred_name || 'unknown'), usedSlugs)
     usedSlugs.add(slug)
-    const row = {
+    return {
       name: ga.preferred_name,
       slug,
       institution_type: guessInstitutionType(ga.preferred_name || ''),
@@ -101,8 +100,6 @@ async function main() {
       data_quality: ga.data_quality || 0,
       verified: false,
     }
-    artistIdToInstitutionRow.set(ga.gauk_id, row)
-    return row
   })
 
   console.log(`\nInserting ${institutionRows.length} institutions…`)
