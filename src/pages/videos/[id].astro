@@ -160,8 +160,6 @@ const pubDate = video.published_at
 
 
   /* CONTENT SECTIONS */
-  .vid-content-sections { max-width: 1200px; margin: 0 auto; padding: 0 32px 80px; }
-  @media (max-width: 767px) { .vid-content-sections { padding: 0 16px 80px; } }
   .vid-cs { padding: 48px 0; border-top: 1px solid #C4B49E; }
   .vid-cs-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
   .vid-cs-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
@@ -256,6 +254,73 @@ const pubDate = video.published_at
 
       <!-- EXCERPT -->
       {video.summary && <p class="vid-excerpt">{video.summary}</p>}
+
+
+  <!-- ESSENTIAL READING -->
+  {catArticles && catArticles.length > 0 && (
+    <div class="vid-cs">
+      <div class="vid-cs-cap">From the archive</div>
+      <div class="vid-cs-title">Essential reading</div>
+      <div class="vid-story-stack">
+        {catArticles.map(a => (
+          <a href={`/learn/${a.slug}`} class="vid-story-card">
+            {a.image_url
+              ? <img class="vid-story-thumb" src={a.image_url} alt={a.title} loading="lazy" />
+              : <div class="vid-story-thumb"></div>
+            }
+            <div>
+              <div class="vid-story-cat">{a.category}</div>
+              <div class="vid-story-title">{a.title}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- AUCTION WATCH -->
+  {catAuctions && catAuctions.length > 0 && (
+    <div class="vid-cs">
+      <div class="vid-cs-cap">Auction Watch</div>
+      <div class="vid-cs-title">Recent results</div>
+      <div class="vid-auction-grid">
+        {catAuctions.map(a => (
+          <div class="vid-auction-card">
+            <div class="vid-auction-house">{a.auction_house}</div>
+            <div class="vid-auction-title">{a.title}</div>
+            <div class="vid-auction-price">£{((a.price_pence || 0) / 100).toLocaleString()}</div>
+            <div class="vid-auction-date">{a.sold_date ? new Date(a.sold_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- RECENTLY IDENTIFIED -->
+  {catIdentifications && catIdentifications.length > 0 && (
+    <div class="vid-cs">
+      <div class="vid-cs-cap">Community</div>
+      <div class="vid-cs-title">Recently identified</div>
+      <div class="vid-id-strip">
+        {catIdentifications.map(item => {
+          const r = item.result_json || {}
+          return (
+            <div class="vid-id-card">
+              <div class="vid-id-img">
+                {item.image_key && <img src={`${R2}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
+              </div>
+              <div class="vid-id-body">
+                {r.maker && <div class="vid-id-maker">{r.maker}</div>}
+                <div class="vid-id-title">{r.subcategory || 'Antique Item'}</div>
+                <div class="vid-id-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )}
+
     </div>
 
     <!-- RIGHT RAIL -->
@@ -339,75 +404,6 @@ const pubDate = video.published_at
   </div>
 </div>
 
-<!-- CATEGORY CONTENT SECTIONS -->
-<div class="vid-content-sections">
-
-  <!-- ESSENTIAL READING -->
-  {catArticles && catArticles.length > 0 && (
-    <div class="vid-cs">
-      <div class="vid-cs-cap">From the archive</div>
-      <div class="vid-cs-title">Essential reading</div>
-      <div class="vid-story-stack">
-        {catArticles.map(a => (
-          <a href={`/learn/${a.slug}`} class="vid-story-card">
-            {a.image_url
-              ? <img class="vid-story-thumb" src={a.image_url} alt={a.title} loading="lazy" />
-              : <div class="vid-story-thumb"></div>
-            }
-            <div>
-              <div class="vid-story-cat">{a.category}</div>
-              <div class="vid-story-title">{a.title}</div>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  )}
-
-  <!-- AUCTION WATCH -->
-  {catAuctions && catAuctions.length > 0 && (
-    <div class="vid-cs">
-      <div class="vid-cs-cap">Auction Watch</div>
-      <div class="vid-cs-title">Recent results</div>
-      <div class="vid-auction-grid">
-        {catAuctions.map(a => (
-          <div class="vid-auction-card">
-            <div class="vid-auction-house">{a.auction_house}</div>
-            <div class="vid-auction-title">{a.title}</div>
-            <div class="vid-auction-price">£{((a.price_pence || 0) / 100).toLocaleString()}</div>
-            <div class="vid-auction-date">{a.sold_date ? new Date(a.sold_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-
-  <!-- RECENTLY IDENTIFIED -->
-  {catIdentifications && catIdentifications.length > 0 && (
-    <div class="vid-cs">
-      <div class="vid-cs-cap">Community</div>
-      <div class="vid-cs-title">Recently identified</div>
-      <div class="vid-id-strip">
-        {catIdentifications.map(item => {
-          const r = item.result_json || {}
-          return (
-            <div class="vid-id-card">
-              <div class="vid-id-img">
-                {item.image_key && <img src={`${R2}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
-              </div>
-              <div class="vid-id-body">
-                {r.maker && <div class="vid-id-maker">{r.maker}</div>}
-                <div class="vid-id-title">{r.subcategory || 'Antique Item'}</div>
-                <div class="vid-id-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )}
-
-</div>
 
 <!-- IDENTIFY INTERRUPT -->
 <div class="vid-interrupt">
