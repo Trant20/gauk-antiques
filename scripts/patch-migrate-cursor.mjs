@@ -39,7 +39,7 @@ const newArtistFetch = `  const all = []
     await sleep(200)
   }`
 
-const ac = (c.match(new RegExp(oldArtistFetch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const ac = (c.match(new RegExp(oldArtistFetch.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Artist fetch: found ${ac}`)
 c = c.replace(oldArtistFetch, newArtistFetch)
 
@@ -79,7 +79,7 @@ const newObjectFetch = `  const all = []
     await sleep(200)
   }`
 
-const oc = (c.match(new RegExp(oldObjectFetch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const oc = (c.match(new RegExp(oldObjectFetch.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Object fetch: found ${oc}`)
 c = c.replace(oldObjectFetch, newObjectFetch)
 
