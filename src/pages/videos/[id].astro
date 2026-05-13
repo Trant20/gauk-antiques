@@ -10,7 +10,7 @@ if (!id) return Astro.redirect('/videos')
 // Load the video
 const { data: video } = await supabase
   .from('external_articles')
-  .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id, excerpt')
+  .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id, summary')
   .eq('id', id)
   .eq('content_type', 'video')
   .single()
@@ -58,14 +58,14 @@ const pubDate = video.published_at
 ---
 <PublicShell
   title={`${video.title} — GAUK Antiques`}
-  description={video.excerpt || `${video.title} — watch on GAUK Antiques.`}
+  description={video.summary || `${video.title} — watch on GAUK Antiques.`}
   ogImage={video.thumbnail_url || ''}
 >
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
   "@context": "https://schema.org",
   "@type": "VideoObject",
   "name": video.title,
-  "description": video.excerpt || video.title,
+  "description": video.summary || video.title,
   "thumbnailUrl": video.thumbnail_url || '',
   "uploadDate": video.published_at || '',
   "embedUrl": `https://www.youtube.com/embed/${video.video_id}`,
@@ -178,7 +178,7 @@ const pubDate = video.published_at
       </div>
 
       <!-- EXCERPT -->
-      {video.excerpt && <p class="vid-excerpt">{video.excerpt}</p>}
+      {video.summary && <p class="vid-excerpt">{video.summary}</p>}
     </div>
 
     <!-- RIGHT RAIL -->
