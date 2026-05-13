@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const f = '/Users/hardone/gauk-antiques/src/pages/categories/collections.astro'
 let c = readFileSync(f, 'utf8')
@@ -10,7 +10,7 @@ const artistWd = `\${a.wikidata_id?\`<div style="margin-bottom:16px"><a class="c
 const artistWdWithProfile = artistWd + `
     <div style="margin-top:12px;margin-bottom:16px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="\${'/artists/' + a.preferred_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}">View Full Profile →</a></div>`
 
-const artistCount = (c.match(new RegExp(artistWd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const artistCount = (c.match(new RegExp(artistWd.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Artist Wikidata blocks found: ${artistCount}`)
 c = c.replaceAll(artistWd, artistWdWithProfile)
 
@@ -19,7 +19,7 @@ const objWd = `\${o.wikidata_id ? \`<div style="margin-top:8px"><a class="col-wi
 const objWdWithLink = objWd + `
     <div style="margin-top:12px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="\${'/collection/' + o.accession_num.replace(/\\./g, '-')}">View Object →</a></div>`
 
-const objCount = (c.match(new RegExp(objWd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const objCount = (c.match(new RegExp(objWd.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Object Wikidata blocks found: ${objCount}`)
 c = c.replaceAll(objWd, objWdWithLink)
 

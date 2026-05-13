@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const f = '/Users/hardone/gauk-antiques/src/pages/artists/[slug].astro'
 let c = readFileSync(f, 'utf8')
@@ -7,7 +7,7 @@ let c = readFileSync(f, 'utf8')
 const oldWorkLink = `href={\`/collection/\${w.accession_num.replace(/\\./g, '-')}\`}`
 const newWorkLink = `href={\`/collection/\${w.accession_num.replace(/\\./g, '-')}?from=\${canonicalSlug}\`}`
 
-const workCount = (c.match(new RegExp(oldWorkLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const workCount = (c.match(new RegExp(oldWorkLink.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Work links: found ${workCount}`)
 c = c.replaceAll(oldWorkLink, newWorkLink)
 
@@ -17,7 +17,7 @@ const newBack = `<a class="ap-link" href="/categories/collections">Collections</
           <span style="color:var(--text3);margin:0 6px">/</span>
           <span style="color:var(--text2);font-family:var(--prata);font-size:11px">{displayName}</span>`
 
-const backCount = (c.match(new RegExp(oldBack.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const backCount = (c.match(new RegExp(oldBack.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Back links: found ${backCount}`)
 c = c.replaceAll(oldBack, newBack)
 

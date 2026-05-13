@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const f = '/Users/hardone/gauk-antiques/src/pages/artists/[slug].astro'
 let c = readFileSync(f, 'utf8')
@@ -19,7 +19,7 @@ const { data: artist } = await supabase
   .eq('slug', slug)
   .single()`
 
-const count = (c.match(new RegExp(oldQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const count = (c.match(new RegExp(oldQuery.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Found ${count} occurrence(s) to replace`)
 c = c.replace(oldQuery, newQuery)
 writeFileSync(f, c)
