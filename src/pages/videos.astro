@@ -119,6 +119,8 @@ const pageDescription = activeCategoryName
   .vid-section-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
   .vid-section-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
   .vid-section-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,28px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 24px; }
+  .channels-strip-wrap { position: relative; }
+  .channels-strip-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 8px; width: 100px; background: linear-gradient(to right, transparent, #EFE7D9); pointer-events: none; z-index: 1; }
   .channels-strip { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
   .channels-strip::-webkit-scrollbar { display: none; }
   .channel-chip { display: flex; align-items: center; gap: 10px; background: #E6DCCB; border: 1px solid #C4B49E; padding: 10px 16px; text-decoration: none; flex-shrink: 0; transition: border-color .15s, background .15s; }
@@ -226,6 +228,7 @@ const pageDescription = activeCategoryName
     <div class="vid-channels">
       <div class="vid-section-cap">Channels</div>
       <div class="vid-section-title">Featured channels</div>
+      <div class="channels-strip-wrap">
       <div class="channels-strip">
         {channels.map(c => (
           <a href={`/channels/${c.slug}`} class="channel-chip">
@@ -236,6 +239,7 @@ const pageDescription = activeCategoryName
             <span class="channel-chip-name">{c.name}</span>
           </a>
         ))}
+      </div>
       </div>
     </div>
   )}
