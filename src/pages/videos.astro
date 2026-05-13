@@ -49,6 +49,16 @@ if (activeCategoryName) {
 
 const { data: allVideos } = await videoQuery.limit(200)
 
+// Latest videos — top 24 regardless of category for the primary grid
+const { data: latestVideos } = !activeCategoryName ? await supabase
+  .from('external_articles')
+  .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id')
+  .eq('site_id', SITE_ID)
+  .eq('content_type', 'video')
+  .eq('is_public', true)
+  .order('published_at', { ascending: false })
+  .limit(24) : { data: [] }
+
 // Build category sections — only categories that have videos
 const categoryVideos: Record<string, typeof allVideos> = {}
 
@@ -98,6 +108,11 @@ const pageDescription = activeCategoryName
   .vid-filter-link:hover { color: #EFE7D9; border-bottom-color: rgba(200,160,96,.4); }
   .vid-filter-link.active { color: #C8A060; border-bottom-color: #C8A060; }
   @media (max-width: 767px) { .vid-filter { padding: 0 8px; } .vid-filter-link { padding: 14px 10px; font-size: 8px; } }
+
+  /* LATEST SECTION */
+  .vid-latest { max-width: 1100px; margin: 0 auto; padding: 48px 32px 0; }
+  @media (max-width: 767px) { .vid-latest { padding: 40px 16px 0; } }
+  .vid-latest-count { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; margin-bottom: 24px; }
 
   /* CHANNELS STRIP */
   .vid-channels { max-width: 1100px; margin: 0 auto; padding: 48px 32px 0; }
@@ -175,6 +190,36 @@ const pageDescription = activeCategoryName
     })}
   </nav>
   </div>
+
+  <!-- LATEST VIDEOS — primary view when no category filter -->
+  {!activeCategoryName && latestVideos && latestVideos.length > 0 && (
+    <div class="vid-latest">
+      <div class="vid-section-cap">Latest</div>
+      <div class="vid-section-title">Recently added</div>
+      <div class="vid-latest-count">{latestVideos.length} of 1,000+ videos</div>
+      <div class="video-grid">
+        {latestVideos.map(v => (
+          <a href={`/videos/${v.id}`} class="video-card">
+            <div class="video-thumb-wrap">
+              {v.thumbnail_url
+                ? <img src={v.thumbnail_url} alt="" loading="lazy" />
+                : <div style="width:100%;height:100%;background:#E6DCCB;"></div>
+              }
+              <div class="video-play">
+                <div class="video-play-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="#1C1810"><polygon points="4,2 14,8 4,14"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="video-body">
+              {v.source_name && <div class="video-source">{v.source_name}</div>}
+              <div class="video-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
 
   <!-- CHANNELS STRIP — only on unfiltered view -->
   {!activeCategoryName && channels && channels.length > 0 && (
