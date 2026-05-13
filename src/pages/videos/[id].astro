@@ -1,0 +1,288 @@
+---
+import PublicShell from '../../layouts/PublicShell.astro'
+import { supabase } from '../../lib/supabase'
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const { id } = Astro.params
+
+if (!id) return Astro.redirect('/videos')
+
+// Load the video
+const { data: video } = await supabase
+  .from('external_articles')
+  .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id, excerpt')
+  .eq('id', id)
+  .eq('content_type', 'video')
+  .single()
+
+if (!video || !video.video_id) return Astro.redirect('/videos')
+
+// Load channel
+const { data: channel } = video.publisher_id ? await supabase
+  .from('publishers')
+  .select('id, name, slug, logo_url, description, site_url')
+  .eq('id', video.publisher_id)
+  .single() : { data: null }
+
+// More from this channel
+const { data: channelVideos } = video.publisher_id ? await supabase
+  .from('external_articles')
+  .select('id, title, video_id, thumbnail_url, source_name, published_at')
+  .eq('site_id', SITE_ID)
+  .eq('content_type', 'video')
+  .eq('publisher_id', video.publisher_id)
+  .neq('id', id)
+  .order('published_at', { ascending: false })
+  .limit(6) : { data: [] }
+
+// Related by category
+const primaryCategory = video.categories?.[0] || null
+const { data: relatedVideos } = primaryCategory ? await supabase
+  .from('external_articles')
+  .select('id, title, video_id, thumbnail_url, source_name, published_at')
+  .eq('site_id', SITE_ID)
+  .eq('content_type', 'video')
+  .contains('categories', [primaryCategory])
+  .neq('id', id)
+  .neq('publisher_id', video.publisher_id || '')
+  .order('published_at', { ascending: false })
+  .limit(6) : { data: [] }
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+const pubDate = video.published_at
+  ? new Date(video.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null
+---
+<PublicShell
+  title={`${video.title} — GAUK Antiques`}
+  description={video.excerpt || `${video.title} — watch on GAUK Antiques.`}
+  ogImage={video.thumbnail_url || ''}
+>
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  "name": video.title,
+  "description": video.excerpt || video.title,
+  "thumbnailUrl": video.thumbnail_url || '',
+  "uploadDate": video.published_at || '',
+  "embedUrl": `https://www.youtube.com/embed/${video.video_id}`,
+  "url": `https://gaukantiques.com/videos/${id}`,
+  "publisher": { "@type": "Organization", "name": "GAUK Antiques", "url": "https://gaukantiques.com" }
+})} />
+
+<style>
+  .vid-pg { background: #EFE7D9; min-height: 100vh; padding-top: 64px; }
+
+  /* LAYOUT */
+  .vid-pg-inner { max-width: 1200px; margin: 0 auto; padding: 40px 32px 80px; display: grid; grid-template-columns: 1fr 340px; gap: 40px; align-items: start; }
+  @media (max-width: 960px) { .vid-pg-inner { grid-template-columns: 1fr; gap: 32px; } }
+  @media (max-width: 767px) { .vid-pg-inner { padding: 24px 16px 80px; } }
+
+  /* EMBED */
+  .vid-embed-wrap { position: relative; aspect-ratio: 16/9; background: #1C1810; }
+  .vid-embed-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+
+  /* TITLE + META */
+  .vid-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,28px); font-weight: 400; font-style: italic; color: #1C1810; line-height: 1.3; margin: 20px 0 12px; }
+  .vid-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 1px solid #C4B49E; margin-bottom: 20px; }
+  .vid-date { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; letter-spacing: 1px; }
+  .vid-cats { display: flex; gap: 6px; flex-wrap: wrap; }
+  .vid-cat-tag { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-decoration: none; border: 1px solid #C4B49E; padding: 4px 10px; transition: border-color .15s, color .15s; }
+  .vid-cat-tag:hover { border-color: #7A5C20; color: #1C1810; }
+
+  /* EXCERPT */
+  .vid-excerpt { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #5C5040; line-height: 1.9; margin-bottom: 24px; }
+
+  /* CHANNEL CARD */
+  .vid-channel { background: #E6DCCB; border: 1px solid #C4B49E; padding: 20px; margin-bottom: 32px; }
+  .vid-channel-inner { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .vid-channel-logo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #C4B49E; flex-shrink: 0; }
+  .vid-channel-logo-placeholder { width: 48px; height: 48px; border-radius: 50%; background: #7A5C20; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 20px; font-style: italic; color: #EFE7D9; flex-shrink: 0; }
+  .vid-channel-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; font-style: italic; color: #1C1810; margin-bottom: 2px; }
+  .vid-channel-desc { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; line-height: 1.6; margin-bottom: 14px; }
+  .vid-channel-follow { display: block; width: 100%; padding: 11px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; text-align: center; text-decoration: none; cursor: pointer; transition: background .2s; box-sizing: border-box; }
+  .vid-channel-follow:hover { background: #2C2418; }
+  .vid-channel-follow.coming-soon { background: #C4B49E; cursor: default; color: #8A7A66; }
+
+  /* SIDE RAIL VIDEO LIST */
+  .vid-rail-section { margin-bottom: 32px; }
+  .vid-rail-cap { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .vid-rail-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .vid-rail-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
+  .vid-rail-item { background: #EFE7D9; display: flex; gap: 12px; padding: 10px; text-decoration: none; transition: background .15s; cursor: pointer; }
+  .vid-rail-item:hover { background: #E6DCCB; }
+  .vid-rail-thumb { width: 100px; aspect-ratio: 16/9; object-fit: cover; background: #E6DCCB; flex-shrink: 0; position: relative; overflow: hidden; }
+  .vid-rail-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .vid-rail-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); }
+  .vid-rail-play-icon { width: 28px; height: 28px; background: rgba(255,255,255,.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .vid-rail-source { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; margin-bottom: 3px; }
+  .vid-rail-title { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #1C1810; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* BREADCRUMB */
+  .vid-breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .vid-bc-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
+  .vid-bc-link:hover { color: #1C1810; }
+  .vid-bc-sep { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #C4B49E; }
+  .vid-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* MODAL for rail clicks */
+  .yt-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .yt-modal-overlay.open { display: flex; }
+  .yt-modal { position: relative; width: 100%; max-width: 960px; aspect-ratio: 16/9; background: #000; }
+  .yt-modal iframe { width: 100%; height: 100%; border: none; }
+  .yt-modal-close { position: absolute; top: -44px; right: 0; background: none; border: none; color: #fff; font-size: 28px; cursor: pointer; line-height: 1; padding: 4px 8px; opacity: .7; transition: opacity .2s; }
+  .yt-modal-close:hover { opacity: 1; }
+</style>
+
+<div class="vid-pg">
+  <div class="vid-pg-inner">
+
+    <!-- LEFT COLUMN -->
+    <div>
+      <!-- BREADCRUMB -->
+      <nav class="vid-breadcrumb">
+        <a href="/videos" class="vid-bc-link">Videos</a>
+        {primaryCategory && <>
+          <span class="vid-bc-sep">›</span>
+          <a href={`/videos?category=${slugify(primaryCategory)}`} class="vid-bc-link">{primaryCategory}</a>
+        </>}
+        <span class="vid-bc-sep">›</span>
+        <span class="vid-bc-cur">{video.title}</span>
+      </nav>
+
+      <!-- EMBED -->
+      <div class="vid-embed-wrap">
+        <iframe
+          src={`https://www.youtube.com/embed/${video.video_id}?rel=0&modestbranding=1`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <!-- TITLE -->
+      <h1 class="vid-title">{video.title}</h1>
+
+      <!-- META -->
+      <div class="vid-meta">
+        {pubDate && <span class="vid-date">{pubDate}</span>}
+        {video.categories && video.categories.length > 0 && (
+          <div class="vid-cats">
+            {video.categories.map((cat: string) => (
+              <a href={`/videos?category=${slugify(cat)}`} class="vid-cat-tag">{cat}</a>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <!-- EXCERPT -->
+      {video.excerpt && <p class="vid-excerpt">{video.excerpt}</p>}
+    </div>
+
+    <!-- RIGHT RAIL -->
+    <div>
+      <!-- CHANNEL CARD -->
+      {channel && (
+        <div class="vid-channel">
+          <div class="vid-channel-inner">
+            {channel.logo_url
+              ? <img class="vid-channel-logo" src={channel.logo_url} alt={channel.name} />
+              : <div class="vid-channel-logo-placeholder">{channel.name.charAt(0)}</div>
+            }
+            <div>
+              <div class="vid-channel-name">{channel.name}</div>
+            </div>
+          </div>
+          {channel.description && <p class="vid-channel-desc">{channel.description}</p>}
+          <a href={`/channels/${channel.slug}`} class="vid-channel-follow coming-soon">
+            Follow Channel — Coming Soon
+          </a>
+        </div>
+      )}
+
+      <!-- MORE FROM CHANNEL -->
+      {channelVideos && channelVideos.length > 0 && (
+        <div class="vid-rail-section">
+          <div class="vid-rail-cap">More from {channel?.name || video.source_name}</div>
+          <div class="vid-rail-list">
+            {channelVideos.map(v => (
+              <a href={`/videos/${v.id}`} class="vid-rail-item">
+                <div class="vid-rail-thumb">
+                  {v.thumbnail_url
+                    ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
+                    : <div style="width:100%;height:100%;background:#E6DCCB;"></div>
+                  }
+                  <div class="vid-rail-play">
+                    <div class="vid-rail-play-icon">
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="#1C1810"><polygon points="4,2 14,8 4,14"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  {v.source_name && <div class="vid-rail-source">{v.source_name}</div>}
+                  <div class="vid-rail-title">{v.title}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- RELATED VIDEOS -->
+      {relatedVideos && relatedVideos.length > 0 && (
+        <div class="vid-rail-section">
+          <div class="vid-rail-cap">Related {primaryCategory} videos</div>
+          <div class="vid-rail-list">
+            {relatedVideos.map(v => (
+              <a href={`/videos/${v.id}`} class="vid-rail-item">
+                <div class="vid-rail-thumb">
+                  {v.thumbnail_url
+                    ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
+                    : <div style="width:100%;height:100%;background:#E6DCCB;"></div>
+                  }
+                  <div class="vid-rail-play">
+                    <div class="vid-rail-play-icon">
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="#1C1810"><polygon points="4,2 14,8 4,14"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  {v.source_name && <div class="vid-rail-source">{v.source_name}</div>}
+                  <div class="vid-rail-title">{v.title}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL (unused on this page but kept for consistency) -->
+<div class="yt-modal-overlay" id="yt-modal-overlay">
+  <div class="yt-modal" id="yt-modal">
+    <button class="yt-modal-close" id="yt-modal-close">&#x2715;</button>
+    <iframe id="yt-modal-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById('yt-modal-overlay') as HTMLElement
+  const iframe = document.getElementById('yt-modal-iframe') as HTMLIFrameElement
+  const closeBtn = document.getElementById('yt-modal-close') as HTMLButtonElement
+
+  function closeModal() {
+    overlay.classList.remove('open')
+    iframe.src = ''
+    document.body.style.overflow = ''
+  }
+
+  closeBtn.addEventListener('click', closeModal)
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal() })
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal() })
+</script>
+</PublicShell>

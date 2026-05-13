@@ -443,7 +443,7 @@ const { data: videos } = await supabase
       <p class="cat-sub">From our network of {dbCategory.toLowerCase()} experts and specialists.</p>
       <div class="video-grid">
         {videos.map(v => (
-          <div class="video-card" data-video-id={v.video_id} data-video-title={v.title} style="cursor:pointer;">
+          <a href={`/videos/${v.id}`} class="video-card" style="text-decoration:none;">
             <div class="video-thumb-wrap">
               {v.thumbnail_url
                 ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
