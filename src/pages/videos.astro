@@ -219,7 +219,7 @@ const pageDescription = activeCategoryName
               </div>
               <div class="video-body">
                 {v.source_name && <div class="video-source">{v.source_name}</div>}
-                <div class="video-title">{v.title}</div>
+                <div class="video-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
               </div>
             </a>
           ))}
@@ -259,7 +259,7 @@ const pageDescription = activeCategoryName
             </div>
             <div class="video-body">
               {v.source_name && <div class="video-source">{v.source_name}</div>}
-              <div class="video-title">{v.title}</div>
+              <div class="video-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
             </div>
           </a>
         ))}
@@ -286,6 +286,22 @@ const pageDescription = activeCategoryName
 </div>
 
 <script>
+function decodeHtml(str) {
+  if (!str) return ''
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&apos;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&ndash;/g, '–')
+    .replace(/&mdash;/g, '—')
+    .replace(/&hellip;/g, '…')
+    .replace(/&#\d+;/g, (m) => String.fromCharCode(parseInt(m.slice(2,-1))))
+}
+
   const overlay = document.getElementById('yt-modal-overlay') as HTMLElement
   const iframe = document.getElementById('yt-modal-iframe') as HTMLIFrameElement
   const titleEl = document.getElementById('yt-modal-title') as HTMLElement

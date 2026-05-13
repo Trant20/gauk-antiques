@@ -374,7 +374,7 @@ const pubDate = video.published_at
               <a href={`/videos/${v.id}`} class="vid-rail-item">
                 <div class="vid-rail-thumb">
                   {v.thumbnail_url
-                    ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
+                    ? <img src={v.thumbnail_url} alt={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')} loading="lazy" />
                     : <div style="width:100%;height:100%;background:#E6DCCB;"></div>
                   }
                   <div class="vid-rail-play">
@@ -385,7 +385,7 @@ const pubDate = video.published_at
                 </div>
                 <div>
                   {v.source_name && <div class="vid-rail-source">{v.source_name}</div>}
-                  <div class="vid-rail-title">{v.title}</div>
+                  <div class="vid-rail-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
                 </div>
               </a>
             ))}
@@ -402,7 +402,7 @@ const pubDate = video.published_at
               <a href={`/videos/${v.id}`} class="vid-rail-item">
                 <div class="vid-rail-thumb">
                   {v.thumbnail_url
-                    ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
+                    ? <img src={v.thumbnail_url} alt={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')} loading="lazy" />
                     : <div style="width:100%;height:100%;background:#E6DCCB;"></div>
                   }
                   <div class="vid-rail-play">
@@ -413,7 +413,7 @@ const pubDate = video.published_at
                 </div>
                 <div>
                   {v.source_name && <div class="vid-rail-source">{v.source_name}</div>}
-                  <div class="vid-rail-title">{v.title}</div>
+                  <div class="vid-rail-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
                 </div>
               </a>
             ))}
