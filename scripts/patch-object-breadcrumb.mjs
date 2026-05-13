@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const f = '/Users/hardone/gauk-antiques/src/pages/collection/[slug].astro'
 let c = readFileSync(f, 'utf8')
@@ -19,7 +19,7 @@ if (fromSlug) {
   fromArtistName = fromArtist?.preferred_name || null
 }`
 
-const slugCount = (c.match(new RegExp(oldSlugLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const slugCount = (c.match(new RegExp(oldSlugLine.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Slug line: found ${slugCount}`)
 c = c.replace(oldSlugLine, newSlugLine)
 
@@ -35,7 +35,7 @@ const newBack = `<a class="op-link" href="/categories/collections">Collections</
           <span style="color:var(--text3);margin:0 6px">/</span>
           <span style="color:var(--text2);font-family:var(--prata);font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">{obj.title}</span>`
 
-const backCount = (c.match(new RegExp(oldBack.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const backCount = (c.match(new RegExp(oldBack.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Back links: found ${backCount}`)
 c = c.replace(oldBack, newBack)
 

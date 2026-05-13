@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const f = '/Users/hardone/gauk-antiques/src/pages/categories/collections.astro'
 let c = readFileSync(f, 'utf8')

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'fs'
+import { readFileSync } from 'node:fs'
 
 import 'dotenv/config'
 
@@ -60,8 +60,8 @@ async function main() {
     forward_name: a.name ? a.name.split(',').reverse().join(' ').trim() : null,
     last_name: a.name ? a.name.split(',')[0].trim() : null,
     display_date: a.dates || null,
-    begin_year: parseInt(a.yearOfBirth) || null,
-    end_year: parseInt(a.yearOfDeath) || null,
+    begin_year: Number.parseInt(a.yearOfBirth) || null,
+    end_year: Number.parseInt(a.yearOfDeath) || null,
     artist_type: 'individual', raw_data: a,
   }))
   console.log(`\nImporting ${aRows.length} artists…`)
@@ -72,7 +72,7 @@ async function main() {
     accession_num: a.accession_number || null,
     title: a.title || 'Untitled',
     display_date: a.dateText || null,
-    begin_year: parseInt(a.year) || null,
+    begin_year: Number.parseInt(a.year) || null,
     medium: a.medium || null, dimensions: a.dimensions || null,
     classification: 'Art', attribution: a.artist || null,
     credit_line: a.creditLine || null, thumb_url: a.thumbnailUrl || null,

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const f = '/Users/hardone/gauk-antiques/src/pages/categories/collections.astro'
 let c = readFileSync(f, 'utf8')
@@ -7,7 +7,7 @@ let c = readFileSync(f, 'utf8')
 const oldSelect = `select: 'constituent_id,preferred_name,forward_name,last_name,display_date,nationality,constituent_type,ulan_id,wikidata_id,portrait_url,signature_url'`
 const newSelect = `select: 'constituent_id,preferred_name,forward_name,last_name,display_date,nationality,constituent_type,ulan_id,wikidata_id,portrait_url,signature_url,slug'`
 
-const selectCount = (c.match(new RegExp(oldSelect.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const selectCount = (c.match(new RegExp(oldSelect.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Select: found ${selectCount} occurrence(s)`)
 c = c.replaceAll(oldSelect, newSelect)
 
@@ -15,7 +15,7 @@ c = c.replaceAll(oldSelect, newSelect)
 const oldLink = `href="\${'/artists/' + a.preferred_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}"`
 const newLink = `href="\${'/artists/' + (a.slug || a.preferred_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-\\$/g, ''))}"`
 
-const linkCount = (c.match(new RegExp(oldLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const linkCount = (c.match(new RegExp(oldLink.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Profile links: found ${linkCount} occurrence(s)`)
 c = c.replaceAll(oldLink, newLink)
 

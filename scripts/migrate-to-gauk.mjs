@@ -13,7 +13,6 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'fs'
 
 import 'dotenv/config'
 

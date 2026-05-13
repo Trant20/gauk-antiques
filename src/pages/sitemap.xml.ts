@@ -18,7 +18,7 @@ function url(loc: string, priority: string, changefreq: string, lastmod?: string
 
 /** Slugify a category name to match the route pattern */
 function slugify(s: string): string {
-  return s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return s.toLowerCase().replaceAll(/&/g, 'and').replaceAll(/[^a-z0-9]+/g, '-').replaceAll(/^-|-$/g, '')
 }
 
 export const GET: APIRoute = async () => {

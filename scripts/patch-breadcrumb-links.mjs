@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 // ── OBJECT PAGE ──────────────────────────────────────────────
 const objFile = '/Users/hardone/gauk-antiques/src/pages/collection/[slug].astro'
@@ -10,7 +10,7 @@ const newCollectionsLink = `<a class="op-link" href={fromSlug ? '/artists/' + fr
             {fromSlug && fromArtistName ? fromArtistName : 'Collections'}
           </a>`
 
-const objLinkCount = (obj.match(new RegExp(oldCollectionsLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const objLinkCount = (obj.match(new RegExp(oldCollectionsLink.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Object Collections link: found ${objLinkCount}`)
 obj = obj.replace(oldCollectionsLink, newCollectionsLink)
 
@@ -18,7 +18,7 @@ obj = obj.replace(oldCollectionsLink, newCollectionsLink)
 const oldObjWd = `{obj.wikidata_id && (
             <a class="op-link" href={\`https://www.wikidata.org/wiki/\${obj.wikidata_id}\`} target="_blank" rel="noopener">Wikidata →</a>
           )}`
-const objWdCount = (obj.match(new RegExp(oldObjWd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const objWdCount = (obj.match(new RegExp(oldObjWd.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Object Wikidata link: found ${objWdCount}`)
 obj = obj.replace(oldObjWd, '')
 
@@ -37,8 +37,8 @@ const oldUlanLink = `{artist.ulan_id && (
             <a class="ap-link" href={\`https://vocab.getty.edu/ulan/\${artist.ulan_id}\`} target="_blank" rel="noopener">ULAN →</a>
           )}`
 
-const wdCount = (art.match(new RegExp(oldWdLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
-const ulanCount = (art.match(new RegExp(oldUlanLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+const wdCount = (art.match(new RegExp(oldWdLink.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
+const ulanCount = (art.match(new RegExp(oldUlanLink.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'g')) || []).length
 console.log(`Artist Wikidata link: found ${wdCount}, ULAN link: found ${ulanCount}`)
 art = art.replace(oldWdLink, '')
 art = art.replace(oldUlanLink, '')
