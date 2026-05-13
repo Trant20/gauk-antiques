@@ -11,7 +11,7 @@ const { title } = Astro.props
     <meta name="supabase-anon" content={import.meta.env.PUBLIC_SUPABASE_ANON_KEY} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Prata&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Prata&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -29,6 +29,7 @@ const { title } = Astro.props
         --goldHi:   #C4A870;
         --goldLo:   #6A5530;
         --display:  'Playfair Display', Didot, Georgia, serif;
+        --mono:     'IBM Plex Mono', monospace;
         --body:     'Prata', Georgia, serif;
         --radius:   2px;
       }
