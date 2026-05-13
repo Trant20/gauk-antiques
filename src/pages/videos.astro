@@ -205,7 +205,7 @@ const pageDescription = activeCategoryName
       {allVideos && allVideos.length > 0 ? (
         <div class="video-grid">
           {allVideos.map(v => (
-            <div class="video-card" data-video-id={v.video_id} data-video-title={v.title}>
+            <a href={`/videos/${v.id}`} class="video-card">
               <div class="video-thumb-wrap">
                 {v.thumbnail_url
                   ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
@@ -221,7 +221,7 @@ const pageDescription = activeCategoryName
                 {v.source_name && <div class="video-source">{v.source_name}</div>}
                 <div class="video-title">{v.title}</div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       ) : (
@@ -245,7 +245,7 @@ const pageDescription = activeCategoryName
       </div>
       <div class="video-grid">
         {(vids || []).map(v => (
-          <div class="video-card" data-video-id={v.video_id} data-video-title={v.title}>
+          <a href={`/videos/${v.id}`} class="video-card">
             <div class="video-thumb-wrap">
               {v.thumbnail_url
                 ? <img src={v.thumbnail_url} alt={v.title} loading="lazy" />
@@ -261,7 +261,7 @@ const pageDescription = activeCategoryName
               {v.source_name && <div class="video-source">{v.source_name}</div>}
               <div class="video-title">{v.title}</div>
             </div>
-          </div>
+          </a>
         ))}
       </div>
     </div>
