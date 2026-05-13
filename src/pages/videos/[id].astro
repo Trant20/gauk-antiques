@@ -52,6 +52,36 @@ function slugify(s: string): string {
   return s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
+// Articles for primary category
+const { data: catArticles } = primaryCategory ? await supabase
+  .from('articles')
+  .select('id, title, slug, excerpt, image_url, category')
+  .eq('site_id', SITE_ID)
+  .eq('category', primaryCategory)
+  .eq('published', true)
+  .order('published_at', { ascending: false })
+  .limit(4) : { data: [] }
+
+// Auction results for primary category
+const { data: catAuctions } = primaryCategory ? await supabase
+  .from('auction_results')
+  .select('id, title, maker, price_pence, auction_house, sold_date')
+  .eq('site_id', SITE_ID)
+  .eq('category', primaryCategory)
+  .order('sold_date', { ascending: false })
+  .limit(4) : { data: [] }
+
+// Recent identifications for primary category
+const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
+const { data: catIdentifications } = primaryCategory ? await supabase
+  .from('identifications')
+  .select('id, image_key, result_json, created_at')
+  .eq('site_id', SITE_ID)
+  .eq('category', primaryCategory)
+  .not('image_key', 'is', null)
+  .order('created_at', { ascending: false })
+  .limit(4) : { data: [] }
+
 const pubDate = video.published_at
   ? new Date(video.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
   : null
@@ -88,7 +118,7 @@ const pubDate = video.published_at
   /* TITLE + META */
   .vid-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,28px); font-weight: 400; font-style: italic; color: #1C1810; line-height: 1.3; margin: 20px 0 12px; }
   .vid-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 1px solid #C4B49E; margin-bottom: 20px; }
-  .vid-date { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; letter-spacing: 1px; }
+  .vid-date { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; letter-spacing: 1px; }
   .vid-cats { display: flex; gap: 6px; flex-wrap: wrap; }
   .vid-cat-tag { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-decoration: none; border: 1px solid #C4B49E; padding: 4px 10px; transition: border-color .15s, color .15s; }
   .vid-cat-tag:hover { border-color: #7A5C20; color: #1C1810; }
@@ -109,7 +139,7 @@ const pubDate = video.published_at
 
   /* SIDE RAIL VIDEO LIST */
   .vid-rail-section { margin-bottom: 32px; }
-  .vid-rail-cap { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .vid-rail-cap { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
   .vid-rail-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
   .vid-rail-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
   .vid-rail-item { background: #EFE7D9; display: flex; gap: 12px; padding: 10px; text-decoration: none; transition: background .15s; cursor: pointer; }
@@ -118,15 +148,62 @@ const pubDate = video.published_at
   .vid-rail-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .vid-rail-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); }
   .vid-rail-play-icon { width: 28px; height: 28px; background: rgba(255,255,255,.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .vid-rail-source { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; margin-bottom: 3px; }
+  .vid-rail-source { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; margin-bottom: 3px; }
   .vid-rail-title { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #1C1810; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* BREADCRUMB */
   .vid-breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-  .vid-bc-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
+  .vid-bc-link { font-family: 'Prata', Georgia, serif; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
   .vid-bc-link:hover { color: #1C1810; }
-  .vid-bc-sep { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #C4B49E; }
-  .vid-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vid-bc-sep { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #C4B49E; }
+  .vid-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+  /* CONTENT SECTIONS */
+  .vid-content-sections { max-width: 1200px; margin: 0 auto; padding: 0 32px 80px; }
+  @media (max-width: 767px) { .vid-content-sections { padding: 0 16px 80px; } }
+  .vid-cs { padding: 48px 0; border-top: 1px solid #C4B49E; }
+  .vid-cs-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .vid-cs-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .vid-cs-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,28px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 24px; }
+
+  /* ARTICLES */
+  .vid-story-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; }
+  @media (max-width: 600px) { .vid-story-stack { grid-template-columns: 1fr; } }
+  .vid-story-card { background: #EFE7D9; padding: 20px; display: flex; gap: 14px; text-decoration: none; color: #1C1810; transition: background .15s; }
+  .vid-story-card:hover { background: #E6DCCB; }
+  .vid-story-thumb { width: 72px; height: 72px; object-fit: cover; flex-shrink: 0; background: #E6DCCB; }
+  .vid-story-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 5px; }
+  .vid-story-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; font-style: italic; color: #1C1810; line-height: 1.3; }
+
+  /* AUCTION */
+  .vid-auction-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .vid-auction-grid { grid-template-columns: 1fr; } }
+  .vid-auction-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 18px; }
+  .vid-auction-house { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 5px; }
+  .vid-auction-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; font-style: italic; color: #1C1810; margin-bottom: 8px; line-height: 1.3; }
+  .vid-auction-price { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 26px; color: #7A5C20; line-height: 1; margin-bottom: 4px; }
+  .vid-auction-date { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; }
+
+  /* RECENT IDS */
+  .vid-id-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #C4B49E; }
+  @media (max-width: 600px) { .vid-id-strip { grid-template-columns: repeat(2, 1fr); } }
+  .vid-id-card { background: #EFE7D9; }
+  .vid-id-img { width: 100%; aspect-ratio: 1/1; overflow: hidden; position: relative; background: #E6DCCB; }
+  .vid-id-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .vid-id-body { padding: 10px; border-top: 1px solid #C4B49E; }
+  .vid-id-maker { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 2px; }
+  .vid-id-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 12px; font-style: italic; color: #1C1810; margin-bottom: 3px; line-height: 1.3; }
+  .vid-id-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 12px; color: #7A5C20; }
+
+  /* IDENTIFY INTERRUPT */
+  .vid-interrupt { background: #1C1810; padding: 56px 32px; text-align: center; margin-top: 48px; }
+  .vid-interrupt-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 14px; }
+  .vid-interrupt-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(24px,4vw,40px); font-style: italic; color: #EFE7D9; margin-bottom: 12px; }
+  .vid-interrupt-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: rgba(239,231,217,.6); line-height: 1.8; margin-bottom: 28px; max-width: 440px; margin-left: auto; margin-right: auto; }
+  .vid-interrupt-btn { display: inline-block; background: #B8860B; color: #fff; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; padding: 16px 40px; text-decoration: none; transition: background .2s; }
+  .vid-interrupt-btn:hover { background: #9A7009; }
+  @media (max-width: 767px) { .vid-interrupt { padding: 40px 16px; } }
 
   /* MODAL for rail clicks */
   .yt-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
@@ -260,6 +337,84 @@ const pubDate = video.published_at
     </div>
 
   </div>
+</div>
+
+<!-- CATEGORY CONTENT SECTIONS -->
+<div class="vid-content-sections">
+
+  <!-- ESSENTIAL READING -->
+  {catArticles && catArticles.length > 0 && (
+    <div class="vid-cs">
+      <div class="vid-cs-cap">From the archive</div>
+      <div class="vid-cs-title">Essential reading</div>
+      <div class="vid-story-stack">
+        {catArticles.map(a => (
+          <a href={`/learn/${a.slug}`} class="vid-story-card">
+            {a.image_url
+              ? <img class="vid-story-thumb" src={a.image_url} alt={a.title} loading="lazy" />
+              : <div class="vid-story-thumb"></div>
+            }
+            <div>
+              <div class="vid-story-cat">{a.category}</div>
+              <div class="vid-story-title">{a.title}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- AUCTION WATCH -->
+  {catAuctions && catAuctions.length > 0 && (
+    <div class="vid-cs">
+      <div class="vid-cs-cap">Auction Watch</div>
+      <div class="vid-cs-title">Recent results</div>
+      <div class="vid-auction-grid">
+        {catAuctions.map(a => (
+          <div class="vid-auction-card">
+            <div class="vid-auction-house">{a.auction_house}</div>
+            <div class="vid-auction-title">{a.title}</div>
+            <div class="vid-auction-price">£{((a.price_pence || 0) / 100).toLocaleString()}</div>
+            <div class="vid-auction-date">{a.sold_date ? new Date(a.sold_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- RECENTLY IDENTIFIED -->
+  {catIdentifications && catIdentifications.length > 0 && (
+    <div class="vid-cs">
+      <div class="vid-cs-cap">Community</div>
+      <div class="vid-cs-title">Recently identified</div>
+      <div class="vid-id-strip">
+        {catIdentifications.map(item => {
+          const r = item.result_json || {}
+          return (
+            <div class="vid-id-card">
+              <div class="vid-id-img">
+                {item.image_key && <img src={`${R2}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
+              </div>
+              <div class="vid-id-body">
+                {r.maker && <div class="vid-id-maker">{r.maker}</div>}
+                <div class="vid-id-title">{r.subcategory || 'Antique Item'}</div>
+                <div class="vid-id-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )}
+
+</div>
+
+<!-- IDENTIFY INTERRUPT -->
+<div class="vid-interrupt">
+  <div class="vid-interrupt-eyebrow">Free Identification</div>
+  <div class="vid-interrupt-title">{primaryCategory ? `What is your ${primaryCategory.toLowerCase()} worth?` : 'What is your antique worth?'}</div>
+  <div class="vid-interrupt-sub">Upload a photograph and our AI identifies maker, period, condition and estimated value in seconds.</div>
+  <a href="/" class="vid-interrupt-btn">Identify Your Piece Free</a>
 </div>
 
 <!-- MODAL (unused on this page but kept for consistency) -->
