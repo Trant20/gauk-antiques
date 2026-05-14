@@ -71,6 +71,11 @@ const pageDescription = channel.description
   .ch-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
   .ch-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.97) 0%, rgba(13,8,4,.65) 60%, rgba(13,8,4,.4) 100%); }
   .ch-hero-inner { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; }
+  .ch-hero-content { display: flex; align-items: flex-start; gap: 28px; }
+  .ch-logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(200,160,96,.3); background: #C4B49E; }
+  .ch-logo-placeholder { width: 80px; height: 80px; border-radius: 50%; background: #7A5C20; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 32px; font-style: italic; color: #EFE7D9; flex-shrink: 0; border: 2px solid rgba(200,160,96,.3); }
+  .ch-hero-body { flex: 1; }
+  @media (max-width: 600px) { .ch-hero-content { flex-direction: column; gap: 16px; } }
   .ch-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #C8A060; margin-bottom: 10px; }
   .ch-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,5vw,48px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.2; margin-bottom: 12px; }
   .ch-count { font-family: 'Prata', Georgia, serif; font-size: 12px; color: rgba(239,231,217,.5); letter-spacing: 1px; margin-bottom: 16px; }
@@ -118,11 +123,19 @@ const pageDescription = channel.description
     {channelHeroImage && <div class="ch-hero-bg" style={`background-image:url('${channelHeroImage}')`}></div>}
     <div class="ch-hero-overlay"></div>
     <div class="ch-hero-inner">
-      <div class="ch-eyebrow">Channel</div>
-      <h1 class="ch-name">{channel.name}</h1>
-      {count && <div class="ch-count">{count} video{count !== 1 ? 's' : ''}</div>}
-      {channel.description && <p class="ch-desc">{channel.description}</p>}
-      <span class="ch-follow">Follow — Coming Soon</span>
+      <div class="ch-hero-content">
+        {channel.logo_url
+          ? <img class="ch-logo" src={channel.logo_url} alt={channel.name} />
+          : <div class="ch-logo-placeholder">{channel.name.charAt(0)}</div>
+        }
+        <div class="ch-hero-body">
+          <div class="ch-eyebrow">Channel</div>
+          <h1 class="ch-name">{channel.name}</h1>
+          {count && <div class="ch-count">{count} video{count !== 1 ? 's' : ''}</div>}
+          {channel.description && <p class="ch-desc">{channel.description}</p>}
+          <span class="ch-follow">Follow — Coming Soon</span>
+        </div>
+      </div>
     </div>
   </div>
 
