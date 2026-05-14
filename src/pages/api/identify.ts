@@ -63,7 +63,7 @@ export const POST: APIRoute = async ({ request }) => {
 
 Return this exact structure:
 {
-  "category": "one of: Pottery, Ceramics, Glass, Jewellery, Silver, Furniture, Art, Clocks, Textiles, Books, Toys, Militaria, Other",
+  "category": "one of: Ceramics, Glass, Jewellery, Metalware, Furniture, Art, Clocks & Watches, Textiles, Books & Literature, Toys, Militaria, Associations, Music, Film & Media, Articles & Guides, Artists, Authors, Designers, Stamps & Coins, Memorabilia, Collectibles & Decorative Arts, Factories, Studios & Workshops, Historical Figures & History, Collections",
   "subcategory": "specific item type e.g. Art Pottery Vase, Georgian Silver Teapot",
   "maker": "maker or artist name, null if unknown",
   "manufacturer": "manufacturing company if different from maker, null if unknown",

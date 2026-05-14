@@ -12,7 +12,7 @@ const { data: catSetting } = await supabase
   .single()
 
 const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : [
-  'Pottery','Ceramics','Glass','Jewellery','Silver','Furniture','Art','Clocks','Textiles','Books','Toys','Militaria','Other'
+  'Ceramics','Glass','Jewellery','Metalware','Furniture','Art','Clocks & Watches','Textiles','Books & Literature','Toys','Militaria','Associations','Music','Film & Media','Articles & Guides','Artists, Authors, Designers','Stamps & Coins','Memorabilia','Collectibles & Decorative Arts','Factories, Studios & Workshops','Historical Figures & History','Collections'
 ]
 
 const path = Astro.url.pathname
