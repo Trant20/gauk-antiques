@@ -91,6 +91,11 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   @media (max-width: 767px) { .chl-search-wrap { padding: 16px 16px 0; } }
 
   /* COUNT */
+  .chl-breadcrumb { max-width: 1100px; margin: 0 auto; padding: 20px 32px 0; display: flex; align-items: center; gap: 8px; }
+  .chl-bc-link { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
+  .chl-bc-link:hover { color: #1C1810; }
+  .chl-bc-sep { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #C4B49E; }
+  .chl-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
   .chl-count { max-width: 1100px; margin: 0 auto; padding: 16px 32px 0; font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
   @media (max-width: 767px) { .chl-count { padding: 12px 16px 0; } }
 
@@ -168,6 +173,11 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   </div>
 
   <!-- SEARCH -->
+  <nav class="chl-breadcrumb">
+    <a href="/videos" class="chl-bc-link">Videos</a>
+    <span class="chl-bc-sep">›</span>
+    <span class="chl-bc-cur">Channels</span>
+  </nav>
   <div class="chl-search-wrap">
     <input class="chl-search" id="chl-search" type="search" placeholder="Search channels..." />
   </div>
