@@ -41,12 +41,7 @@ const articles = [
   { title: "World's Most Expensive Teddy Bears", category: 'Toys', slug: 'worlds-most-expensive-teddy-bears' },
 ]
 
-const CAT_SLUGS: Record<string, string> = {
-  'Pottery': 'pottery', 'Ceramics': 'pottery', 'Glass': 'glass',
-  'Silver': 'silver', 'Furniture': 'furniture', 'Art': 'art',
-  'Jewellery': 'jewellery', 'Clocks': 'clocks', 'Textiles': 'textiles',
-  'Books': 'books', 'Toys': 'toys', 'Militaria': 'militaria',
-}
+
 ---
 <PublicShell title="Explore — GAUK Antiques" description="Explore antiques by category — ceramics, glass, jewellery, furniture and more. Browse recent identifications and discover the GAUK Antiques knowledge base.">
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
@@ -162,7 +157,7 @@ const CAT_SLUGS: Record<string, string> = {
     <p class="exp-sub">Our AI has identified pieces across these categories — click to explore makers, values and recent finds.</p>
     <div class="cat-grid">
       {categories.map(([cat, count]) => (
-        <a href={`/categories/${CAT_SLUGS[cat] || cat.toLowerCase()}`} class="cat-tile">
+        <a href={`/categories/${cat.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`} class="cat-tile">
           <div class="cat-tile-name">{cat}</div>
           <div class="cat-tile-count">{count} {count === 1 ? 'piece' : 'pieces'}</div>
         </a>
