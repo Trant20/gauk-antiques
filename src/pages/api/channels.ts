@@ -29,13 +29,22 @@ export const GET: APIRoute = async ({ url }) => {
   const { data: channels, count, error } = await query
 
   if (error) {
+    // Range exceeds available rows — return empty page rather than 500
+    if (error.message === 'Requested range not satisfiable') {
+      return new Response(JSON.stringify({
+        channels: [],
+        total: 0,
+        page,
+        hasMore: false,
+        categories: []
+      }), { headers: { 'Content-Type': 'application/json' } })
+    }
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
   }
 
-  // Get video counts for this page of channels
   const channelIds = (channels || []).map(c => c.id)
   const videoCounts: Record<string, number> = {}
 
@@ -53,7 +62,6 @@ export const GET: APIRoute = async ({ url }) => {
     })
   }
 
-  // Get distinct categories for filter
   const { data: catRows } = await supabase
     .from('publishers')
     .select('default_category')
