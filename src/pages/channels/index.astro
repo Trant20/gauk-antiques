@@ -1,0 +1,355 @@
+---
+import PublicShell from '../../layouts/PublicShell.astro'
+import { supabase } from '../../lib/supabase'
+
+// Initial load — first 24 channels and category list
+const { data: initialChannels } = await supabase
+  .from('publishers')
+  .select('id, name, slug, logo_url, description, default_category')
+  .eq('has_youtube', true)
+  .eq('active', true)
+  .order('name')
+  .limit(24)
+
+const { count: totalCount } = await supabase
+  .from('publishers')
+  .select('*', { count: 'exact', head: true })
+  .eq('has_youtube', true)
+  .eq('active', true)
+
+const { data: catRows } = await supabase
+  .from('publishers')
+  .select('default_category')
+  .eq('has_youtube', true)
+  .eq('active', true)
+  .not('default_category', 'is', null)
+
+const categories = [...new Set(catRows?.map(r => r.default_category).filter(Boolean))].sort() as string[]
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+// Video counts for initial channels
+const initialIds = (initialChannels || []).map(c => c.id)
+const videoCounts: Record<string, number> = {}
+if (initialIds.length > 0) {
+  const { data: counts } = await supabase
+    .from('external_articles')
+    .select('publisher_id')
+    .eq('site_id', SITE_ID)
+    .eq('content_type', 'video')
+    .eq('is_public', true)
+    .in('publisher_id', initialIds)
+  counts?.forEach(r => { videoCounts[r.publisher_id] = (videoCounts[r.publisher_id] || 0) + 1 })
+}
+
+const channelsWithCounts = (initialChannels || []).map(c => ({
+  ...c,
+  video_count: videoCounts[c.id] || 0
+}))
+---
+<PublicShell
+  title="Channels — GAUK Antiques"
+  description="Browse our curated antiques channels — expert dealers, auction houses, collectors and specialists."
+>
+<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Antiques Channels — GAUK Antiques",
+  "description": "Browse our curated antiques channels — expert dealers, auction houses, collectors and specialists.",
+  "url": "https://gaukantiques.com/channels"
+})} />
+
+<style>
+  .chl-page { background: #EFE7D9; min-height: 100vh; }
+
+  /* HERO */
+  .chl-hero { background: #1C1810; padding: 100px 32px 56px; text-align: center; }
+  .chl-hero-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: #C8A060; margin-bottom: 16px; }
+  .chl-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px,6vw,56px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.1; margin-bottom: 12px; }
+  .chl-hero-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: rgba(239,231,217,.6); max-width: 480px; margin: 0 auto; line-height: 1.8; }
+  @media (max-width: 767px) { .chl-hero { padding: 80px 16px 40px; } }
+
+  /* CONTROLS */
+  .chl-controls { background: #1C1810; border-top: 1px solid rgba(255,255,255,.08); padding: 0 32px; display: flex; align-items: center; gap: 0; }
+  .chl-filter-wrap { position: relative; flex: 1; }
+  .chl-filter-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 80px; background: linear-gradient(to right, transparent, #1C1810); pointer-events: none; z-index: 1; }
+  .chl-filter { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; }
+  .chl-filter::-webkit-scrollbar { display: none; }
+  .chl-filter-btn { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(239,231,217,.5); background: none; border: none; border-bottom: 2px solid transparent; padding: 14px 16px; cursor: pointer; white-space: nowrap; transition: color .2s, border-color .2s; flex-shrink: 0; }
+  .chl-filter-btn:hover { color: #EFE7D9; }
+  .chl-filter-btn.active { color: #C8A060; border-bottom-color: #C8A060; }
+  .chl-view-toggle { display: flex; gap: 4px; padding: 12px 0 12px 16px; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,.08); margin-left: 8px; }
+  .chl-view-btn { background: none; border: 1px solid rgba(255,255,255,.15); padding: 6px 8px; cursor: pointer; transition: border-color .2s; }
+  .chl-view-btn.active { border-color: #C8A060; }
+  .chl-view-btn svg { display: block; }
+  @media (max-width: 767px) { .chl-controls { padding: 0 8px; } .chl-filter-btn { padding: 14px 10px; font-size: 9px; } }
+
+  /* SEARCH */
+  .chl-search-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 32px 0; }
+  .chl-search { width: 100%; background: #E6DCCB; border: 1px solid #C4B49E; padding: 12px 20px; font-family: 'Prata', Georgia, serif; font-size: 14px; color: #1C1810; outline: none; box-sizing: border-box; }
+  .chl-search::placeholder { color: #8A7A66; }
+  @media (max-width: 767px) { .chl-search-wrap { padding: 16px 16px 0; } }
+
+  /* COUNT */
+  .chl-count { max-width: 1100px; margin: 0 auto; padding: 16px 32px 0; font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
+  @media (max-width: 767px) { .chl-count { padding: 12px 16px 0; } }
+
+  /* GRID */
+  .chl-grid-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 32px 80px; }
+  @media (max-width: 767px) { .chl-grid-wrap { padding: 16px 16px 80px; } }
+  .chl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #C4B49E; }
+  @media (max-width: 900px) { .chl-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 600px) { .chl-grid { grid-template-columns: repeat(2, 1fr); } }
+  .chl-card { background: #EFE7D9; text-decoration: none; display: flex; flex-direction: column; align-items: center; padding: 24px 16px; text-align: center; transition: background .15s; }
+  .chl-card:hover { background: #E6DCCB; }
+  .chl-card-logo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: #C4B49E; margin-bottom: 12px; flex-shrink: 0; }
+  .chl-card-logo-placeholder { width: 64px; height: 64px; border-radius: 50%; background: #7A5C20; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 24px; font-style: italic; color: #EFE7D9; margin-bottom: 12px; flex-shrink: 0; }
+  .chl-card-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; font-style: italic; color: #1C1810; line-height: 1.3; margin-bottom: 6px; }
+  .chl-card-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
+  .chl-card-count { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; }
+
+  /* LIST */
+  .chl-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
+  .chl-list-item { background: #EFE7D9; display: flex; align-items: center; gap: 20px; padding: 16px 20px; text-decoration: none; transition: background .15s; }
+  .chl-list-item:hover { background: #E6DCCB; }
+  .chl-list-logo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #C4B49E; flex-shrink: 0; }
+  .chl-list-logo-placeholder { width: 48px; height: 48px; border-radius: 50%; background: #7A5C20; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 18px; font-style: italic; color: #EFE7D9; flex-shrink: 0; }
+  .chl-list-body { flex: 1; min-width: 0; }
+  .chl-list-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 17px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
+  .chl-list-desc { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 600px; }
+  .chl-list-meta { flex-shrink: 0; text-align: right; }
+  .chl-list-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
+  .chl-list-count { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
+  @media (max-width: 600px) { .chl-list-desc { display: none; } .chl-list-meta { display: none; } }
+
+  /* LOADING / EMPTY */
+  .chl-loading { text-align: center; padding: 40px; font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; letter-spacing: 2px; text-transform: uppercase; }
+  .chl-empty { text-align: center; padding: 64px 32px; }
+  .chl-empty-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 24px; font-style: italic; color: #1C1810; margin-bottom: 10px; }
+  .chl-empty-sub { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; }
+</style>
+
+<div class="chl-page">
+
+  <!-- HERO -->
+  <div class="chl-hero">
+    <div class="chl-hero-eyebrow">Video Channels</div>
+    <h1 class="chl-hero-title">The Channels</h1>
+    <p class="chl-hero-sub">Curated antiques channels — expert dealers, auction houses, collectors and specialists.</p>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="chl-controls">
+    <div class="chl-filter-wrap">
+      <div class="chl-filter" id="chl-filter">
+        <button class="chl-filter-btn active" data-cat="">All</button>
+        {categories.map(cat => (
+          <button class="chl-filter-btn" data-cat={cat}>{cat}</button>
+        ))}
+      </div>
+    </div>
+    <div class="chl-view-toggle">
+      <button class="chl-view-btn active" id="btn-grid" aria-label="Grid view">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="0" y="0" width="6" height="6" fill="rgba(239,231,217,.6)"/>
+          <rect x="8" y="0" width="6" height="6" fill="rgba(239,231,217,.6)"/>
+          <rect x="0" y="8" width="6" height="6" fill="rgba(239,231,217,.6)"/>
+          <rect x="8" y="8" width="6" height="6" fill="rgba(239,231,217,.6)"/>
+        </svg>
+      </button>
+      <button class="chl-view-btn" id="btn-list" aria-label="List view">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="0" y="1" width="14" height="2" fill="rgba(239,231,217,.6)"/>
+          <rect x="0" y="6" width="14" height="2" fill="rgba(239,231,217,.6)"/>
+          <rect x="0" y="11" width="14" height="2" fill="rgba(239,231,217,.6)"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="chl-search-wrap">
+    <input class="chl-search" id="chl-search" type="search" placeholder="Search channels..." />
+  </div>
+
+  <!-- COUNT -->
+  <div class="chl-count" id="chl-count">{totalCount} channels</div>
+
+  <!-- CHANNEL OUTPUT -->
+  <div class="chl-grid-wrap">
+    <div id="chl-output" class="chl-grid">
+      {channelsWithCounts.map(c => (
+        <a href={`/channels/${c.slug}`} class="chl-card" data-name={c.name.toLowerCase()} data-cat={c.default_category || ''}>
+          {c.logo_url
+            ? <img class="chl-card-logo" src={c.logo_url} alt={c.name} loading="lazy" />
+            : <div class="chl-card-logo-placeholder">{c.name.charAt(0)}</div>
+          }
+          <div class="chl-card-name">{c.name}</div>
+          {c.default_category && <div class="chl-card-cat">{c.default_category}</div>}
+          <div class="chl-card-count">{c.video_count} video{c.video_count !== 1 ? 's' : ''}</div>
+        </a>
+      ))}
+    </div>
+    <div id="chl-loading" class="chl-loading" style="display:none">Loading more channels...</div>
+    <div id="chl-empty" class="chl-empty" style="display:none">
+      <div class="chl-empty-title">No channels found</div>
+      <div class="chl-empty-sub">Try a different search or category.</div>
+    </div>
+    <div id="chl-sentinel" style="height:1px;"></div>
+  </div>
+
+</div>
+
+<script define:vars={{ initialTotal: totalCount, initialHasMore: (totalCount || 0) > 24 }}>
+  let currentPage = 1
+  let currentCategory = ''
+  let currentSearch = ''
+  let isLoading = false
+  let hasMore = initialHasMore
+  let isGridView = true
+  let searchTimeout = null
+  let total = initialTotal
+
+  const output = document.getElementById('chl-output')
+  const loading = document.getElementById('chl-loading')
+  const empty = document.getElementById('chl-empty')
+  const countEl = document.getElementById('chl-count')
+  const sentinel = document.getElementById('chl-sentinel')
+  const searchInput = document.getElementById('chl-search')
+  const btnGrid = document.getElementById('btn-grid')
+  const btnList = document.getElementById('btn-list')
+
+  function cardHTML(c) {
+    const logo = c.logo_url
+      ? `<img class="chl-card-logo" src="${c.logo_url}" alt="${c.name}" loading="lazy" />`
+      : `<div class="chl-card-logo-placeholder">${c.name.charAt(0)}</div>`
+    const cat = c.default_category ? `<div class="chl-card-cat">${c.default_category}</div>` : ''
+    return `<a href="/channels/${c.slug}" class="chl-card" data-name="${c.name.toLowerCase()}" data-cat="${c.default_category || ''}">
+      ${logo}
+      <div class="chl-card-name">${c.name}</div>
+      ${cat}
+      <div class="chl-card-count">${c.video_count} video${c.video_count !== 1 ? 's' : ''}</div>
+    </a>`
+  }
+
+  function listItemHTML(c) {
+    const logo = c.logo_url
+      ? `<img class="chl-list-logo" src="${c.logo_url}" alt="${c.name}" loading="lazy" />`
+      : `<div class="chl-list-logo-placeholder">${c.name.charAt(0)}</div>`
+    const cat = c.default_category ? `<div class="chl-list-cat">${c.default_category}</div>` : ''
+    const desc = c.description ? `<div class="chl-list-desc">${c.description.slice(0, 120)}</div>` : ''
+    return `<a href="/channels/${c.slug}" class="chl-list-item" data-name="${c.name.toLowerCase()}" data-cat="${c.default_category || ''}">
+      ${logo}
+      <div class="chl-list-body">
+        <div class="chl-list-name">${c.name}</div>
+        ${desc}
+      </div>
+      <div class="chl-list-meta">
+        ${cat}
+        <div class="chl-list-count">${c.video_count} video${c.video_count !== 1 ? 's' : ''}</div>
+      </div>
+    </a>`
+  }
+
+  async function loadMore() {
+    if (isLoading || !hasMore) return
+    isLoading = true
+    loading.style.display = 'block'
+    currentPage++
+    const params = new URLSearchParams({ page: currentPage, limit: 24 })
+    if (currentCategory) params.set('category', currentCategory)
+    if (currentSearch) params.set('search', currentSearch)
+    try {
+      const res = await fetch(`/api/channels?${params}`)
+      const data = await res.json()
+      hasMore = data.hasMore
+      data.channels.forEach(c => {
+        output.insertAdjacentHTML('beforeend', isGridView ? cardHTML(c) : listItemHTML(c))
+      })
+    } catch (e) {
+      console.error(e)
+    } finally {
+      isLoading = false
+      loading.style.display = 'none'
+    }
+  }
+
+  async function reset() {
+    currentPage = 1
+    hasMore = true
+    output.innerHTML = ''
+    loading.style.display = 'block'
+    empty.style.display = 'none'
+    const params = new URLSearchParams({ page: 1, limit: 24 })
+    if (currentCategory) params.set('category', currentCategory)
+    if (currentSearch) params.set('search', currentSearch)
+    try {
+      const res = await fetch(`/api/channels?${params}`)
+      const data = await res.json()
+      hasMore = data.hasMore
+      total = data.total
+      countEl.textContent = `${data.total} channel${data.total !== 1 ? 's' : ''}`
+      if (data.channels.length === 0) {
+        empty.style.display = 'block'
+      } else {
+        data.channels.forEach(c => {
+          output.insertAdjacentHTML('beforeend', isGridView ? cardHTML(c) : listItemHTML(c))
+        })
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      loading.style.display = 'none'
+    }
+  }
+
+  // Category filter
+  document.getElementById('chl-filter').addEventListener('click', e => {
+    const btn = e.target.closest('.chl-filter-btn')
+    if (!btn) return
+    document.querySelectorAll('.chl-filter-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    currentCategory = btn.dataset.cat
+    reset()
+  })
+
+  // Search
+  searchInput.addEventListener('input', e => {
+    clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      currentSearch = e.target.value.trim()
+      reset()
+    }, 300)
+  })
+
+  // View toggle
+  btnGrid.addEventListener('click', () => {
+    if (isGridView) return
+    isGridView = true
+    btnGrid.classList.add('active')
+    btnList.classList.remove('active')
+    output.className = 'chl-grid'
+    // Re-render existing items as grid cards
+    const items = output.querySelectorAll('a')
+    items.forEach(item => {
+      item.className = 'chl-card'
+    })
+    reset()
+  })
+
+  btnList.addEventListener('click', () => {
+    if (!isGridView) return
+    isGridView = false
+    btnList.classList.add('active')
+    btnGrid.classList.remove('active')
+    output.className = 'chl-list'
+    reset()
+  })
+
+  // Infinite scroll
+  const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) loadMore()
+  }, { rootMargin: '200px' })
+  observer.observe(sentinel)
+</script>
+</PublicShell>
