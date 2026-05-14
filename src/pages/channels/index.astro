@@ -60,7 +60,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
 })} />
 
 <style>
-  .chl-page { background: #EFE7D9; min-height: 100vh; }
+  .chl-page { background: #EFE7D9; min-height: 100vh; overflow-x: hidden; }
 
   /* HERO */
   .chl-hero { background: #1C1810; padding: 100px 32px 56px; text-align: center; }
@@ -102,7 +102,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   @media (max-width: 600px) { .chl-grid { grid-template-columns: repeat(2, 1fr); } }
   .chl-card { background: #EFE7D9; text-decoration: none; display: flex; flex-direction: column; align-items: center; padding: 24px 16px; text-align: center; transition: background .15s; }
   .chl-card:hover { background: #E6DCCB; }
-  .chl-card-logo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: #C4B49E; margin-bottom: 12px; flex-shrink: 0; }
+  .chl-card-logo { width: 64px; height: 64px; min-height: 64px; border-radius: 50%; object-fit: cover; background: #C4B49E; margin-bottom: 12px; flex-shrink: 0; }
   .chl-card-logo-placeholder { width: 64px; height: 64px; border-radius: 50%; background: #7A5C20; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 24px; font-style: italic; color: #EFE7D9; margin-bottom: 12px; flex-shrink: 0; }
   .chl-card-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; font-style: italic; color: #1C1810; line-height: 1.3; margin-bottom: 6px; }
   .chl-card-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
@@ -112,7 +112,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   .chl-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
   .chl-list-item { background: #EFE7D9; display: flex; align-items: center; gap: 20px; padding: 16px 20px; text-decoration: none; transition: background .15s; }
   .chl-list-item:hover { background: #E6DCCB; }
-  .chl-list-logo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #C4B49E; flex-shrink: 0; }
+  .chl-list-logo { width: 48px; height: 48px; min-height: 48px; border-radius: 50%; object-fit: cover; background: #C4B49E; flex-shrink: 0; }
   .chl-list-logo-placeholder { width: 48px; height: 48px; border-radius: 50%; background: #7A5C20; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 18px; font-style: italic; color: #EFE7D9; flex-shrink: 0; }
   .chl-list-body { flex: 1; min-width: 0; }
   .chl-list-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 17px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
