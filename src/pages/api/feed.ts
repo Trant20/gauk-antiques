@@ -38,6 +38,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   if (!userId) return errorResponse('Unauthorised', 401)
 
   const limit = parseInt(url.searchParams.get('limit') || '8')
+  const categorySlug = url.searchParams.get('category') || ''
   const supabase = getSupabase()
 
   // Get followed channel IDs and their categories
@@ -62,32 +63,57 @@ export const GET: APIRoute = async ({ request, url }) => {
     (publishers || []).map(p => p.default_category).filter(Boolean)
   )]
 
+  // Resolve category name from slug if filtered
+  let categoryFilter: string | null = null
+  if (categorySlug) {
+    const { data: catSetting } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('site_id', SITE_ID)
+      .eq('key', 'categories')
+      .single()
+    const allCats: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
+    categoryFilter = allCats.find(c =>
+      c.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === categorySlug
+    ) || null
+  }
+
+  // Build base queries
+  let feedQuery = supabase
+    .from('external_articles')
+    .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
+    .eq('site_id', SITE_ID)
+    .eq('content_type', 'video')
+    .eq('is_public', true)
+    .in('publisher_id', publisherIds)
+    .order('published_at', { ascending: false })
+    .limit(limit)
+
+  let suggestQuery = followedCategories.length > 0
+    ? supabase
+        .from('external_articles')
+        .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
+        .eq('site_id', SITE_ID)
+        .eq('content_type', 'video')
+        .eq('is_public', true)
+        .not('publisher_id', 'in', `(${publisherIds.join(',')})`)
+        .overlaps('categories', followedCategories)
+        .order('published_at', { ascending: false })
+        .limit(6)
+    : null
+
+  if (categoryFilter) {
+    feedQuery = feedQuery.contains('categories', [categoryFilter])
+    if (suggestQuery) suggestQuery = suggestQuery.contains('categories', [categoryFilter])
+  }
+
   // Run feed and suggestions queries in parallel
   const [
     { data: videos },
     { data: suggested },
   ] = await Promise.all([
-    supabase
-      .from('external_articles')
-      .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
-      .eq('site_id', SITE_ID)
-      .eq('content_type', 'video')
-      .eq('is_public', true)
-      .in('publisher_id', publisherIds)
-      .order('published_at', { ascending: false })
-      .limit(limit),
-    followedCategories.length > 0
-      ? supabase
-          .from('external_articles')
-          .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
-          .eq('site_id', SITE_ID)
-          .eq('content_type', 'video')
-          .eq('is_public', true)
-          .not('publisher_id', 'in', `(${publisherIds.join(',')})`)
-          .overlaps('categories', followedCategories)
-          .order('published_at', { ascending: false })
-          .limit(6)
-      : Promise.resolve({ data: [] }),
+    feedQuery,
+    suggestQuery ? suggestQuery : Promise.resolve({ data: [] }),
   ])
 
   return jsonResponse({ videos: videos || [], suggested: suggested || [] })

@@ -1,0 +1,220 @@
+---
+import PublicShell from '../layouts/PublicShell.astro'
+import { supabase } from '../lib/supabase'
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+// Load categories and hero image in parallel
+const [
+  { data: catSetting },
+  { data: heroSetting },
+] = await Promise.all([
+  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'categories').single(),
+  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'videos_hero').single(),
+])
+
+const allCategories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
+const heroImage: string = heroSetting?.value || ''
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+---
+<PublicShell title="My Feed — GAUK Antiques" description="Videos from the channels you follow.">
+
+<style>
+  .feed-page { background: #EFE7D9; min-height: 100vh; }
+
+  /* HERO */
+  .feed-hero { position: relative; background: #1C1810; padding: 100px 32px 56px; text-align: center; overflow: hidden; }
+  .feed-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .feed-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.95) 0%, rgba(13,8,4,.6) 60%, rgba(13,8,4,.4) 100%); }
+  .feed-hero-inner { position: relative; z-index: 2; }
+  .feed-hero-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: #C8A060; margin-bottom: 16px; }
+  .feed-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px,6vw,56px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.1; margin-bottom: 12px; }
+  .feed-hero-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: rgba(239,231,217,.6); max-width: 520px; margin: 0 auto; line-height: 1.8; }
+  @media (max-width: 767px) { .feed-hero { padding: 80px 16px 40px; } }
+
+  /* CATEGORY FILTER */
+  .feed-filter-wrap { position: relative; background: #1C1810; border-top: 1px solid rgba(255,255,255,.08); }
+  .feed-filter-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 120px; background: linear-gradient(to right, transparent, #1C1810); pointer-events: none; z-index: 1; }
+  .feed-filter { padding: 0 32px; display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .feed-filter::-webkit-scrollbar { display: none; }
+  .feed-filter-btn { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(239,231,217,.5); background: none; border: none; border-bottom: 2px solid transparent; padding: 14px 16px; cursor: pointer; white-space: nowrap; transition: color .2s, border-color .2s; flex-shrink: 0; }
+  .feed-filter-btn:hover { color: #EFE7D9; }
+  .feed-filter-btn.active { color: #C8A060; border-bottom-color: #C8A060; }
+  @media (max-width: 767px) { .feed-filter { padding: 0 8px; } .feed-filter-btn { padding: 14px 10px; font-size: 9px; } }
+
+  /* CONTENT */
+  .feed-content { max-width: 1100px; margin: 0 auto; padding: 48px 32px 80px; }
+  @media (max-width: 767px) { .feed-content { padding: 32px 16px 80px; } }
+
+  /* SECTION */
+  .feed-section { margin-bottom: 56px; }
+  .feed-section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .feed-section-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .feed-section-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .feed-section-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(20px,3vw,28px); font-weight: 400; font-style: italic; color: #1C1810; }
+  .feed-view-all { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-decoration: none; border-bottom: 1px solid #C4B49E; padding-bottom: 2px; transition: color .2s, border-color .2s; }
+  .feed-view-all:hover { color: #1C1810; border-color: #1C1810; }
+
+  /* VIDEO GRID */
+  .video-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #C4B49E; }
+  @media (max-width: 900px) { .video-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 600px) { .video-grid { grid-template-columns: repeat(2, 1fr); } }
+  .video-card { background: #EFE7D9; text-decoration: none; display: block; transition: background .15s; }
+  .video-card:hover { background: #E6DCCB; }
+  .video-thumb-wrap { position: relative; aspect-ratio: 16/9; overflow: hidden; background: #E6DCCB; }
+  .video-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .video-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); transition: background .2s; }
+  .video-card:hover .video-play { background: rgba(0,0,0,0.4); }
+  .video-play-icon { width: 44px; height: 44px; background: rgba(255,255,255,.92); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .video-body { padding: 12px; }
+  .video-source { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #8A7A66; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .video-title { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #1C1810; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* STATES */
+  .feed-loading { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A7A66; letter-spacing: 2px; text-transform: uppercase; padding: 48px 0; text-align: center; }
+  .feed-gate { background: #E6DCCB; border: 1px solid #C4B49E; padding: 48px 32px; text-align: center; }
+  .feed-gate-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 24px; font-style: italic; color: #1C1810; margin-bottom: 10px; }
+  .feed-gate-sub { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; line-height: 1.8; margin-bottom: 24px; }
+  .feed-gate-btn { display: inline-block; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 12px 28px; background: #1C1810; color: #EFE7D9; text-decoration: none; transition: background .2s; }
+  .feed-gate-btn:hover { background: #2C2418; }
+  .feed-empty { padding: 48px 0; text-align: center; }
+  .feed-empty-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 22px; font-style: italic; color: #1C1810; margin-bottom: 8px; }
+  .feed-empty-sub { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.8; }
+</style>
+
+<div class="feed-page">
+
+  <!-- HERO -->
+  <div class="feed-hero">
+    {heroImage && <div class="feed-hero-bg" style={`background-image:url('${heroImage}')`}></div>}
+    <div class="feed-hero-overlay"></div>
+    <div class="feed-hero-inner">
+      <div class="feed-hero-eyebrow">My Feed</div>
+      <h1 class="feed-hero-title">Channels You Follow</h1>
+      <p class="feed-hero-sub">The latest videos from your followed channels, personalised to your interests.</p>
+    </div>
+  </div>
+
+  <!-- CATEGORY FILTER -->
+  <div class="feed-filter-wrap">
+    <div class="feed-filter" id="feed-filter">
+      <button class="feed-filter-btn active" data-cat="">All</button>
+      {allCategories.map(cat => (
+        <button class="feed-filter-btn" data-cat={slugify(cat)}>{cat}</button>
+      ))}
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="feed-content">
+    <div id="feed-main">
+      <div class="feed-loading">Loading your feed...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  const feedMain = document.getElementById('feed-main') as HTMLElement
+  let currentCategory = ''
+
+  function videoCardHTML(v: any): string {
+    return `<a href="/videos/${v.id}" class="video-card">
+      <div class="video-thumb-wrap">
+        ${v.thumbnail_url ? `<img src="${v.thumbnail_url}" alt="" loading="lazy" />` : '<div style="width:100%;height:100%;background:#E6DCCB;"></div>'}
+        <div class="video-play"><div class="video-play-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="#1C1810"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+      </div>
+      <div class="video-body">
+        ${v.source_name ? `<div class="video-source">${v.source_name}</div>` : ''}
+        <div class="video-title">${v.title}</div>
+      </div>
+    </a>`
+  }
+
+  async function loadFeed() {
+    feedMain.innerHTML = '<div class="feed-loading">Loading your feed...</div>'
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+      feedMain.innerHTML = `<div class="feed-gate">
+        <div class="feed-gate-title">Sign in to see your feed</div>
+        <div class="feed-gate-sub">Follow channels and get a personalised feed of the latest antiques videos.</div>
+        <a href="/auth/signin" class="feed-gate-btn">Sign In</a>
+      </div>`
+      return
+    }
+
+    const params = new URLSearchParams({ limit: '24' })
+    if (currentCategory) params.set('category', currentCategory)
+
+    const res = await fetch(`/api/feed?${params}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    const json = await res.json()
+
+    if (!json.videos?.length && !json.suggested?.length) {
+      feedMain.innerHTML = `<div class="feed-gate">
+        <div class="feed-gate-title">Your feed is empty</div>
+        <div class="feed-gate-sub">You haven't followed any channels yet. Browse channels and follow the ones you love.</div>
+        <a href="/channels" class="feed-gate-btn">Browse Channels</a>
+      </div>`
+      return
+    }
+
+    let html = ''
+
+    if (json.videos?.length) {
+      html += `<div class="feed-section">
+        <div class="feed-section-cap">My Feed</div>
+        <div class="feed-section-title" style="margin-bottom:24px">Latest from your channels</div>
+        <div class="video-grid">${json.videos.map(videoCardHTML).join('')}</div>
+      </div>`
+    } else {
+      html += `<div class="feed-section">
+        <div class="feed-section-cap">My Feed</div>
+        <div class="feed-empty">
+          <div class="feed-empty-title">No videos in this category</div>
+          <div class="feed-empty-sub">Your followed channels haven't posted in this category yet.</div>
+        </div>
+      </div>`
+    }
+
+    if (json.suggested?.length) {
+      html += `<div class="feed-section">
+        <div class="feed-section-header">
+          <div>
+            <div class="feed-section-cap">Discover</div>
+            <div class="feed-section-title">You might also like</div>
+          </div>
+          <a href="/channels" class="feed-view-all">Browse all channels →</a>
+        </div>
+        <div class="video-grid">${json.suggested.map(videoCardHTML).join('')}</div>
+      </div>`
+    }
+
+    feedMain.innerHTML = html
+  }
+
+  // Category filter
+  document.getElementById('feed-filter')?.addEventListener('click', e => {
+    const btn = (e.target as HTMLElement).closest('.feed-filter-btn') as HTMLElement
+    if (!btn) return
+    document.querySelectorAll('.feed-filter-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    currentCategory = btn.dataset.cat || ''
+    loadFeed()
+  })
+
+  loadFeed()
+</script>
+
+</PublicShell>
