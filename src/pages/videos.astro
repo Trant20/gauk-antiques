@@ -26,6 +26,16 @@ const activeCategoryName = categoryFilter
   ? allCategories.find(c => slugify(c) === categoryFilter) || ''
   : ''
 
+// Load category hero image if filtered
+// Load category hero image if filtered
+const { data: heroSetting } = categoryFilter ? await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', `category_hero_${categoryFilter}`)
+  .single() : { data: null }
+const categoryHeroImage: string = heroSetting?.value || ''
+
 // Load active YouTube channels
 const { data: channels } = await supabase
   .from('publishers')
@@ -110,7 +120,10 @@ const pageDescription = activeCategoryName
   .vid-page { background: #EFE7D9; min-height: 100vh; }
 
   /* HERO */
-  .vid-hero { background: #1C1810; padding: 100px 32px 56px; text-align: center; }
+  .vid-hero { position: relative; background: #1C1810; padding: 100px 32px 56px; text-align: center; overflow: hidden; }
+  .vid-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .vid-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.95) 0%, rgba(13,8,4,.6) 60%, rgba(13,8,4,.4) 100%); }
+  .vid-hero-inner { position: relative; z-index: 2; }
   .vid-hero-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: #C8A060; margin-bottom: 16px; }
   .vid-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px,6vw,56px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.1; margin-bottom: 12px; }
   .vid-hero-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: rgba(239,231,217,.6); max-width: 520px; margin: 0 auto; line-height: 1.8; }
@@ -188,11 +201,15 @@ const pageDescription = activeCategoryName
 
   <!-- HERO -->
   <div class="vid-hero">
-    <div class="vid-hero-eyebrow">Video Library</div>
-    <h1 class="vid-hero-title">
-      {activeCategoryName ? `${activeCategoryName} Videos` : 'Videos & Guides'}
-    </h1>
-    <p class="vid-hero-sub">{pageDescription}</p>
+    {categoryHeroImage && <div class="vid-hero-bg" style={`background-image:url('${categoryHeroImage}')`}></div>}
+    <div class="vid-hero-overlay"></div>
+    <div class="vid-hero-inner">
+      <div class="vid-hero-eyebrow">Video Library</div>
+      <h1 class="vid-hero-title">
+        {activeCategoryName ? `${activeCategoryName} Videos` : 'Videos & Guides'}
+      </h1>
+      <p class="vid-hero-sub">{pageDescription}</p>
+    </div>
   </div>
 
   <!-- CATEGORY FILTER -->
