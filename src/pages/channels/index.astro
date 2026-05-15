@@ -124,6 +124,8 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   .chl-card-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 15px; font-style: italic; color: #1C1810; line-height: 1.3; margin-bottom: 6px; }
   .chl-card-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
   .chl-card-count { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; }
+  .chl-card-following { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #C8A060; margin-top: 6px; display: none; }
+  .chl-card[data-following="true"] .chl-card-following { display: block; }
 
   /* LIST */
   .chl-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
@@ -205,7 +207,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   <div class="chl-grid-wrap">
     <div id="chl-output" class="chl-grid">
       {channelsWithCounts.map(c => (
-        <a href={`/channels/${c.slug}`} class="chl-card" data-name={c.name.toLowerCase()} data-cat={c.default_category || ''}>
+        <a href={`/channels/${c.slug}`} class="chl-card" data-name={c.name.toLowerCase()} data-cat={c.default_category || ''} data-id={c.id}>
           {c.logo_url
             ? <img class="chl-card-logo" src={c.logo_url} alt={c.name} loading="lazy" />
             : <div class="chl-card-logo-placeholder">{c.name.charAt(0)}</div>
@@ -213,6 +215,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
           <div class="chl-card-name">{c.name}</div>
           {c.default_category && <div class="chl-card-cat">{c.default_category}</div>}
           <div class="chl-card-count">{c.video_count} video{c.video_count !== 1 ? 's' : ''}</div>
+          <div class="chl-card-following">Following</div>
         </a>
       ))}
     </div>
@@ -250,11 +253,12 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
       ? `<img class="chl-card-logo" src="${c.logo_url}" alt="${c.name}" loading="lazy" />`
       : `<div class="chl-card-logo-placeholder">${c.name.charAt(0)}</div>`
     const cat = c.default_category ? `<div class="chl-card-cat">${c.default_category}</div>` : ''
-    return `<a href="/channels/${c.slug}" class="chl-card" data-name="${c.name.toLowerCase()}" data-cat="${c.default_category || ''}">
+    return `<a href="/channels/${c.slug}" class="chl-card" data-name="${c.name.toLowerCase()}" data-cat="${c.default_category || ''}" data-id="${c.id}">
       ${logo}
       <div class="chl-card-name">${c.name}</div>
       ${cat}
       <div class="chl-card-count">${c.video_count} video${c.video_count !== 1 ? 's' : ''}</div>
+      <div class="chl-card-following">Following</div>
     </a>`
   }
 
@@ -377,5 +381,31 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
     if (entries[0].isIntersecting) loadMore()
   }, { rootMargin: '200px' })
   observer.observe(sentinel)
+</script>
+
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  async function markFollowedChannels() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const res = await fetch('/api/follow/list', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    const json = await res.json()
+    if (!json.publisher_ids?.length) return
+    const ids = new Set(json.publisher_ids)
+    document.querySelectorAll('.chl-card[data-id]').forEach(card => {
+      if (ids.has((card as HTMLElement).dataset.id || '')) {
+        (card as HTMLElement).dataset.following = 'true'
+      }
+    })
+  }
+
+  markFollowedChannels()
 </script>
 </PublicShell>
