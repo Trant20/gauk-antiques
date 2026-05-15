@@ -72,7 +72,10 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   .chl-page { background: #EFE7D9; min-height: 100vh; }
 
   /* HERO */
-  .chl-hero { background: #1C1810; padding: 100px 32px 56px; text-align: center; }
+  .chl-hero { position: relative; background: #1C1810; padding: 100px 32px 56px; text-align: center; overflow: hidden; }
+  .chl-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .chl-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.95) 0%, rgba(13,8,4,.6) 60%, rgba(13,8,4,.4) 100%); }
+  .chl-hero-inner { position: relative; z-index: 2; }
   .chl-hero-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: #C8A060; margin-bottom: 16px; }
   .chl-hero-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px,6vw,56px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.1; margin-bottom: 12px; }
   .chl-hero-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: rgba(239,231,217,.6); max-width: 480px; margin: 0 auto; line-height: 1.8; }
