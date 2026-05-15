@@ -70,7 +70,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   @media (max-width: 767px) { .chl-hero { padding: 80px 16px 40px; } }
 
   /* CONTROLS */
-  .chl-controls { background: #1C1810; border-top: 1px solid rgba(255,255,255,.08); padding: 0 32px; display: flex; align-items: center; gap: 0; }
+  .chl-controls { background: #1C1810; border-top: 1px solid rgba(255,255,255,.08); padding: 0 32px; display: flex; align-items: center; gap: 0; overflow: hidden; }
   .chl-filter-wrap { position: relative; flex: 1; }
   .chl-filter-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 80px; background: linear-gradient(to right, transparent, #1C1810); pointer-events: none; z-index: 1; }
   .chl-filter { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; }
