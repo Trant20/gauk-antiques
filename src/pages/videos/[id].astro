@@ -306,6 +306,7 @@ const pubDate = video.published_at
             </div>
           </div>
           {channel.description && <p class="vid-channel-desc">{channel.description}</p>}
+          <a href={`/channels/${channel.slug}`} class="vid-channel-follow" style="margin-bottom:8px;">Visit Channel →</a>
           <a href={`/channels/${channel.slug}`} class="vid-channel-follow coming-soon">
             Follow Channel — Coming Soon
           </a>
