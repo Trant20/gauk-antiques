@@ -26,15 +26,18 @@ const activeCategoryName = categoryFilter
   ? allCategories.find(c => slugify(c) === categoryFilter) || ''
   : ''
 
-// Load category hero image if filtered
-// Load category hero image if filtered
-const { data: heroSetting } = categoryFilter ? await supabase
-  .from('site_settings')
-  .select('value')
-  .eq('site_id', SITE_ID)
-  .eq('key', `category_hero_${categoryFilter}`)
-  .single() : { data: null }
-const categoryHeroImage: string = heroSetting?.value || ''
+// Load hero images — videos listing hero and category hero if filtered
+const [
+  { data: videosHeroSetting },
+  { data: categoryHeroSetting },
+] = await Promise.all([
+  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'videos_hero').single(),
+  categoryFilter
+    ? supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', `category_hero_${categoryFilter}`).single()
+    : Promise.resolve({ data: null }),
+])
+const videosHeroImage: string = videosHeroSetting?.value || ''
+const categoryHeroImage: string = categoryHeroSetting?.value || ''
 
 // Load active YouTube channels
 const { data: channels } = await supabase
@@ -201,7 +204,7 @@ const pageDescription = activeCategoryName
 
   <!-- HERO -->
   <div class="vid-hero">
-    {categoryHeroImage && <div class="vid-hero-bg" style={`background-image:url('${categoryHeroImage}')`}></div>}
+    {(categoryHeroImage || videosHeroImage) && <div class="vid-hero-bg" style={`background-image:url('${categoryHeroImage || videosHeroImage}')`}></div>}
     <div class="vid-hero-overlay"></div>
     <div class="vid-hero-inner">
       <div class="vid-hero-eyebrow">Video Library</div>

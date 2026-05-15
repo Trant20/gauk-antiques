@@ -28,6 +28,15 @@ const categories = [...new Set(catRows?.map(r => r.default_category).filter(Bool
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
+// Load channels hero
+const { data: channelsHeroSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', 'channels_hero')
+  .single()
+const channelsHeroImage: string = channelsHeroSetting?.value || ''
+
 // Video counts for initial channels
 const initialIds = (initialChannels || []).map(c => c.id)
 const videoCounts: Record<string, number> = {}
@@ -138,9 +147,13 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
 
   <!-- HERO -->
   <div class="chl-hero">
-    <div class="chl-hero-eyebrow">Video Channels</div>
-    <h1 class="chl-hero-title">The Channels</h1>
-    <p class="chl-hero-sub">Curated antiques channels — expert dealers, auction houses, collectors and specialists.</p>
+    {channelsHeroImage && <div class="chl-hero-bg" style={`background-image:url('${channelsHeroImage}')`}></div>}
+    <div class="chl-hero-overlay"></div>
+    <div class="chl-hero-inner">
+      <div class="chl-hero-eyebrow">Video Channels</div>
+      <h1 class="chl-hero-title">The Channels</h1>
+      <p class="chl-hero-sub">Curated antiques channels — expert dealers, auction houses, collectors and specialists.</p>
+    </div>
   </div>
 
   <!-- CONTROLS -->
