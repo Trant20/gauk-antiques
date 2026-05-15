@@ -72,7 +72,7 @@ const { data: latestVideos } = !activeCategoryName ? await supabase
   .eq('content_type', 'video')
   .eq('is_public', true)
   .order('published_at', { ascending: false })
-  .limit(24) : { data: [] }
+  .limit(8) : { data: [] }
 
 // Build category sections — one query per category so counts are accurate
 type CategorySection = { videos: VideoRow[]; total: number }
@@ -142,6 +142,14 @@ const pageDescription = activeCategoryName
   .vid-filter-link:hover { color: #EFE7D9; border-bottom-color: rgba(200,160,96,.4); }
   .vid-filter-link.active { color: #C8A060; border-bottom-color: #C8A060; }
   @media (max-width: 767px) { .vid-filter { padding: 0 8px; } .vid-filter-link { padding: 14px 10px; font-size: 8px; } }
+
+  /* MY FEED */
+  .vid-feed-gate { background: #E6DCCB; border: 1px solid #C4B49E; padding: 32px; text-align: center; }
+  .vid-feed-gate-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 8px; }
+  .vid-feed-gate-sub { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; margin-bottom: 20px; line-height: 1.8; }
+  .vid-feed-gate-btn { display: inline-block; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 12px 28px; background: #1C1810; color: #EFE7D9; text-decoration: none; transition: background .2s; }
+  .vid-feed-gate-btn:hover { background: #2C2418; }
+  .vid-feed-loading { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A7A66; letter-spacing: 2px; text-transform: uppercase; padding: 32px 0; text-align: center; }
 
   /* LATEST SECTION */
   .vid-latest { max-width: 1100px; margin: 0 auto; padding: 48px 32px 0; }
@@ -230,6 +238,22 @@ const pageDescription = activeCategoryName
     })}
   </nav>
   </div>
+
+  <!-- MY FEED — shown on unfiltered view -->
+  {!activeCategoryName && (
+    <div class="vid-latest" id="vid-feed-wrap">
+      <div class="vid-section-header">
+        <div>
+          <div class="vid-section-cap">My Feed</div>
+          <div class="vid-section-title">Channels you follow</div>
+        </div>
+        <a href="/feed" class="vid-view-all">Go to feed →</a>
+      </div>
+      <div id="vid-feed-content">
+        <div class="vid-feed-loading">Loading your feed...</div>
+      </div>
+    </div>
+  )}
 
   <!-- LATEST VIDEOS — primary view when no category filter -->
   {!activeCategoryName && latestVideos && latestVideos.length > 0 && (
@@ -378,6 +402,51 @@ const pageDescription = activeCategoryName
 </div>
 
 <script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  async function loadFeed() {
+    const feedContent = document.getElementById('vid-feed-content')
+    if (!feedContent) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      feedContent.innerHTML = `<div class="vid-feed-gate">
+        <div class="vid-feed-gate-title">Your personal feed</div>
+        <div class="vid-feed-gate-sub">Follow channels to build a feed of videos tailored to your interests.</div>
+        <a href="/auth/signin" class="vid-feed-gate-btn">Sign In to Follow Channels</a>
+      </div>`
+      return
+    }
+    const res = await fetch('/api/feed?limit=8', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    const json = await res.json()
+    if (!json.videos?.length) {
+      feedContent.innerHTML = `<div class="vid-feed-gate">
+        <div class="vid-feed-gate-title">Your feed is empty</div>
+        <div class="vid-feed-gate-sub">Follow some channels and their latest videos will appear here.</div>
+        <a href="/channels" class="vid-feed-gate-btn">Browse Channels</a>
+      </div>`
+      return
+    }
+    feedContent.innerHTML = `<div class="video-grid">${json.videos.map((v: any) => `
+      <a href="/videos/${v.id}" class="video-card">
+        <div class="video-thumb-wrap">
+          ${v.thumbnail_url ? `<img src="${v.thumbnail_url}" alt="" loading="lazy" />` : '<div style="width:100%;height:100%;background:#E6DCCB;"></div>'}
+          <div class="video-play"><div class="video-play-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="#1C1810"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+        </div>
+        <div class="video-body">
+          ${v.source_name ? `<div class="video-source">${v.source_name}</div>` : ''}
+          <div class="video-title">${v.title}</div>
+        </div>
+      </a>`).join('')}</div>`
+  }
+
+  loadFeed()
+
 function decodeHtml(str) {
   if (!str) return ''
   return str
