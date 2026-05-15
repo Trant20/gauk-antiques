@@ -226,8 +226,13 @@ const pageDescription = activeCategoryName
   <!-- CHANNELS STRIP — only on unfiltered view -->
   {!activeCategoryName && channels && channels.length > 0 && (
     <div class="vid-channels">
-      <div class="vid-section-cap">Channels</div>
-      <div class="vid-section-title">Featured channels</div>
+      <div class="vid-section-header">
+        <div>
+          <div class="vid-section-cap">Channels</div>
+          <div class="vid-section-title">Featured channels</div>
+        </div>
+        <a href="/channels" class="vid-view-all">View all →</a>
+      </div>
       <div class="channels-strip-wrap">
       <div class="channels-strip">
         {channels.map(c => (
