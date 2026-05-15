@@ -80,7 +80,11 @@ const pageDescription = channel.description
   .ch-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px,5vw,48px); font-weight: 400; font-style: italic; color: #EFE7D9; line-height: 1.2; margin-bottom: 12px; }
   .ch-count { font-family: 'Prata', Georgia, serif; font-size: 12px; color: rgba(239,231,217,.5); letter-spacing: 1px; margin-bottom: 16px; }
   .ch-desc { font-family: 'Prata', Georgia, serif; font-size: 14px; color: rgba(239,231,217,.55); line-height: 1.8; max-width: 600px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 20px; }
-  .ch-follow { display: inline-block; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 12px 28px; background: #C4B49E; color: #8A7A66; cursor: default; }
+  .ch-follow { display: inline-block; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 12px 28px; background: #1C1810; color: #EFE7D9; cursor: pointer; border: none; transition: background .2s; }
+  .ch-follow:hover { background: #2C2418; }
+  .ch-follow.following { background: transparent; color: #C8A060; border: 1px solid #C8A060; padding: 11px 27px; }
+  .ch-follow.loading { opacity: 0.6; cursor: default; }
+  .ch-follow-signin { display: inline-block; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 12px 28px; background: transparent; color: rgba(239,231,217,.5); border: 1px solid rgba(239,231,217,.2); text-decoration: none; }
   @media (max-width: 767px) { .ch-hero { padding: 80px 16px 40px; } }
 
   /* BREADCRUMB */
@@ -133,7 +137,8 @@ const pageDescription = channel.description
           <h1 class="ch-name">{channel.name}</h1>
           {count && <div class="ch-count">{count} video{count !== 1 ? 's' : ''}</div>}
           {channel.description && <p class="ch-desc">{channel.description}</p>}
-          <span class="ch-follow">Follow — Coming Soon</span>
+          <button class="ch-follow loading" id="ch-follow-btn" data-publisher-id={channel.id}>Follow</button>
+          <a href="/auth/signin" class="ch-follow-signin" id="ch-follow-signin" style="display:none">Sign in to Follow</a>
         </div>
       </div>
     </div>
@@ -182,4 +187,64 @@ const pageDescription = channel.description
   </div>
 
 </div>
+<script>
+  import { createClient } from '@supabase/supabase-js'
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  )
+
+  const btn = document.getElementById('ch-follow-btn') as HTMLButtonElement
+  const signinLink = document.getElementById('ch-follow-signin') as HTMLAnchorElement
+  const publisherId = btn?.dataset.publisherId
+
+  async function init() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      btn.style.display = 'none'
+      signinLink.style.display = 'inline-block'
+      return
+    }
+    btn.classList.remove('loading')
+    const res = await fetch(`/api/follow?publisher_id=${publisherId}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    const json = await res.json()
+    setFollowState(json.following)
+  }
+
+  function setFollowState(following: boolean) {
+    if (following) {
+      btn.textContent = 'Following ✓'
+      btn.classList.add('following')
+    } else {
+      btn.textContent = 'Follow'
+      btn.classList.remove('following')
+    }
+  }
+
+  btn?.addEventListener('click', async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = '/auth/signin'; return }
+    btn.classList.add('loading')
+    const isFollowing = btn.classList.contains('following')
+    const res = await fetch('/api/follow', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ publisher_id: publisherId, action: isFollowing ? 'unfollow' : 'follow' })
+    })
+    const json = await res.json()
+    btn.classList.remove('loading')
+    setFollowState(json.following)
+  })
+
+  init()
+</script>
+
+
+
+
 </PublicShell>
