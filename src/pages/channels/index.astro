@@ -70,15 +70,15 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   @media (max-width: 767px) { .chl-hero { padding: 80px 16px 40px; } }
 
   /* CONTROLS */
-  .chl-controls { background: #1C1810; border-top: 1px solid rgba(255,255,255,.08); padding: 0 32px; display: flex; align-items: center; gap: 0; overflow: hidden; }
-  .chl-filter-wrap { position: relative; flex: 1; }
+  .chl-controls { background: #1C1810; border-top: 1px solid rgba(255,255,255,.08); padding: 0 32px; display: flex; align-items: center; gap: 0; }
+  .chl-filter-wrap { position: relative; flex: 1; min-width: 0; }
   .chl-filter-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 80px; background: linear-gradient(to right, transparent, #1C1810); pointer-events: none; z-index: 1; }
   .chl-filter { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; }
   .chl-filter::-webkit-scrollbar { display: none; }
   .chl-filter-btn { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(239,231,217,.5); background: none; border: none; border-bottom: 2px solid transparent; padding: 14px 16px; cursor: pointer; white-space: nowrap; transition: color .2s, border-color .2s; flex-shrink: 0; }
   .chl-filter-btn:hover { color: #EFE7D9; }
   .chl-filter-btn.active { color: #C8A060; border-bottom-color: #C8A060; }
-  .chl-view-toggle { display: flex; gap: 4px; padding: 12px 0 12px 16px; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,.08); margin-left: 8px; }
+  .chl-view-toggle { display: flex; gap: 4px; padding: 12px 0 12px 16px; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,.08); margin-left: 8px; overflow: visible; }
   .chl-view-btn { background: none; border: 1px solid rgba(255,255,255,.15); padding: 6px 8px; cursor: pointer; transition: border-color .2s; }
   .chl-view-btn.active { border-color: #C8A060; }
   .chl-view-btn svg { display: block; }
