@@ -1,0 +1,94 @@
+import type { APIRoute } from 'astro'
+import { createClient } from '@supabase/supabase-js'
+import { env } from 'cloudflare:workers'
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+function getSupabase() {
+  return createClient(
+    (env as Record<string, string>).PUBLIC_SUPABASE_URL,
+    (env as Record<string, string>).SUPABASE_SERVICE_ROLE_KEY
+  )
+}
+
+function errorResponse(message: string, status = 400) {
+  return new Response(JSON.stringify({ error: message }), {
+    status, headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+function jsonResponse(data: unknown) {
+  return new Response(JSON.stringify(data), {
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+async function resolveUserId(request: Request): Promise<string | null> {
+  const auth = request.headers.get('Authorization')
+  if (!auth?.startsWith('Bearer ')) return null
+  const token = auth.slice(7)
+  const supabase = getSupabase()
+  const { data: { user } } = await supabase.auth.getUser(token)
+  return user?.id || null
+}
+
+/** GET /api/feed?limit=8 — returns videos from followed channels + you might also like */
+export const GET: APIRoute = async ({ request, url }) => {
+  const userId = await resolveUserId(request)
+  if (!userId) return errorResponse('Unauthorised', 401)
+
+  const limit = parseInt(url.searchParams.get('limit') || '8')
+  const supabase = getSupabase()
+
+  // Get followed channel IDs and their categories
+  const { data: follows } = await supabase
+    .from('user_channels')
+    .select('publisher_id')
+    .eq('user_id', userId)
+    .eq('site_id', SITE_ID)
+
+  if (!follows?.length) return jsonResponse({ videos: [], suggested: [] })
+
+  const publisherIds = follows.map(f => f.publisher_id)
+
+  // Get followed channels categories for suggestions
+  const { data: publishers } = await supabase
+    .from('publishers')
+    .select('id, default_category')
+    .in('id', publisherIds)
+    .not('default_category', 'is', null)
+
+  const followedCategories = [...new Set(
+    (publishers || []).map(p => p.default_category).filter(Boolean)
+  )]
+
+  // Run feed and suggestions queries in parallel
+  const [
+    { data: videos },
+    { data: suggested },
+  ] = await Promise.all([
+    supabase
+      .from('external_articles')
+      .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
+      .eq('site_id', SITE_ID)
+      .eq('content_type', 'video')
+      .eq('is_public', true)
+      .in('publisher_id', publisherIds)
+      .order('published_at', { ascending: false })
+      .limit(limit),
+    followedCategories.length > 0
+      ? supabase
+          .from('external_articles')
+          .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
+          .eq('site_id', SITE_ID)
+          .eq('content_type', 'video')
+          .eq('is_public', true)
+          .not('publisher_id', 'in', `(${publisherIds.join(',')})`)
+          .overlaps('categories', followedCategories)
+          .order('published_at', { ascending: false })
+          .limit(6)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  return jsonResponse({ videos: videos || [], suggested: suggested || [] })
+}
