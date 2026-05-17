@@ -678,11 +678,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 </div>
 
 <script>
-  import { createClient } from '@supabase/supabase-js'
-  const _sb = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  )
+  import { supabase as _sb } from '../../lib/supabase-browser'
 
   // Auth gate
   const { data: { session: _gate } } = await _sb.auth.getSession()
@@ -726,7 +722,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 </script>
 
 <script>
-  import { createClient } from '@supabase/supabase-js'
+  import { supabase as sb } from '../../lib/supabase-browser'
 
   const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
@@ -739,11 +735,6 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     const enrichBtn = document.getElementById('enrich-btn')
     const enrichTopup = document.getElementById('enrich-topup')
     const enrichRegister = document.getElementById('enrich-register')
-
-    const sb = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-    )
 
     ;(async () => {
       const { data: { session } } = await sb.auth.getSession()

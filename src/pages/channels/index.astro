@@ -384,11 +384,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
 </script>
 
 <script>
-  import { createClient } from '@supabase/supabase-js'
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  )
+  import { supabase } from '../../lib/supabase-browser'
 
   async function markFollowedChannels() {
     const { data: { session } } = await supabase.auth.getSession()
