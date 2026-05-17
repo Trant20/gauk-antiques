@@ -296,6 +296,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
       data.channels.forEach(c => {
         output.insertAdjacentHTML('beforeend', isGridView ? cardHTML(c) : listItemHTML(c))
       })
+      document.dispatchEvent(new Event('channels:loaded'))
     } catch (e) {
       console.error(e)
     } finally {
@@ -386,6 +387,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
 <script>
   import { supabase } from '../../lib/supabase-browser'
 
+  /** Marks followed channel cards with data-following="true" */
   async function markFollowedChannels() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
@@ -403,5 +405,9 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   }
 
   markFollowedChannels()
+
+  // Re-mark after infinite scroll loads more cards
+  document.addEventListener('channels:loaded', () => markFollowedChannels())
 </script>
+
 </PublicShell>
