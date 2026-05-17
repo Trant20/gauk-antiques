@@ -309,7 +309,7 @@ const pubDate = video.published_at
           </div>
           {channel.description && <p class="vid-channel-desc">{channel.description}</p>}
           <a href={`/channels/${channel.slug}`} class="vid-channel-follow" style="margin-bottom:8px;">Visit Channel →</a>
-          <button class="vid-channel-follow loading" id="vid-follow-btn" style="display:none;background:#1C1810;color:#EFE7D9;width:100%;padding:11px;border:none;font-family:Prata,Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;box-sizing:border-box;" data-publisher-id={channel.id}>Follow Channel</button>
+          <button class="vid-channel-follow loading" id="vid-follow-btn" data-publisher-id={channel.id}>Follow Channel</button>
           <a href="/auth/signin" class="vid-channel-follow-signin" id="vid-follow-signin" style="display:none">Sign in to Follow</a>
         </div>
       )}
@@ -405,7 +405,6 @@ const pubDate = video.published_at
       signinLink.style.display = 'block'
       return
     }
-    btn.style.display = 'block'
     btn.classList.remove('loading')
     const res = await fetch(`/api/follow?publisher_id=${publisherId}`, {
       headers: { Authorization: `Bearer ${session.access_token}` }
