@@ -99,7 +99,7 @@ export const GET: APIRoute = async ({ request, url }) => {
         .not('publisher_id', 'in', `(${publisherIds.join(',')})`)
         .overlaps('categories', followedCategories)
         .order('published_at', { ascending: false })
-        .limit(6)
+        .limit(8)
     : null
 
   if (categoryFilter) {
