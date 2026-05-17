@@ -158,14 +158,9 @@ import AppShell from '../layouts/AppShell.astro'
 
 
 <script>
-  import { createClient } from '@supabase/supabase-js'
+  import { supabase } from '../lib/supabase-browser'
 
   const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
-
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  )
 
   const elLoading   = document.getElementById('lib-loading')
   const elAuthGate  = document.getElementById('lib-auth-gate')

@@ -64,8 +64,7 @@ import AppShell from '../layouts/AppShell.astro'
 </AppShell>
 
 <script>
-  import { createClient } from '@supabase/supabase-js'
-  const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY)
+  import { supabase } from '../lib/supabase-browser'
   const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
   const REASON_LABELS: Record<string, string> = {

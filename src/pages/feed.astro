@@ -22,7 +22,7 @@ function slugify(s: string): string {
 ---
 <PublicShell title="My Feed — GAUK Antiques" description="Videos from the channels you follow.">
 
-<style>
+<style is:global>
   .feed-page { background: #EFE7D9; min-height: 100vh; }
 
   /* HERO */
@@ -118,11 +118,7 @@ function slugify(s: string): string {
 </div>
 
 <script>
-  import { createClient } from '@supabase/supabase-js'
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  )
+  import { supabase } from '../lib/supabase-browser'
 
   const feedMain = document.getElementById('feed-main') as HTMLElement
   let currentCategory = ''

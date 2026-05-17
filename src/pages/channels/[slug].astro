@@ -188,11 +188,7 @@ const pageDescription = channel.description
 
 </div>
 <script>
-  import { createClient } from '@supabase/supabase-js'
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  )
+  import { supabase } from '../../lib/supabase-browser'
 
   const btn = document.getElementById('ch-follow-btn') as HTMLButtonElement
   const signinLink = document.getElementById('ch-follow-signin') as HTMLAnchorElement
