@@ -132,6 +132,8 @@ const pubDate = video.published_at
   .vid-channel-follow:hover { background: #2C2418; }
   .vid-channel-follow.following { background: transparent; color: #C8A060; border: 1px solid #C8A060; padding: 10px; }
   .vid-channel-follow.loading { opacity: 0.6; cursor: default; }
+  .vid-channel-follow.hidden { display: none; }
+  .vid-channel-follow-signin.hidden { display: none; }
   .vid-channel-follow-signin { display: block; width: 100%; padding: 11px; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(239,231,217,.5); text-align: center; text-decoration: none; border: 1px solid rgba(239,231,217,.2); box-sizing: border-box; }
 
   /* SIDE RAIL VIDEO LIST */
@@ -309,8 +311,8 @@ const pubDate = video.published_at
           </div>
           {channel.description && <p class="vid-channel-desc">{channel.description}</p>}
           <a href={`/channels/${channel.slug}`} class="vid-channel-follow" style="margin-bottom:8px;">Visit Channel →</a>
-          <button class="vid-channel-follow loading" id="vid-follow-btn" data-publisher-id={channel.id}>Follow Channel</button>
-          <a href="/auth/signin" class="vid-channel-follow-signin" id="vid-follow-signin" style="display:none">Sign in to Follow</a>
+          <button class="vid-channel-follow hidden" id="vid-follow-btn" data-publisher-id={channel.id}>Follow Channel</button>
+          <a href="/auth/signin" class="vid-channel-follow-signin hidden" id="vid-follow-signin">Sign in to Follow</a>
         </div>
       )}
 
@@ -401,11 +403,10 @@ const pubDate = video.published_at
   async function initFollow() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
-      btn.style.display = 'none'
-      signinLink.style.display = 'block'
+      signinLink.classList.remove('hidden')
       return
     }
-    btn.classList.remove('loading')
+    btn.classList.remove('hidden')
     const res = await fetch(`/api/follow?publisher_id=${publisherId}`, {
       headers: { Authorization: `Bearer ${session.access_token}` }
     })
