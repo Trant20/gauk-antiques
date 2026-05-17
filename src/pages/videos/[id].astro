@@ -130,7 +130,9 @@ const pubDate = video.published_at
   .vid-channel-desc { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; line-height: 1.6; margin-bottom: 14px; }
   .vid-channel-follow { display: block; width: 100%; padding: 11px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; text-align: center; text-decoration: none; cursor: pointer; transition: background .2s; box-sizing: border-box; }
   .vid-channel-follow:hover { background: #2C2418; }
-  .vid-channel-follow.coming-soon { background: #C4B49E; cursor: default; color: #8A7A66; }
+  .vid-channel-follow.following { background: transparent; color: #C8A060; border: 1px solid #C8A060; padding: 10px; }
+  .vid-channel-follow.loading { opacity: 0.6; cursor: default; }
+  .vid-channel-follow-signin { display: block; width: 100%; padding: 11px; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(239,231,217,.5); text-align: center; text-decoration: none; border: 1px solid rgba(239,231,217,.2); box-sizing: border-box; }
 
   /* SIDE RAIL VIDEO LIST */
   .vid-rail-section { margin-bottom: 32px; }
@@ -307,9 +309,8 @@ const pubDate = video.published_at
           </div>
           {channel.description && <p class="vid-channel-desc">{channel.description}</p>}
           <a href={`/channels/${channel.slug}`} class="vid-channel-follow" style="margin-bottom:8px;">Visit Channel →</a>
-          <a href={`/channels/${channel.slug}`} class="vid-channel-follow coming-soon">
-            Follow Channel — Coming Soon
-          </a>
+          <button class="vid-channel-follow loading" id="vid-follow-btn" data-publisher-id={channel.id}>Follow Channel</button>
+          <a href="/auth/signin" class="vid-channel-follow-signin" id="vid-follow-signin" style="display:none">Sign in to Follow</a>
         </div>
       )}
 
@@ -389,6 +390,56 @@ const pubDate = video.published_at
     <iframe id="yt-modal-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
   </div>
 </div>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+
+  const btn = document.getElementById('vid-follow-btn') as HTMLButtonElement
+  const signinLink = document.getElementById('vid-follow-signin') as HTMLAnchorElement
+  const publisherId = btn?.dataset.publisherId
+
+  async function initFollow() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      btn.style.display = 'none'
+      signinLink.style.display = 'block'
+      return
+    }
+    btn.classList.remove('loading')
+    const res = await fetch(`/api/follow?publisher_id=${publisherId}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    const json = await res.json()
+    setFollowState(json.following)
+  }
+
+  function setFollowState(following: boolean) {
+    if (following) {
+      btn.textContent = 'Following ✓'
+      btn.classList.add('following')
+    } else {
+      btn.textContent = 'Follow Channel'
+      btn.classList.remove('following')
+    }
+  }
+
+  btn?.addEventListener('click', async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = '/auth/signin'; return }
+    btn.classList.add('loading')
+    const isFollowing = btn.classList.contains('following')
+    const res = await fetch('/api/follow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ publisher_id: publisherId, action: isFollowing ? 'unfollow' : 'follow' })
+    })
+    const json = await res.json()
+    btn.classList.remove('loading')
+    setFollowState(json.following)
+  })
+
+  initFollow()
+</script>
 
 <script>
   const overlay = document.getElementById('yt-modal-overlay') as HTMLElement
