@@ -98,7 +98,7 @@ const pubDate = video.published_at
   "publisher": { "@type": "Organization", "name": "GAUK Antiques", "url": "https://gaukantiques.com" }
 })} />
 
-<style is:global>
+<style>
   .vid-pg { background: #EFE7D9; min-height: 100vh; padding-top: 64px; }
 
   /* LAYOUT */
@@ -311,8 +311,8 @@ const pubDate = video.published_at
           </div>
           {channel.description && <p class="vid-channel-desc">{channel.description}</p>}
           <a href={`/channels/${channel.slug}`} class="vid-channel-follow" style="margin-bottom:8px;">Visit Channel →</a>
-          <button class="vid-channel-follow hidden" id="vid-follow-btn" data-publisher-id={channel.id}>Follow Channel</button>
-          <a href="/auth/signin" class="vid-channel-follow-signin hidden" id="vid-follow-signin">Sign in to Follow</a>
+          <button class="vid-channel-follow" id="vid-follow-btn" hidden data-publisher-id={channel.id}>Follow Channel</button>
+          <a href="/auth/signin" class="vid-channel-follow-signin" id="vid-follow-signin" hidden>Sign in to Follow</a>
         </div>
       )}
 
@@ -403,10 +403,10 @@ const pubDate = video.published_at
   async function initFollow() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
-      signinLink.classList.remove('hidden')
+      signinLink.removeAttribute('hidden')
       return
     }
-    btn.classList.remove('hidden')
+    btn.removeAttribute('hidden')
     const res = await fetch(`/api/follow?publisher_id=${publisherId}`, {
       headers: { Authorization: `Bearer ${session.access_token}` }
     })
