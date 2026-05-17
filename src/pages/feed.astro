@@ -45,9 +45,17 @@ function slugify(s: string): string {
   .feed-filter-btn.active { color: #C8A060; border-bottom-color: #C8A060; }
   @media (max-width: 767px) { .feed-filter { padding: 0 8px; } .feed-filter-btn { padding: 14px 10px; font-size: 9px; } }
 
+  /* BREADCRUMB */
+  .feed-breadcrumb { max-width: 1100px; margin: 0 auto; padding: 20px 32px 0; display: flex; align-items: center; gap: 8px; }
+  .feed-bc-link { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
+  .feed-bc-link:hover { color: #1C1810; }
+  .feed-bc-sep { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #C4B49E; }
+  .feed-bc-cur { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
+  @media (max-width: 767px) { .feed-breadcrumb { padding: 16px 16px 0; } }
+
   /* CONTENT */
-  .feed-content { max-width: 1100px; margin: 0 auto; padding: 48px 32px 80px; }
-  @media (max-width: 767px) { .feed-content { padding: 32px 16px 80px; } }
+  .feed-content { max-width: 1100px; margin: 0 auto; padding: 32px 32px 80px; }
+  @media (max-width: 767px) { .feed-content { padding: 24px 16px 80px; } }
 
   /* SECTION */
   .feed-section { margin-bottom: 56px; }
@@ -107,6 +115,13 @@ function slugify(s: string): string {
       ))}
     </div>
   </div>
+
+  <!-- BREADCRUMB -->
+  <nav class="feed-breadcrumb">
+    <a href="/videos" class="feed-bc-link">Videos</a>
+    <span class="feed-bc-sep">›</span>
+    <span class="feed-bc-cur">My Feed</span>
+  </nav>
 
   <!-- CONTENT -->
   <div class="feed-content">
