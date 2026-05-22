@@ -9,9 +9,9 @@ const [
   { count: artists },
   { count: withImage },
 ] = await Promise.all([
-  supabase.from('nga_objects').select('*', { count: 'exact', head: true }),
-  supabase.from('nga_constituents').select('*', { count: 'exact', head: true }),
-  supabase.from('nga_objects').select('*', { count: 'exact', head: true }).not('nga_image_url', 'is', null),
+  supabase.from('gauk_objects').select('*', { count: 'exact', head: true }),
+  supabase.from('gauk_artists').select('*', { count: 'exact', head: true }),
+  supabase.from('gauk_objects').select('*', { count: 'exact', head: true }).not('image_url', 'is', null),
 ])
 
 const stats = {
@@ -21,62 +21,44 @@ const stats = {
 }
 
 const { data: heroSetting } = await supabase
-  .from('site_settings')
-  .select('value')
-  .eq('site_id', SITE_ID)
-  .eq('key', 'category_hero_collections')
-  .single()
-
-const heroImage = heroSetting?.value || ''
+  .from('site_settings').select('value')
+  .eq('site_id', SITE_ID).eq('key', 'category_hero_collections').single()
 
 const { data: titleSetting } = await supabase
-  .from('site_settings')
-  .select('value')
-  .eq('site_id', SITE_ID)
-  .eq('key', 'category_title_collections')
-  .single()
+  .from('site_settings').select('value')
+  .eq('site_id', SITE_ID).eq('key', 'category_title_collections').single()
 
 const { data: subtitleSetting } = await supabase
-  .from('site_settings')
-  .select('value')
-  .eq('site_id', SITE_ID)
-  .eq('key', 'category_subtitle_collections')
-  .single()
+  .from('site_settings').select('value')
+  .eq('site_id', SITE_ID).eq('key', 'category_subtitle_collections').single()
 
-const heroTitle = titleSetting?.value || 'The Museum Collection'
-const heroSubtitle = subtitleSetting?.value || 'Search 116,000 works from the National Gallery of Art — paintings, sculpture, decorative arts and more.'
+const heroImage    = heroSetting?.value || ''
+const heroTitle    = titleSetting?.value || 'The GAUK Knowledge Collection'
+const heroSubtitle = subtitleSetting?.value || 'Search 145,000 works from world-class collections — paintings, sculpture, decorative arts and more.'
 
-// Preload first 50 objects server-side — zero JS fetch on first paint
+// Preload first 50 objects with images server-side
 const { data: initialObjects } = await supabase
-  .from('nga_objects')
-  .select('object_id,title,display_date,attribution,classification,subclassification,nga_thumb_url,medium,accession_num,dimensions,credit_line,on_view,wikidata_id,department_abbr')
-  .order('begin_year', { ascending: true, nullsFirst: false })
+  .from('gauk_objects')
+  .select('gauk_id,title,display_date,attribution,classification,thumb_url,image_url,medium,dimensions,credit_line,provenance,slug,external_ids,properties')
+  .not('image_url', 'is', null)
+  .order('date_from', { ascending: true, nullsFirst: false })
   .limit(50)
 
-const initialCount = stats.objects
+const initialCount = stats.withImage
 ---
-<PublicShell title="Museum Collection — GAUK Antiques" description="Search 116,000 works from the National Gallery of Art">
+<PublicShell title="Museum Collection — GAUK Antiques" description="Search 145,000 works from world-class art collections">
 
 <style is:global>
-  /* ── TOKENS ── map admin vars to public shell palette */
   :root {
-    --pc: #1C1810;
-    --pc2: rgba(28,24,16,.95);
-    --card: rgba(239,231,217,.04);
-    --border: rgba(200,160,96,.2);
-    --surface: rgba(239,231,217,.03);
-    --text: #EFE7D9;
-    --text2: rgba(239,231,217,.7);
-    --text3: rgba(239,231,217,.4);
-    --t1: #C8A060;
-    --tglow: rgba(200,160,96,.08);
-    --radius: 4px;
-    --radius2: 4px;
+    --pc: #1C1810; --pc2: rgba(28,24,16,.95);
+    --card: rgba(239,231,217,.04); --border: rgba(200,160,96,.2);
+    --surface: rgba(239,231,217,.03); --text: #EFE7D9;
+    --text2: rgba(239,231,217,.7); --text3: rgba(239,231,217,.4);
+    --t1: #C8A060; --tglow: rgba(200,160,96,.08);
+    --radius: 4px; --radius2: 4px;
     --prata: 'Prata', Georgia, serif;
     --playfair: 'Playfair Display', Didot, Georgia, serif;
   }
-
-  /* HERO */
   .col-hero { position: relative; min-height: 55vh; display: flex; align-items: flex-end; overflow: hidden; background: var(--pc); }
   .col-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
   .col-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,8,4,.97) 0%, rgba(13,8,4,.55) 55%, rgba(13,8,4,.2) 100%); }
@@ -85,40 +67,25 @@ const initialCount = stats.objects
   .col-hero-eyebrow { font-family: var(--prata); font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--t1); margin-bottom: 16px; }
   .col-hero-title { font-family: var(--playfair); font-size: clamp(36px,7vw,72px); font-weight: 400; font-style: italic; color: var(--text); line-height: 1.1; margin-bottom: 16px; }
   .col-hero-sub { font-family: var(--prata); font-size: 16px; color: var(--text3); line-height: 1.8; max-width: 560px; margin: 0 auto; }
-
-  /* BODY */
   .col-body { background: var(--pc); min-height: 100vh; padding: 32px; }
   .col-inner { max-width: 1400px; margin: 0 auto; }
-
-  /* STATS */
   .col-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
   @media (max-width: 480px) { .col-stats { grid-template-columns: 1fr; gap: 8px; } }
   .col-stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius2); padding: 24px; }
   .col-stat-label { font-family: var(--prata); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
   .col-stat-value { font-family: var(--playfair); font-style: italic; font-size: 28px; color: var(--text); line-height: 1; }
-
-  /* TABS */
   .col-tabs { border-bottom: 1px solid var(--border); margin-bottom: 24px; display: flex; }
   .col-tab { padding: 10px 20px; cursor: pointer; border: none; background: transparent; border-bottom: 2px solid transparent; font-family: var(--prata); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); transition: all .15s; margin-bottom: -1px; }
   .col-tab.active { color: var(--t1); border-bottom-color: var(--t1); }
-
-  /* CONTROLS */
   .col-controls { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
   .col-search { flex: 1; padding: 8px 12px; font-family: var(--prata); font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--text); outline: none; }
   .col-search::placeholder { color: var(--text3); }
   .col-pill { padding: 6px 12px; font-family: var(--prata); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--text3); transition: all .15s; }
   .col-pill.active { background: var(--tglow); color: var(--t1); border-color: var(--t1); }
   .col-count { font-family: var(--prata); font-size: 11px; color: var(--text3); margin-left: auto; letter-spacing: 0.05em; }
-
-  /* LAYOUT */
   .col-layout { display: flex; gap: 16px; align-items: flex-start; }
-
-  /* LIST */
   .col-list { flex-shrink: 0; border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden; background: var(--card); }
-  .col-list.full { width: 100%; }
-  .col-list.narrow { width: 320px; }
-
-  /* ROW */
+  .col-list.full { width: 100%; } .col-list.narrow { width: 320px; }
   .col-row { padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 10px; align-items: flex-start; background: transparent; border-left: 2px solid transparent; transition: background .15s; }
   .col-row:hover { background: var(--tglow); }
   .col-row.selected { background: var(--tglow); border-left-color: var(--t1); }
@@ -133,8 +100,6 @@ const initialCount = stats.objects
   .col-badge-green { background: rgba(99,153,34,.15); color: #9FD46A; }
   .col-badge-amber { background: rgba(186,117,23,.15); color: #F5C97A; }
   .col-badge-gray { background: rgba(239,231,217,.08); color: var(--text3); }
-
-  /* DETAIL PANEL */
   .col-detail { flex: 1; border: 1px solid var(--border); border-radius: var(--radius2); background: var(--card); padding: 24px; position: sticky; top: 80px; max-height: calc(100vh - 120px); overflow-y: auto; }
   .col-detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
   .col-detail-label-sm { font-family: var(--prata); font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -148,30 +113,19 @@ const initialCount = stats.objects
   .col-field-val { font-family: var(--prata); font-size: 12px; color: var(--text2); line-height: 1.5; }
   .col-section-label { font-family: var(--prata); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; margin-top: 16px; }
   .col-text-block { font-family: var(--prata); font-size: 11px; color: var(--text2); line-height: 1.6; padding: 8px 10px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 6px; }
-  .col-hist-block { padding: 8px 10px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 6px; }
-  .col-hist-text { font-family: var(--playfair); font-size: 12px; font-style: italic; color: var(--text); }
-  .col-hist-meta { font-family: var(--prata); font-size: 10px; color: var(--text3); margin-top: 2px; }
-  .col-dim-line { font-family: var(--prata); font-size: 11px; color: var(--text2); margin-bottom: 4px; }
   .col-wikidata { font-family: var(--prata); font-size: 11px; color: var(--t1); text-decoration: none; letter-spacing: 0.05em; }
-
-  /* ARTIST ROW */
   .col-artist-row { padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 10px; align-items: center; background: transparent; border-left: 2px solid transparent; transition: background .15s; }
   .col-artist-row:hover { background: var(--tglow); }
   .col-artist-row.selected { background: var(--tglow); border-left-color: var(--t1); }
   .col-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--tglow); border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--t1); font-family: var(--playfair); font-style: italic; font-size: 15px; }
   .col-artist-name { font-family: var(--playfair); font-size: 13px; font-style: italic; color: var(--text); }
   .col-artist-meta { font-family: var(--prata); font-size: 10px; color: var(--text3); margin-top: 2px; }
-
-  /* WORKS IN COLLECTION */
   .col-work-row { display: flex; gap: 10px; align-items: center; padding: 8px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer; }
   .col-work-thumb { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
   .col-work-title { font-family: var(--playfair); font-size: 12px; font-style: italic; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .col-work-meta { font-family: var(--prata); font-size: 10px; color: var(--text3); }
-
   .col-empty { padding: 32px; text-align: center; font-family: var(--prata); font-size: 12px; color: var(--text3); }
   .col-hidden { display: none; }
-
-  /* ALPHABET BAR */
   .col-alpha-bar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
   .col-alpha { font-family: var(--prata); font-size: 10px; letter-spacing: 0.08em; padding: 4px 8px; background: transparent; border: 1px solid var(--border); color: var(--text3); cursor: pointer; transition: all .15s; border-radius: var(--radius); min-width: 28px; text-align: center; }
   .col-alpha:hover { border-color: var(--t1); color: var(--t1); }
@@ -190,32 +144,18 @@ const initialCount = stats.objects
 </div>
 
 <div id="col-initial-data" data-objects={JSON.stringify(initialObjects || [])} data-count={initialCount} style="display:none"></div>
+
 <div class="col-body">
   <div class="col-inner">
-
-    <!-- STATS -->
     <div class="col-stats">
-      <div class="col-stat">
-        <div class="col-stat-label">Objects</div>
-        <div class="col-stat-value">{stats.objects.toLocaleString()}</div>
-      </div>
-      <div class="col-stat">
-        <div class="col-stat-label">Artists</div>
-        <div class="col-stat-value">{stats.artists.toLocaleString()}</div>
-      </div>
-      <div class="col-stat">
-        <div class="col-stat-label">With image</div>
-        <div class="col-stat-value">{stats.withImage.toLocaleString()}</div>
-      </div>
+      <div class="col-stat"><div class="col-stat-label">Objects</div><div class="col-stat-value">{stats.objects.toLocaleString()}</div></div>
+      <div class="col-stat"><div class="col-stat-label">Artists</div><div class="col-stat-value">{stats.artists.toLocaleString()}</div></div>
+      <div class="col-stat"><div class="col-stat-label">With image</div><div class="col-stat-value">{stats.withImage.toLocaleString()}</div></div>
     </div>
-
-    <!-- TABS -->
     <div class="col-tabs">
       <button class="col-tab active" data-tab="objects">Objects</button>
       <button class="col-tab" data-tab="artists">Artists</button>
     </div>
-
-    <!-- OBJECTS TAB -->
     <div id="tab-objects">
       <div class="col-controls">
         <input class="col-search" id="obj-search" placeholder="Search title, attribution, medium..." autocomplete="off" />
@@ -229,8 +169,6 @@ const initialCount = stats.objects
         <div class="col-detail col-hidden" id="obj-detail"></div>
       </div>
     </div>
-
-    <!-- ARTISTS TAB -->
     <div id="tab-artists" class="col-hidden">
       <div class="col-controls">
         <input class="col-search" id="art-search" placeholder="Search artist name, nationality..." autocomplete="off" />
@@ -247,7 +185,6 @@ const initialCount = stats.objects
         <div class="col-detail col-hidden" id="art-detail"></div>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -267,89 +204,45 @@ const initialCount = stats.objects
 <script is:inline>
 (function(){
   var _it=[], _i=0, _zoomed=false;
-  window._lbOpen = function(i, items) {
-    _it=items; _i=i; _zoomed=false;
-    render();
-    var lb=document.getElementById('lb');
-    lb.style.display='flex';
-    document.body.style.overflow='hidden';
-  };
-  function close(){
-    document.getElementById('lb').style.display='none';
-    document.body.style.overflow='';
-    _zoomed=false;
-    document.getElementById('lb-img').style.transform='';
-  }
-  function nav(d){
-    _i=(_i+d+_it.length)%_it.length;
-    _zoomed=false;
-    document.getElementById('lb-img').style.transform='';
-    render();
-  }
+  window._lbOpen = function(i, items) { _it=items; _i=i; _zoomed=false; render(); document.getElementById('lb').style.display='flex'; document.body.style.overflow='hidden'; };
+  function close(){ document.getElementById('lb').style.display='none'; document.body.style.overflow=''; _zoomed=false; document.getElementById('lb-img').style.transform=''; }
+  function nav(d){ _i=(_i+d+_it.length)%_it.length; _zoomed=false; document.getElementById('lb-img').style.transform=''; render(); }
   function render(){
-    var it=_it[_i];
-    var img=document.getElementById('lb-img');
+    var it=_it[_i], img=document.getElementById('lb-img');
     img.src=it.url; img.alt=it.caption||'';
     document.getElementById('lb-caption').textContent=it.caption||'';
     document.getElementById('lb-counter').textContent=(_i+1)+' / '+_it.length;
-    var tb=document.getElementById('lb-thumbs');
-    tb.innerHTML='';
-    _it.forEach(function(t,idx){
-      var th=document.createElement('img');
-      th.src=t.url; th.alt='';
-      th.style.cssText='width:56px;height:42px;object-fit:cover;border-radius:2px;cursor:pointer;opacity:'+(idx===_i?'1':'0.4')+';border:1px solid '+(idx===_i?'#C8A060':'transparent')+';flex-shrink:0;transition:opacity .2s;';
-      th.setAttribute('data-ti',String(idx));
-      tb.appendChild(th);
-    });
+    var tb=document.getElementById('lb-thumbs'); tb.innerHTML='';
+    _it.forEach(function(t,idx){ var th=document.createElement('img'); th.src=t.url; th.alt=''; th.style.cssText='width:56px;height:42px;object-fit:cover;border-radius:2px;cursor:pointer;opacity:'+(idx===_i?'1':'0.4')+';border:1px solid '+(idx===_i?'#C8A060':'transparent')+';flex-shrink:0;transition:opacity .2s;'; th.setAttribute('data-ti',String(idx)); tb.appendChild(th); });
   }
   document.addEventListener('click',function(e){
     var t=e.target;
     if(t.id==='lb-close'||t.id==='lb'){close();return;}
     if(t.id==='lb-prev'){nav(-1);return;}
     if(t.id==='lb-next'){nav(1);return;}
-    if(t.id==='lb-img'){
-      _zoomed=!_zoomed;
-      t.style.transform=_zoomed?'scale(2)':'';
-      t.style.cursor=_zoomed?'zoom-out':'zoom-in';
-      return;
-    }
+    if(t.id==='lb-img'){ _zoomed=!_zoomed; t.style.transform=_zoomed?'scale(2)':''; t.style.cursor=_zoomed?'zoom-out':'zoom-in'; return; }
     var ti=t.getAttribute('data-ti');
     if(ti!==null){_i=parseInt(ti,10);_zoomed=false;document.getElementById('lb-img').style.transform='';render();return;}
   });
   document.addEventListener('keydown',function(e){
     if(document.getElementById('lb').style.display==='none') return;
-    if(e.key==='ArrowRight') nav(1);
-    if(e.key==='ArrowLeft') nav(-1);
-    if(e.key==='Escape') close();
+    if(e.key==='ArrowRight') nav(1); if(e.key==='ArrowLeft') nav(-1); if(e.key==='Escape') close();
   });
   var _tx=0;
-  document.addEventListener('touchstart',function(e){
-    if(document.getElementById('lb').style.display!=='none') _tx=e.touches[0].clientX;
-  },{passive:true});
-  document.addEventListener('touchend',function(e){
-    if(document.getElementById('lb').style.display==='none') return;
-    var d=_tx-e.changedTouches[0].clientX;
-    if(Math.abs(d)>50) nav(d>0?1:-1);
-  });
+  document.addEventListener('touchstart',function(e){ if(document.getElementById('lb').style.display!=='none') _tx=e.touches[0].clientX; },{passive:true});
+  document.addEventListener('touchend',function(e){ if(document.getElementById('lb').style.display==='none') return; var d=_tx-e.changedTouches[0].clientX; if(Math.abs(d)>50) nav(d>0?1:-1); });
 })();
 </script>
 
 </PublicShell>
 
 <script>
-// ── CACHE & STATE ────────────────────────────────────────────
 const searchCache = new Map()
-const detailCache = new Map()
-
 const SUPA_URL = import.meta.env.PUBLIC_SUPABASE_URL
 const SUPA_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 const H = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
 
-let objClass = '', objTimer = null, artTimer = null, selObjId = null, selArtId = null
-
-function iiif(url) {
-  return url ? url.replace(/\/full\/![^/]+\//, '/full/!600,600/') : null
-}
+let objClass = '', objTimer = null, artTimer = null, selObjId = null, selArtId = null, artLetter = ''
 
 function classColor(c) {
   if (c === 'Painting') return 'blue'
@@ -358,10 +251,7 @@ function classColor(c) {
   if (c === 'Print' || c === 'Drawing') return 'amber'
   return 'gray'
 }
-
-function badge(label, color) {
-  return `<span class="col-badge col-badge-${color || 'gray'}">${label}</span>`
-}
+function badge(label, color) { return `<span class="col-badge col-badge-${color||'gray'}">${label}</span>` }
 
 // ── TABS ──────────────────────────────────────────────────────
 document.querySelectorAll('.col-tab').forEach(tab => {
@@ -379,10 +269,14 @@ document.querySelectorAll('.col-tab').forEach(tab => {
 async function fetchObjects(q, cls) {
   const cacheKey = `${q}__${cls}`
   if (searchCache.has(cacheKey)) return searchCache.get(cacheKey)
-  const p = new URLSearchParams({ select: 'object_id,title,display_date,attribution,classification,subclassification,nga_thumb_url,medium,accession_num,dimensions,credit_line,on_view,wikidata_id,department_abbr', limit: '50', order: 'begin_year.asc.nullslast' })
+  const p = new URLSearchParams({
+    select: 'gauk_id,title,display_date,attribution,classification,thumb_url,image_url,medium,dimensions,credit_line,provenance,slug,external_ids,properties',
+    limit: '50', order: 'date_from.asc.nullslast'
+  })
+  p.append('image_url', 'not.is.null')
   if (cls) p.append('classification', `eq.${cls}`)
-  if (q) p.append('search_vector', `fts.${encodeURIComponent(q)}`)
-  const res = await fetch(`${SUPA_URL}/rest/v1/nga_objects?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
+  if (q) p.append('title', `ilike.*${q}*`)
+  const res = await fetch(`${SUPA_URL}/rest/v1/gauk_objects?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
   const data = await res.json()
   const total = res.headers.get('content-range')?.split('/')[1] || '?'
   const result = { data: Array.isArray(data) ? data : [], total }
@@ -391,34 +285,51 @@ async function fetchObjects(q, cls) {
   return result
 }
 
-async function fetchObjDetail(id) {
-  if (detailCache.has(id)) return detailCache.get(id)
-  const [terms, texts, dimensions, historical] = await Promise.all([
-    fetch(`${SUPA_URL}/rest/v1/nga_object_terms?object_id=eq.${id}&select=term_type,term`, { headers: H }).then(r => r.json()),
-    fetch(`${SUPA_URL}/rest/v1/nga_object_texts?object_id=eq.${id}&select=text_type,text,year`, { headers: H }).then(r => r.json()),
-    fetch(`${SUPA_URL}/rest/v1/nga_object_dimensions?object_id=eq.${id}&select=element,dimension_type,dimension,unit_name`, { headers: H }).then(r => r.json()),
-    fetch(`${SUPA_URL}/rest/v1/nga_object_historical?object_id=eq.${id}&select=data_type,forward_text,remarks,effective_date&order=display_order.asc`, { headers: H }).then(r => r.json()),
-  ])
-  const result = { terms, texts, dimensions, historical }
-  detailCache.set(id, result)
-  return result
+async function fetchArtistForObject(gauk_id) {
+  const relRes = await fetch(
+    `${SUPA_URL}/rest/v1/gauk_entity_relations?from_gauk_id=eq.${gauk_id}&relation_type=eq.made_by&select=to_gauk_id&limit=1`,
+    { headers: H }
+  )
+  const rels = await relRes.json()
+  if (!rels.length) return null
+  const artRes = await fetch(
+    `${SUPA_URL}/rest/v1/gauk_artists?gauk_id=eq.${rels[0].to_gauk_id}&select=gauk_id,preferred_name,nationality,birth_year,death_year,portrait_url,slug`,
+    { headers: H }
+  )
+  const artists = await artRes.json()
+  return artists[0] || null
+}
+
+async function fetchArtistWorks(gauk_id) {
+  const relRes = await fetch(
+    `${SUPA_URL}/rest/v1/gauk_entity_relations?to_gauk_id=eq.${gauk_id}&relation_type=eq.made_by&select=from_gauk_id&limit=24`,
+    { headers: H }
+  )
+  const rels = await relRes.json()
+  if (!rels.length) return []
+  const ids = rels.map(r => r.from_gauk_id).join(',')
+  const res = await fetch(
+    `${SUPA_URL}/rest/v1/gauk_objects?gauk_id=in.(${ids})&select=gauk_id,title,display_date,classification,thumb_url,slug&image_url=not.is.null`,
+    { headers: H }
+  )
+  return await res.json()
 }
 
 function renderObjList(objects) {
   const list = document.getElementById('obj-list')
   if (!objects.length) { list.innerHTML = '<div class="col-empty">No results</div>'; return }
   list.innerHTML = objects.map(o => `
-    <div class="col-row${o.object_id === selObjId ? ' selected' : ''}" data-id="${o.object_id}" data-obj='${JSON.stringify(o).replace(/'/g,'&#39;')}'>
-      <div class="col-thumb">${o.nga_thumb_url ? `<img src="${o.nga_thumb_url}" alt="" loading="lazy"/>` : '<span class="col-thumb-empty">◻</span>'}</div>
+    <div class="col-row${o.gauk_id === selObjId ? ' selected' : ''}" data-id="${o.gauk_id}" data-obj='${JSON.stringify(o).replace(/'/g,"&#39;")}'>
+      <div class="col-thumb">${o.thumb_url ? `<img src="${o.thumb_url}" alt="" loading="lazy"/>` : '<span class="col-thumb-empty">◻</span>'}</div>
       <div style="flex:1;min-width:0">
         <div class="col-row-title">${o.title || 'Untitled'}</div>
         <div class="col-row-attr">${o.attribution || 'Unknown'}${o.display_date ? ' · ' + o.display_date : ''}</div>
-        <div style="margin-top:3px">${badge(o.classification, classColor(o.classification))}${o.nga_thumb_url ? badge('NGA img','gray') : ''}</div>
+        <div style="margin-top:3px">${badge(o.classification, classColor(o.classification))}</div>
       </div>
     </div>`).join('')
   list.querySelectorAll('.col-row').forEach(row => row.addEventListener('click', () => {
     const o = JSON.parse(row.dataset.obj)
-    selObjId = o.object_id
+    selObjId = o.gauk_id
     list.querySelectorAll('.col-row').forEach(r => r.classList.remove('selected'))
     row.classList.add('selected')
     list.classList.replace('full', 'narrow')
@@ -429,160 +340,55 @@ function renderObjList(objects) {
 async function showObjDetail(o) {
   const panel = document.getElementById('obj-detail')
   panel.classList.remove('col-hidden')
+  const wikidata_id = o.external_ids?.wikidata
+  const accession = o.external_ids?.nga_accession
   panel.innerHTML = `
     <div class="col-detail-header">
       <div class="col-detail-label-sm">Object detail</div>
       <button class="col-close" id="obj-close">✕</button>
     </div>
-    ${(o.nga_thumb_url) ? `<img class="col-detail-img" id="obj-hero-img" src="${iiif(o.nga_thumb_url)}" alt="" style="cursor:pointer" title="Click to view all works by this artist"/>` : ''}
+    ${o.image_url ? `<img class="col-detail-img" src="${o.image_url}" alt="" loading="lazy"/>` : ''}
     <div class="col-detail-title">${o.title || 'Untitled'}</div>
-    ${o.attribution ? `<div class="col-detail-attr" id="obj-artist-link" data-attribution="${o.attribution}">${o.attribution}</div>` : ''}
+    ${o.attribution ? `<div class="col-detail-attr">${o.attribution}</div>` : ''}
     ${o.display_date ? `<div class="col-detail-date">${o.display_date}</div>` : ''}
-    <div style="margin-bottom:16px">
-      ${badge(o.classification, classColor(o.classification))}
-      ${o.subclassification ? badge(o.subclassification, 'gray') : ''}
-      ${o.on_view ? badge('On view','green') : ''}
-    </div>
+    <div style="margin-bottom:16px">${badge(o.classification, classColor(o.classification))}</div>
     <div class="col-field-grid">
-      ${o.accession_num ? `<div><div class="col-field-label">Accession</div><div class="col-field-val">${o.accession_num}</div></div>` : ''}
-      ${o.department_abbr ? `<div><div class="col-field-label">Department</div><div class="col-field-val">${o.department_abbr}</div></div>` : ''}
+      ${accession ? `<div><div class="col-field-label">Accession</div><div class="col-field-val">${accession}</div></div>` : ''}
       ${o.medium ? `<div><div class="col-field-label">Medium</div><div class="col-field-val">${o.medium}</div></div>` : ''}
       ${o.dimensions ? `<div><div class="col-field-label">Dimensions</div><div class="col-field-val">${o.dimensions}</div></div>` : ''}
     </div>
     ${o.credit_line ? `<div class="col-section-label">Credit line</div><div class="col-field-val" style="margin-bottom:8px">${o.credit_line}</div>` : ''}
-    ${o.wikidata_id ? `<div style="margin-top:8px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${o.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>` : ''}
-    <div style="margin-top:12px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="${'/collection/' + o.accession_num.replace(/\./g, '-')}">View Object →</a></div>
-    <div id="obj-extra"><div class="col-section-label">Loading detail…</div></div>`
+    ${o.provenance ? `<div class="col-section-label">Provenance</div><div class="col-field-val" style="margin-bottom:8px;font-size:11px;line-height:1.6">${o.provenance}</div>` : ''}
+    ${wikidata_id ? `<div style="margin-top:8px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>` : ''}
+    <div style="margin-top:12px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="/collection/${o.slug}">View Object →</a></div>
+    <div id="obj-artist" style="margin-top:16px"><div class="col-section-label">Loading artist…</div></div>`
 
   document.getElementById('obj-close').addEventListener('click', () => {
-    panel.classList.add('col-hidden')
-    selObjId = null
+    panel.classList.add('col-hidden'); selObjId = null
     const list = document.getElementById('obj-list')
     list.classList.replace('narrow', 'full')
     list.querySelectorAll('.col-row').forEach(r => r.classList.remove('selected'))
   })
 
-  // Image click — open lightbox with all works by this artist
-  const heroImg = document.getElementById('obj-hero-img')
-  const artistLink = document.getElementById('obj-artist-link')
-  if (heroImg && artistLink) {
-    heroImg.addEventListener('click', async () => {
-      const name = artistLink.dataset.attribution
-      if (!name) return
-      const res = await fetch(`${SUPA_URL}/rest/v1/nga_constituents?preferred_name=eq.${encodeURIComponent(name)}&select=constituent_id,preferred_name,slug&limit=1`, { headers: H })
-      const matches = await res.json()
-      if (!matches.length) return
-      const artist = matches[0]
-      const works = await fetchArtistWorks(artist.constituent_id)
-      if (!works.length) return
-      const items = works
-        .filter(w => w.nga_thumb_url)
-        .map(w => ({
-          url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
-          caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
-        }))
-      if (!items.length) return
-      const startIdx = works.filter(w => w.nga_thumb_url).findIndex(w => w.object_id === o.object_id)
-      window._lbOpen(Math.max(0, startIdx), items)
-    })
+  const artist = await fetchArtistForObject(o.gauk_id)
+  const artDiv = document.getElementById('obj-artist')
+  if (!artDiv) return
+  if (artist) {
+    const dateRange = [artist.birth_year, artist.death_year].filter(Boolean).join('–')
+    artDiv.innerHTML = `
+      <div class="col-section-label">Artist</div>
+      <div class="col-work-row" style="cursor:pointer" onclick="window.location='/artists/${artist.slug}'">
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--tglow);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--playfair);font-style:italic;font-size:15px;color:var(--t1)">
+          ${artist.portrait_url ? `<img src="${artist.portrait_url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/>` : artist.preferred_name.charAt(0)}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="col-work-title">${artist.preferred_name}</div>
+          <div class="col-work-meta">${[artist.nationality, dateRange].filter(Boolean).join(' · ')}</div>
+        </div>
+      </div>`
+  } else {
+    artDiv.innerHTML = ''
   }
-
-  const { terms, texts, dimensions, historical } = await fetchObjDetail(o.object_id)
-  const extra = document.getElementById('obj-extra')
-  if (!extra) return
-  let html = ''
-
-  if (terms.length) {
-    const g = terms.reduce((a,t) => { (a[t.term_type]=a[t.term_type]||[]).push(t.term); return a }, {})
-    html += Object.entries(g).map(([type,ts]) => `<div class="col-section-label">${type}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px">${ts.map(t=>badge(t,'gray')).join('')}</div>`).join('')
-  }
-
-  if (dimensions.length) {
-    html += `<div class="col-section-label">Dimensions (structured)</div>${dimensions.map(d => `<div class="col-dim-line">${[d.element,d.dimension_type].filter(Boolean).join(' · ')} — ${d.dimension} ${d.unit_name}</div>`).join('')}`
-  }
-
-  if (historical.length) {
-    html += `<div class="col-section-label">Attribution history</div>${historical.map(h => `<div class="col-hist-block"><div class="col-hist-text">${h.forward_text}</div>${h.effective_date?`<div class="col-hist-meta">${h.data_type} · ${h.effective_date}</div>`:''} ${h.remarks?`<div class="col-hist-meta" style="font-style:italic">${h.remarks}</div>`:''}</div>`).join('')}`
-  }
-
-  if (texts.length) {
-    const g = texts.reduce((a,t) => { (a[t.text_type]=a[t.text_type]||[]).push(t); return a }, {})
-    html += Object.entries(g).map(([type,entries]) => `<div class="col-section-label">${type.replace(/_/g,' ')}</div>${entries.map(e=>`<div class="col-text-block">${e.year?`<span style="color:var(--text3);margin-right:6px">${e.year}</span>`:''}${e.text}</div>`).join('')}`).join('')
-  }
-
-  extra.innerHTML = html || ''
-}
-
-async function showArtistDetailFromObject(a, returnObj, panel) {
-  panel.innerHTML = `
-    <div class="col-detail-header">
-      <button class="col-close" id="art-back-to-obj">← Back to object</button>
-      <button class="col-close" id="art-from-obj-close">✕</button>
-    </div>
-    
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0;overflow:hidden;">${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>' : (a.last_name||a.preferred_name||'?').charAt(0)}</div>
-      <div>
-        <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:16px;font-style:italic;color:#EFE7D9">${a.preferred_name||''}</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:11px;color:rgba(239,231,217,.4);margin-top:3px">${[a.nationality,a.display_date].filter(Boolean).join(' · ')}</div>
-      </div>
-    </div>
-    <div class="col-field-grid">
-      ${a.constituent_type?`<div><div class="col-field-label">Type</div><div class="col-field-val">${a.constituent_type}</div></div>`:''}
-      
-    </div>
-    ${a.wikidata_id?`<div style="margin-bottom:16px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${a.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>`:''}
-    <div style="margin-top:12px;margin-bottom:16px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="${'/artists/' + (a.slug || a.preferred_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-\$/g, ''))}">View Full Profile →</a></div>
-    ${a.signature_url ? '<div style="margin-bottom:20px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center;"><div class="col-field-label" style="margin-bottom:8px">Signature</div><img src="' + a.signature_url + '" alt="Signature" style="max-height:48px;max-width:100%;object-fit:contain;filter:invert(1) opacity(0.7);" loading="lazy"/></div>' : ''}
-    <div id="art-from-obj-extra"><div class="col-section-label">Loading…</div></div>`
-
-  document.getElementById('art-back-to-obj').addEventListener('click', () => showObjDetail(returnObj))
-  document.getElementById('art-from-obj-close').addEventListener('click', () => {
-    panel.classList.add('col-hidden')
-    selObjId = null
-    const list = document.getElementById('obj-list')
-    list.classList.replace('narrow','full')
-    list.querySelectorAll('.col-row').forEach(r => r.classList.remove('selected'))
-  })
-
-  const [detail, works] = await Promise.all([fetchArtistDetail(a.constituent_id), fetchArtistWorks(a.constituent_id)])
-  const extra = document.getElementById('art-from-obj-extra')
-  if (!extra) return
-  let html = ''
-
-  if (detail.altnames.length) {
-    html += `<div class="col-section-label">Also known as</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${detail.altnames.map(n=>badge(`${n.display_name} (${n.name_type})`,'gray')).join('')}</div>`
-  }
-
-  if (works.length) {
-    html += `<div style="border-top:1px solid var(--border);padding-top:16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="col-section-label" style="margin:0;border:none;padding:0">Works in collection</div><button class="col-viewall-btn" style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t1);background:none;border:none;cursor:pointer;padding:0">View all →</button></div>${works.map(w=>`<div class="col-work-row" data-obj='${JSON.stringify(w).replace(/'/g,'&#39;')}'>${w.nga_thumb_url?`<img class="col-work-thumb" src="${w.nga_thumb_url}" alt="" loading="lazy"/>`:''}<div style="flex:1;min-width:0"><div class="col-work-title">${w.title||'Untitled'}</div><div class="col-work-meta">${w.display_date||''} · ${w.classification||''}</div></div></div>`).join('')}</div>`
-  }
-
-  if (detail.texts.length) {
-    html += `<div class="col-section-label">Bibliography (${detail.texts.length})</div><div style="max-height:200px;overflow-y:auto">${detail.texts.map(t=>`<div class="col-text-block">${t.year?`<span style="color:var(--text3);margin-right:6px">${t.year}</span>`:''}${t.text}</div>`).join('')}</div>`
-  }
-
-  extra.innerHTML = html || ''
-
-  // View all button
-  const viewAllBtn = panel.querySelector('.col-viewall-btn')
-  if (viewAllBtn) {
-    viewAllBtn.addEventListener('click', () => {
-      const items = works.filter(w => w.nga_thumb_url).map(w => ({
-        url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
-        caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
-      }))
-      if (items.length) window._lbOpen(0, items)
-    })
-  }
-
-  // Wire works to go back to object detail
-  panel.querySelectorAll('.col-work-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const obj = JSON.parse(row.dataset.obj)
-      showObjDetail(obj)
-    })
-  })
 }
 
 async function refreshObjs() {
@@ -601,48 +407,36 @@ document.querySelectorAll('.col-pill').forEach(p => p.addEventListener('click', 
 
 // ── ARTISTS ───────────────────────────────────────────────────
 async function fetchArtists(q, letter = '') {
-  const p = new URLSearchParams({ select: 'constituent_id,preferred_name,forward_name,last_name,display_date,nationality,constituent_type,ulan_id,wikidata_id,portrait_url,signature_url,slug', limit: '50', order: 'last_name.asc.nullslast' })
-  if (q) p.append('search_vector', `fts.${encodeURIComponent(q)}`)
-  if (letter) p.append('last_name', `ilike.${letter}*`)
-  const res = await fetch(`${SUPA_URL}/rest/v1/nga_constituents?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
+  const p = new URLSearchParams({
+    select: 'gauk_id,preferred_name,nationality,birth_year,death_year,portrait_url,signature_url,slug,external_ids',
+    limit: '50', order: 'preferred_name.asc'
+  })
+  if (q) p.append('preferred_name', `ilike.*${q}*`)
+  if (letter) p.append('preferred_name', `ilike.${letter}*`)
+  const res = await fetch(`${SUPA_URL}/rest/v1/gauk_artists?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
   const data = await res.json()
   const total = res.headers.get('content-range')?.split('/')[1] || '?'
   document.getElementById('art-count').textContent = `${parseInt(total).toLocaleString()} artists`
   renderArtistList(Array.isArray(data) ? data : [])
 }
 
-async function fetchArtistWorks(id) {
-  const links = await fetch(`${SUPA_URL}/rest/v1/nga_object_constituents?constituent_id=eq.${id}&select=object_id&limit=20`, { headers: H }).then(r => r.json())
-  if (!links.length) return []
-  const ids = links.map(l => l.object_id).join(',')
-  return fetch(`${SUPA_URL}/rest/v1/nga_objects?object_id=in.(${ids})&select=object_id,title,display_date,classification,nga_thumb_url,medium`, { headers: H }).then(r => r.json())
-}
-
-async function fetchArtistDetail(id) {
-  const [altnames, texts] = await Promise.all([
-    fetch(`${SUPA_URL}/rest/v1/nga_constituent_altnames?constituent_id=eq.${id}&select=display_name,name_type`, { headers: H }).then(r => r.json()),
-    fetch(`${SUPA_URL}/rest/v1/nga_constituent_texts?constituent_id=eq.${id}&select=text_type,text,year&order=year.asc`, { headers: H }).then(r => r.json()),
-  ])
-  return { altnames, texts }
-}
-
 function renderArtistList(artists) {
   const list = document.getElementById('art-list')
   if (!artists.length) { list.innerHTML = '<div class="col-empty">No results</div>'; return }
   list.innerHTML = artists.map(a => `
-    <div class="col-artist-row${a.constituent_id===selArtId?' selected':''}" data-id="${a.constituent_id}" data-art='${JSON.stringify(a).replace(/'/g,'&#39;')}'>
-      <div class="col-avatar">${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>' : (a.last_name||a.preferred_name||'?').charAt(0)}</div>
+    <div class="col-artist-row${a.gauk_id === selArtId ? ' selected' : ''}" data-id="${a.gauk_id}" data-art='${JSON.stringify(a).replace(/'/g,"&#39;")}'>
+      <div class="col-avatar">${a.portrait_url ? `<img src="${a.portrait_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>` : a.preferred_name.charAt(0)}</div>
       <div style="flex:1;min-width:0">
-        <div class="col-artist-name">${a.preferred_name||a.forward_name||''}</div>
-        <div class="col-artist-meta">${[a.nationality,a.display_date].filter(Boolean).join(' · ')}</div>
+        <div class="col-artist-name">${a.preferred_name}</div>
+        <div class="col-artist-meta">${[a.nationality, [a.birth_year, a.death_year].filter(Boolean).join('–')].filter(Boolean).join(' · ')}</div>
       </div>
     </div>`).join('')
   list.querySelectorAll('.col-artist-row').forEach(row => row.addEventListener('click', () => {
     const a = JSON.parse(row.dataset.art)
-    selArtId = a.constituent_id
+    selArtId = a.gauk_id
     list.querySelectorAll('.col-artist-row').forEach(r => r.classList.remove('selected'))
     row.classList.add('selected')
-    list.classList.replace('full','narrow')
+    list.classList.replace('full', 'narrow')
     showArtistDetail(a)
   }))
 }
@@ -650,150 +444,74 @@ function renderArtistList(artists) {
 async function showArtistDetail(a) {
   const panel = document.getElementById('art-detail')
   panel.classList.remove('col-hidden')
+  const dateRange = [a.birth_year, a.death_year].filter(Boolean).join('–')
+  const wikidata_id = a.external_ids?.wikidata
   panel.innerHTML = `
     <div class="col-detail-header">
-      <div class="col-detail-label-sm">Artist detail</div>
+      <div class="col-detail-label-sm">Artist</div>
       <button class="col-close" id="art-close">✕</button>
     </div>
-    
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0;overflow:hidden;">${a.portrait_url ? '<img src="' + a.portrait_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>' : (a.last_name||a.preferred_name||'?').charAt(0)}</div>
+      <div class="col-avatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0;overflow:hidden;">
+        ${a.portrait_url ? `<img src="${a.portrait_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" loading="lazy"/>` : a.preferred_name.charAt(0)}
+      </div>
       <div>
-        <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:16px;font-style:italic;color:#EFE7D9">${a.preferred_name||''}</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:11px;color:rgba(239,231,217,.4);margin-top:3px">${[a.nationality,a.display_date].filter(Boolean).join(' · ')}</div>
+        <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:16px;font-style:italic;color:#EFE7D9">${a.preferred_name}</div>
+        <div style="font-family:'Prata',Georgia,serif;font-size:11px;color:rgba(239,231,217,.4);margin-top:3px">${[a.nationality, dateRange].filter(Boolean).join(' · ')}</div>
       </div>
     </div>
-    <div class="col-field-grid">
-      ${a.constituent_type?`<div><div class="col-field-label">Type</div><div class="col-field-val">${a.constituent_type}</div></div>`:''}
-      
-    </div>
-    ${a.wikidata_id?`<div style="margin-bottom:16px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${a.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>`:''}
-    <div style="margin-top:12px;margin-bottom:16px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="${'/artists/' + (a.slug || a.preferred_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-\$/g, ''))}">View Full Profile →</a></div>
-    ${a.signature_url ? '<div style="margin-bottom:20px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center;"><div class="col-field-label" style="margin-bottom:8px">Signature</div><img src="' + a.signature_url + '" alt="Signature" style="max-height:48px;max-width:100%;object-fit:contain;filter:invert(1) opacity(0.7);" loading="lazy"/></div>' : ''}
-    <div id="art-extra"><div class="col-section-label">Loading…</div></div>`
+    ${a.signature_url ? `<div style="margin-bottom:16px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center"><div class="col-field-label" style="margin-bottom:6px">Signature</div><img src="${a.signature_url}" alt="signature" style="max-height:40px;max-width:100%;object-fit:contain;filter:invert(1) opacity(.7);" loading="lazy"/></div>` : ''}
+    ${wikidata_id ? `<div style="margin-bottom:12px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>` : ''}
+    <div style="margin-bottom:16px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="/artists/${a.slug}">View Full Profile →</a></div>
+    <div id="art-works"><div class="col-section-label">Loading works…</div></div>`
 
   document.getElementById('art-close').addEventListener('click', () => {
-    panel.classList.add('col-hidden')
-    selArtId = null
+    panel.classList.add('col-hidden'); selArtId = null
     const list = document.getElementById('art-list')
-    list.classList.replace('narrow','full')
+    list.classList.replace('narrow', 'full')
     list.querySelectorAll('.col-artist-row').forEach(r => r.classList.remove('selected'))
   })
 
-  const [detail, works] = await Promise.all([fetchArtistDetail(a.constituent_id), fetchArtistWorks(a.constituent_id)])
-  const extra = document.getElementById('art-extra')
-  if (!extra) return
-  let html = ''
-
-  if (detail.altnames.length) {
-    html += `<div class="col-section-label">Also known as</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${detail.altnames.map(n=>badge(`${n.display_name} (${n.name_type})`,'gray')).join('')}</div>`
-  }
-
-  if (detail.texts.length) {
-    html += `<div class="col-section-label">Bibliography (${detail.texts.length})</div><div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;max-height:200px;overflow-y:auto">${detail.texts.map(t=>`<div class="col-text-block">${t.year?`<span style="color:var(--text3);margin-right:6px">${t.year}</span>`:''}${t.text}</div>`).join('')}</div>`
-  }
-
+  const works = await fetchArtistWorks(a.gauk_id)
+  const worksDiv = document.getElementById('art-works')
+  if (!worksDiv) return
   if (works.length) {
-    html += `<div style="border-top:1px solid var(--border);padding-top:16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="col-section-label" style="margin:0;border:none;padding:0">Works in collection</div><button class="col-viewall-btn" style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t1);background:none;border:none;cursor:pointer;padding:0">View all →</button></div>${works.map(w=>`<div class="col-work-row" data-obj='${JSON.stringify(w).replace(/'/g,'&#39;')}'>${w.nga_thumb_url?`<img class="col-work-thumb" src="${w.nga_thumb_url}" alt="" loading="lazy"/>`:''}<div style="flex:1;min-width:0"><div class="col-work-title">${w.title||'Untitled'}</div><div class="col-work-meta">${w.display_date||''} · ${w.classification||''}</div></div></div>`).join('')}</div>`
+    worksDiv.innerHTML = `
+      <div class="col-section-label">Works in collection (${works.length})</div>
+      ${works.map(w => `
+        <div class="col-work-row" onclick="window.location='/collection/${w.slug || w.gauk_id}'">
+          ${w.thumb_url ? `<img class="col-work-thumb" src="${w.thumb_url}" alt="" loading="lazy"/>` : ''}
+          <div style="flex:1;min-width:0">
+            <div class="col-work-title">${w.title || 'Untitled'}</div>
+            <div class="col-work-meta">${[w.display_date, w.classification].filter(Boolean).join(' · ')}</div>
+          </div>
+        </div>`).join('')}`
+  } else {
+    worksDiv.innerHTML = '<div class="col-section-label">No works with images in collection</div>'
   }
-
-  extra.innerHTML = html || ''
-
-  // View all button
-  const viewAllBtn = panel.querySelector('.col-viewall-btn')
-  if (viewAllBtn) {
-    viewAllBtn.addEventListener('click', () => {
-      const items = works.filter(w => w.nga_thumb_url).map(w => ({
-        url: w.nga_thumb_url.replace(/\/full\/![^/]+\//, '/full/!1200,1200/'),
-        caption: [w.title, w.display_date, w.classification].filter(Boolean).join(' · ')
-      }))
-      if (items.length) window._lbOpen(0, items)
-    })
-  }
-
-  // Wire up work rows — open object detail inside artist panel, no tab switch
-  panel.querySelectorAll('.col-work-row').forEach(row => {
-    row.addEventListener('click', async () => {
-      const o = JSON.parse(row.dataset.obj)
-      panel.innerHTML = `
-        <div class="col-detail-header">
-          <button class="col-close" id="art-back">← Back to artist</button>
-          <button class="col-close" id="art-obj-close">✕</button>
-        </div>
-        ${o.nga_thumb_url ? `<img class="col-detail-img" src="${iiif(o.nga_thumb_url)}" alt=""/>` : ''}
-        <div class="col-detail-title">${o.title || 'Untitled'}</div>
-        ${o.attribution ? `<div class="col-detail-attr" id="obj-artist-link" data-attribution="${o.attribution}">${o.attribution}</div>` : ''}
-        ${o.display_date ? `<div class="col-detail-date">${o.display_date}</div>` : ''}
-        <div style="margin-bottom:16px">
-          ${badge(o.classification, classColor(o.classification))}
-          ${o.subclassification ? badge(o.subclassification, 'gray') : ''}
-          ${o.on_view ? badge('On view','green') : ''}
-        </div>
-        <div class="col-field-grid">
-          ${o.accession_num ? `<div><div class="col-field-label">Accession</div><div class="col-field-val">${o.accession_num}</div></div>` : ''}
-          ${o.department_abbr ? `<div><div class="col-field-label">Department</div><div class="col-field-val">${o.department_abbr}</div></div>` : ''}
-          ${o.medium ? `<div><div class="col-field-label">Medium</div><div class="col-field-val">${o.medium}</div></div>` : ''}
-          ${o.dimensions ? `<div><div class="col-field-label">Dimensions</div><div class="col-field-val">${o.dimensions}</div></div>` : ''}
-        </div>
-        ${o.credit_line ? `<div class="col-section-label">Credit line</div><div class="col-field-val" style="margin-bottom:8px">${o.credit_line}</div>` : ''}
-        ${o.wikidata_id ? `<div style="margin-top:8px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${o.wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>` : ''}
-    <div style="margin-top:12px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="${'/collection/' + o.accession_num.replace(/\./g, '-')}">View Object →</a></div>
-        <div id="art-obj-extra"><div class="col-section-label">Loading detail…</div></div>`
-
-      document.getElementById('art-back').addEventListener('click', () => showArtistDetail(a))
-      document.getElementById('art-obj-close').addEventListener('click', () => {
-        panel.classList.add('col-hidden')
-        selArtId = null
-        const list = document.getElementById('art-list')
-        list.classList.replace('narrow','full')
-        list.querySelectorAll('.col-artist-row').forEach(r => r.classList.remove('selected'))
-      })
-
-      const { terms, texts, dimensions, historical } = await fetchObjDetail(o.object_id)
-      const extra = document.getElementById('art-obj-extra')
-      if (!extra) return
-      let html = ''
-      if (terms.length) {
-        const g = terms.reduce((a,t) => { (a[t.term_type]=a[t.term_type]||[]).push(t.term); return a }, {})
-        html += Object.entries(g).map(([type,ts]) => `<div class="col-section-label">${type}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px">${ts.map(t=>badge(t,'gray')).join('')}</div>`).join('')
-      }
-      if (historical.length) {
-        html += `<div class="col-section-label">Attribution history</div>${historical.map(h => `<div class="col-hist-block"><div class="col-hist-text">${h.forward_text}</div>${h.effective_date?`<div class="col-hist-meta">${h.data_type} · ${h.effective_date}</div>`:''}</div>`).join('')}`
-      }
-      if (texts.length) {
-        const g = texts.reduce((a,t) => { (a[t.text_type]=a[t.text_type]||[]).push(t); return a }, {})
-        html += Object.entries(g).map(([type,entries]) => `<div class="col-section-label">${type.replace(/_/g,' ')}</div>${entries.map(e=>`<div class="col-text-block">${e.year?`<span style="color:var(--text3);margin-right:6px">${e.year}</span>`:''}${e.text}</div>`).join('')}`).join('')
-      }
-      extra.innerHTML = html || ''
-    })
-  })
 }
 
 document.getElementById('art-search').addEventListener('input', e => {
   clearTimeout(artTimer); artTimer = setTimeout(() => fetchArtists(e.target.value.trim(), artLetter), 350)
 })
 
-// Alphabet filter
-let artLetter = ''
 document.querySelectorAll('.col-alpha').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.col-alpha').forEach(b => b.classList.remove('active'))
     btn.classList.add('active')
     artLetter = btn.dataset.letter
-    const q = document.getElementById('art-search').value.trim()
-    fetchArtists(q, artLetter)
+    fetchArtists(document.getElementById('art-search').value.trim(), artLetter)
   })
 })
 
-// ── INIT WITH SERVER DATA ────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────
 const initialEl = document.getElementById('col-initial-data')
 if (initialEl) {
   const preloaded = JSON.parse(initialEl.dataset.objects || '[]')
   const preloadedCount = parseInt(initialEl.dataset.count || '0')
   if (preloaded.length) {
-    // Seed cache so first search is instant
     searchCache.set('__', { data: preloaded, total: String(preloadedCount) })
-    document.getElementById('obj-count').textContent = `${preloadedCount.toLocaleString()} objects`
+    document.getElementById('obj-count').textContent = `${preloadedCount.toLocaleString()} objects with images`
     renderObjList(preloaded)
   } else {
     refreshObjs()
@@ -801,12 +519,4 @@ if (initialEl) {
 } else {
   refreshObjs()
 }
-
-// ── HOVER PRELOAD ─────────────────────────────────────────────
-document.getElementById('obj-list').addEventListener('mouseover', e => {
-  const row = e.target.closest('.col-row')
-  if (!row || !row.dataset.obj) return
-  const o = JSON.parse(row.dataset.obj)
-  if (!detailCache.has(o.object_id)) fetchObjDetail(o.object_id)
-})
 </script>
