@@ -143,7 +143,7 @@ const jsonLd = {
       <div class="op-section">
         <div class="op-section-label">Provenance</div>
         {obj.provenance.split(";").map(s => s.trim()).filter(Boolean).map(s => (
-          <div class="op-text-block">{s};</div>
+          <div class="op-text-block" style="margin-bottom:4px">{s};</div>
         ))}
       </div>
     )}
