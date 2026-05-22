@@ -32,17 +32,28 @@ const { data: subtitleSetting } = await supabase
   .from('site_settings').select('value')
   .eq('site_id', SITE_ID).eq('key', 'category_subtitle_collections').single()
 
+// Fetch public source IDs
+const { data: publicSources } = await supabase
+  .from('gauk_sources')
+  .select('id')
+  .eq('is_public', true)
+const publicSourceIds = (publicSources || []).map((s: any) => s.id)
+const hasPublicSources = publicSourceIds.length > 0
+const sourceFilter = hasPublicSources ? `{${publicSourceIds.join(',')}}` : null
+
 const heroImage    = heroSetting?.value || ''
 const heroTitle    = titleSetting?.value || 'The GAUK Knowledge Collection'
 const heroSubtitle = subtitleSetting?.value || 'Search 145,000 works from world-class collections — paintings, sculpture, decorative arts and more.'
 
 // Preload first 50 objects with images server-side
-const { data: initialObjects } = await supabase
+let initialQuery = supabase
   .from('gauk_objects')
   .select('gauk_id,title,display_date,attribution,classification,thumb_url,image_url,medium,dimensions,credit_line,provenance,slug,external_ids,properties')
   .not('image_url', 'is', null)
   .order('date_from', { ascending: true, nullsFirst: false })
   .limit(50)
+if (sourceFilter) initialQuery = initialQuery.overlaps('sources', publicSourceIds)
+const { data: initialObjects } = await initialQuery
 
 const initialCount = stats.withImage
 ---
@@ -143,7 +154,7 @@ const initialCount = stats.withImage
   </div>
 </div>
 
-<div id="col-initial-data" data-objects={JSON.stringify(initialObjects || [])} data-count={initialCount} style="display:none"></div>
+<div id="col-initial-data" data-objects={JSON.stringify(initialObjects || [])} data-count={initialCount} data-sources={JSON.stringify(publicSourceIds)} style="display:none"></div>
 
 <div class="col-body">
   <div class="col-inner">
@@ -242,6 +253,10 @@ const SUPA_URL = import.meta.env.PUBLIC_SUPABASE_URL
 const SUPA_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 const H = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
 
+const initialEl2 = document.getElementById('col-initial-data')
+const publicSourceIds = JSON.parse(initialEl2?.dataset.sources || '[]')
+const sourceParam = publicSourceIds.length ? `&sources=ov.{${publicSourceIds.join(',')}}` : ''
+
 let objClass = '', objTimer = null, artTimer = null, selObjId = null, selArtId = null, artLetter = ''
 
 function classColor(c) {
@@ -276,7 +291,7 @@ async function fetchObjects(q, cls) {
   p.append('image_url', 'not.is.null')
   if (cls) p.append('classification', `eq.${cls}`)
   if (q) p.append('title', `ilike.*${q}*`)
-  const res = await fetch(`${SUPA_URL}/rest/v1/gauk_objects?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
+  const res = await fetch(`${SUPA_URL}/rest/v1/gauk_objects?${p}${sourceParam}`, { headers: { ...H, Prefer: 'count=exact' } })
   const data = await res.json()
   const total = res.headers.get('content-range')?.split('/')[1] || '?'
   const result = { data: Array.isArray(data) ? data : [], total }
@@ -413,7 +428,7 @@ async function fetchArtists(q, letter = '') {
   })
   if (q) p.append('preferred_name', `ilike.*${q}*`)
   if (letter) p.append('preferred_name', `ilike.${letter}*`)
-  const res = await fetch(`${SUPA_URL}/rest/v1/gauk_artists?${p}`, { headers: { ...H, Prefer: 'count=exact' } })
+  const res = await fetch(`${SUPA_URL}/rest/v1/gauk_artists?${p}${sourceParam}`, { headers: { ...H, Prefer: 'count=exact' } })
   const data = await res.json()
   const total = res.headers.get('content-range')?.split('/')[1] || '?'
   document.getElementById('art-count').textContent = `${parseInt(total).toLocaleString()} artists`
