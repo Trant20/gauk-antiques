@@ -358,7 +358,7 @@ async function showObjDetail(o) {
       ${o.dimensions ? `<div><div class="col-field-label">Dimensions</div><div class="col-field-val">${o.dimensions}</div></div>` : ''}
     </div>
     ${o.credit_line ? `<div class="col-section-label">Credit line</div><div class="col-field-val" style="margin-bottom:8px">${o.credit_line}</div>` : ''}
-    ${o.provenance ? `<div class="col-section-label">Provenance</div><div class="col-field-val" style="margin-bottom:8px;font-size:11px;line-height:1.6">${o.provenance}</div>` : ''}
+    ${o.provenance ? `<div class="col-section-label">Provenance</div><div class="col-field-val" style="margin-bottom:8px;font-size:11px;line-height:1.8">${o.provenance.split(';').map(s => s.trim()).filter(Boolean).map(s => `<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)">${s};</div>`).join('')}</div>` : ''}
     ${wikidata_id ? `<div style="margin-top:8px"><a class="col-wikidata" href="https://www.wikidata.org/wiki/${wikidata_id}" target="_blank" rel="noopener">Wikidata →</a></div>` : ''}
     <div style="margin-top:12px"><a class="col-wikidata" style="display:inline-block;padding:7px 14px;border:1px solid rgba(200,160,96,.4);border-radius:4px;" href="/collection/${o.slug}">View Object →</a></div>
     <div id="obj-artist" style="margin-top:16px"><div class="col-section-label">Loading artist…</div></div>`

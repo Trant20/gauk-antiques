@@ -142,7 +142,9 @@ const jsonLd = {
     {obj.provenance && (
       <div class="op-section">
         <div class="op-section-label">Provenance</div>
-        <div class="op-text-block">{obj.provenance}</div>
+        {obj.provenance.split(";").map(s => s.trim()).filter(Boolean).map(s => (
+          <div class="op-text-block">{s};</div>
+        ))}
       </div>
     )}
     {attribution_source && (
