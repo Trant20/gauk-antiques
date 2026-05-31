@@ -13,9 +13,30 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary)
 }
 
+/** Fetch prompt config from ai_prompts for the given context, fallback to general */
+async function getPromptConfig(supabase: any, siteId: string, context: string) {
+  const { data } = await supabase
+    .from('ai_prompts')
+    .select('system_prompt, description_instruction, model, max_tokens')
+    .eq('site_id', siteId)
+    .eq('context', context)
+    .single()
+
+  if (data) return data
+
+  const { data: fallback } = await supabase
+    .from('ai_prompts')
+    .select('system_prompt, description_instruction, model, max_tokens')
+    .eq('site_id', siteId)
+    .eq('context', 'general')
+    .single()
+
+  return fallback
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { key, secondary_key, user_id } = await request.json()
+    const { key, secondary_key, user_id, context = 'general' } = await request.json()
 
     if (!key) {
       return new Response(JSON.stringify({ error: 'No image key provided' }), {
@@ -23,6 +44,28 @@ export const POST: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' }
       })
     }
+
+    const supabase = await import('@supabase/supabase-js').then(m =>
+      m.createClient(
+        (env as any).PUBLIC_SUPABASE_URL,
+        (env as any).SUPABASE_SERVICE_ROLE_KEY
+      )
+    )
+
+    const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+    const promptConfig = await getPromptConfig(supabase, SITE_ID, context)
+    if (!promptConfig) {
+      return new Response(JSON.stringify({ error: 'Prompt configuration not found' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    const systemPrompt = promptConfig.system_prompt.replace(
+      '{{DESCRIPTION_INSTRUCTION}}',
+      promptConfig.description_instruction
+    )
 
     const bucket = (env as any).gauk_antiques_images
     const object = await bucket.get(key)
@@ -40,7 +83,6 @@ export const POST: APIRoute = async ({ request }) => {
     const allowed = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
     const contentType = allowed.has(rawContentType) ? rawContentType : 'image/jpeg'
 
-    // Optional second image (back, base, maker mark)
     let secondary: { base64: string; contentType: string } | null = null
     if (secondary_key) {
       const secObject = await bucket.get(secondary_key)
@@ -57,69 +99,9 @@ export const POST: APIRoute = async ({ request }) => {
     const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
-      system: `You are a senior antiques appraiser with 40 years of experience across all categories. Analyse the image and return ONLY a valid JSON object — no markdown, no explanation, just the JSON.
-
-Return this exact structure:
-{
-  "category": "one of: Ceramics, Glass, Jewellery, Metalware, Furniture, Art, Clocks & Watches, Textiles, Books & Literature, Toys, Militaria, Associations, Music, Film & Media, Articles & Guides, Artists, Authors, Designers, Stamps & Coins, Memorabilia, Collectibles & Decorative Arts, Factories, Studios & Workshops, Historical Figures & History, Collections",
-  "subcategory": "specific item type e.g. Art Pottery Vase, Georgian Silver Teapot",
-  "maker": "maker or artist name, null if unknown",
-  "manufacturer": "manufacturing company if different from maker, null if unknown",
-  "period": "period name e.g. Victorian, Art Deco, Georgian, Mid-Century Modern",
-  "circa": "date estimate e.g. c.1890-1910, null if unknown",
-  "country_of_origin": "country name, null if unknown",
-  "condition": "one of: Mint, Excellent, Good, Fair, Poor",
-  "condition_notes": "specific observations about condition — chips, cracks, wear, restoration, marks",
-  "description": "3-4 sentences. Lead with what makes this piece distinctive. Include style, decoration, form and any notable features. Write for a collector audience.",
-  "value_range_low": integer in GBP,
-  "value_range_high": integer in GBP,
-  "confidence": "one of: High, Medium, Low",
-  "confidence_notes": "why confidence is at this level — what visual evidence supports or limits the identification",
-  "rarity_score": integer 0-100 where 100 is extremely rare. Base on maker reputation, period, pattern, form and typical survival rates for this type of piece,
-  "tags": ["4-6 short keyword tags for this piece e.g. Art Deco, Hand-painted, Staffordshire"],
-  "category_specific": {
-    "POTTERY/CERAMICS — include if applicable": {
-      "maker_mark": "description of any marks, signatures or stamps visible",
-      "pattern_name": "pattern name if identifiable",
-      "glaze_type": "e.g. crystalline, flambe, majolica, slip-glazed",
-      "firing_type": "e.g. earthenware, stoneware, porcelain, bone china",
-      "shape_number": "shape or mould number if visible"
-    },
-    "GLASS — include if applicable": {
-      "glass_type": "e.g. lead crystal, pressed, blown, art glass",
-      "technique": "e.g. cameo, acid-etched, hand-painted, iridescent",
-      "colour": "colour description"
-    },
-    "JEWELLERY — include if applicable": {
-      "metal": "e.g. 18ct gold, sterling silver, base metal",
-      "stones": "gemstone types and cuts if present",
-      "hallmarks": "any hallmarks visible",
-      "weight_estimate": "estimated weight if determinable"
-    },
-    "SILVER/METALWARE — include if applicable": {
-      "hallmarks": "all visible hallmarks described",
-      "assay_office": "assay office if identifiable",
-      "weight_estimate": "estimated weight",
-      "form": "functional description"
-    },
-    "FURNITURE — include if applicable": {
-      "wood_type": "primary wood species",
-      "construction": "e.g. hand-cut dovetails, machine cut, veneered",
-      "style": "furniture style e.g. Chippendale, Arts and Crafts",
-      "provenance_notes": "any provenance indicators"
-    },
-    "ART — include if applicable": {
-      "medium": "e.g. oil on canvas, watercolour, lithograph",
-      "subject": "subject matter description",
-      "signed": "signature details if visible",
-      "framed": "frame description if notable"
-    }
-  }
-}
-
-Only include the relevant category_specific sub-object for the identified category. Omit irrelevant ones. Be precise and authoritative. If you cannot determine something, use null rather than guessing.`,
+      model: promptConfig.model,
+      max_tokens: promptConfig.max_tokens,
+      system: systemPrompt,
       messages: [
         {
           role: 'user',
@@ -147,17 +129,10 @@ Only include the relevant category_specific sub-object for the identified catego
     const clean = raw.replaceAll('```json', '').replaceAll('```', '').trim()
     const result = JSON.parse(clean)
 
-    const supabase = await import('@supabase/supabase-js').then(m =>
-      m.createClient(
-        (env as any).PUBLIC_SUPABASE_URL,
-        (env as any).SUPABASE_SERVICE_ROLE_KEY
-      )
-    )
-
     const { data: record, error: dbError } = await supabase
       .from('identifications')
       .insert({
-        site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744',
+        site_id: SITE_ID,
         user_id: user_id || null,
         image_key: key,
         secondary_image_key: secondary_key || null,
