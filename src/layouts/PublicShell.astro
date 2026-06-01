@@ -307,6 +307,8 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
     if (cta) cta.classList.add('hidden')
     if (account) account.classList.add('visible')
     if (accountTab) accountTab.setAttribute('href', '/account')
+    window.__gauk_token = session.access_token
+    window.__gauk_user_id = session.user.id
   }
 </script>
 </Layout>
