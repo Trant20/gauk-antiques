@@ -43,13 +43,15 @@ export async function lookupSpine(supabase: any, terms: string[], context: strin
     .from('gauk_marks')
     .select('gauk_id, name, description, mark_type, date_from, date_to, country, image_url, sources')
     .or(boostedTerms.map((t: string) => `name.ilike.%${t}%`).join(','))
-    .limit(4)
+    .limit(8)
 
   if (markRows && markRows.length > 0) {
+    const seenImages = new Set<string>()
     markRows.forEach((m: any) => {
       sources.push(m.name)
       contextBlocks.push(`MARK: ${m.name} — ${m.mark_type || 'mark'}, ${m.country || ''}, ${m.date_from || ''}${m.date_to ? `–${m.date_to}` : ''}. ${m.description || ''}`)
-      if (m.image_url) {
+      if (m.image_url && !seenImages.has(m.image_url)) {
+        seenImages.add(m.image_url)
         marks.push({
           gauk_id: m.gauk_id,
           name: m.name,
