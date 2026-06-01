@@ -1,6 +1,7 @@
 ---
 import PublicShell from '../layouts/PublicShell.astro'
 import { supabase } from '../lib/supabase'
+import AIHeroWidget from '../components/AIHeroWidget.astro'
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
@@ -89,112 +90,6 @@ const firstWords = words.slice(0, -1).join(' ')
       color: var(--text);
     }
     .hero-h1 em { font-style: italic; color: var(--goldHi); }
-
-    /* ─── UPLOAD PANEL ─── */
-    .upload-panel {
-      width: 100%;
-      background: rgba(13,11,9,.82);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      padding: 16px;
-    }
-    .upload-zone-wrap { position: relative; margin-bottom: 16px; }
-    .corner {
-      position: absolute; width: 18px; height: 18px; z-index: 2;
-      transition: border-color .25s;
-    }
-    .corner.tl { top:0; left:0; border-top: 1px solid var(--borderHi); border-left: 1px solid var(--borderHi); }
-    .corner.tr { top:0; right:0; border-top: 1px solid var(--borderHi); border-right: 1px solid var(--borderHi); }
-    .corner.bl { bottom:0; left:0; border-bottom: 1px solid var(--borderHi); border-left: 1px solid var(--borderHi); }
-    .corner.br { bottom:0; right:0; border-bottom: 1px solid var(--borderHi); border-right: 1px solid var(--borderHi); }
-    .corner.active { border-color: var(--goldHi) !important; }
-    @keyframes scanLine { 0% { top: 0%; } 100% { top: 100%; } }
-    .scan-overlay {
-      position: absolute; inset: 0; z-index: 10; pointer-events: none;
-      display: none; overflow: hidden;
-    }
-    .scan-overlay.active { display: block; }
-    .scan-line {
-      position: absolute; left: 0; right: 0; height: 2px;
-      background: linear-gradient(to right, transparent, var(--goldHi), transparent);
-      box-shadow: 0 0 12px 2px rgba(196,168,112,0.6);
-      animation: scanLine 1.8s ease-in-out infinite;
-    }
-    .scan-corners::before, .scan-corners::after {
-      content: ""; position: absolute;
-      width: 24px; height: 24px;
-      border-color: var(--goldHi); border-style: solid;
-    }
-    .scan-corners::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
-    .scan-corners::after  { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
-    .upload-zone {
-      width: 100%; aspect-ratio: 1/1;
-      background: rgba(255,255,255,.03);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      cursor: pointer; overflow: hidden;
-      margin: 2px; position: relative; transition: background .2s;
-    }
-    .upload-zone:hover { background: rgba(255,255,255,.05); }
-    .upload-zone img { width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; background: var(--surface); }
-    .upload-placeholder { text-align: center; padding: 24px; }
-    .upload-icon {
-      width: 44px; height: 44px; border-radius: 50%;
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px; opacity: .5;
-    }
-    .upload-prompt {
-      font-family: 'Playfair Display', Didot, Georgia, serif;
-      font-size: 18px; font-weight: 400; color: var(--text); margin-bottom: 8px;
-    }
-    .upload-hint {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--textDim);
-    }
-    .upload-actions { display: flex; flex-direction: column; gap: 8px; }
-    .upload-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0; }
-    .upload-slot { position: relative; cursor: pointer; }
-    .upload-slot-zone {
-      width: 100%; aspect-ratio: 1/1; background: rgba(255,255,255,.03);
-      border: 1px solid var(--border);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      overflow: hidden; transition: background .2s, border-color .2s;
-    }
-    .upload-slot-zone:hover { background: rgba(255,255,255,.05); border-color: var(--borderHi); }
-    .upload-slot-zone.has-image { border-color: var(--borderHi); }
-    .upload-slot img { width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; background: var(--surface); display: none; }
-    .upload-slot img.visible { display: block; }
-    .upload-slot-label {
-      font-family: "Prata", Georgia, serif; font-size: 11px;
-      letter-spacing: 2px; text-transform: uppercase; color: var(--textDim);
-      margin-top: 8px; text-align: center;
-    }
-    .upload-slot-placeholder { text-align: center; padding: 12px; }
-    .upload-slot-icon { opacity: .7; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; }
-    .upload-slot-hint { font-family: "Prata", Georgia, serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--textDim); }
-    .slot-required { color: var(--goldHi); font-size: 13px; }
-    .slot-optional { color: var(--text); font-size: 13px; }
-    .btn-primary {
-      width: 100%; padding: 15px; background: var(--text); border: none;
-      font-family: 'Prata', Georgia, serif; font-size: 11px;
-      letter-spacing: 3px; text-transform: uppercase;
-      color: var(--bg); cursor: pointer; transition: opacity .2s;
-    }
-    .btn-primary:hover { opacity: .9; }
-    .btn-primary:disabled { opacity: .4; cursor: default; }
-    .btn-ghost {
-      width: 100%; padding: 15px; background: transparent; border: 1px solid var(--border);
-      font-family: 'Prata', Georgia, serif; font-size: 11px;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--textDim); cursor: pointer; transition: border-color .25s, color .25s;
-    }
-    .btn-ghost:hover { border-color: var(--borderHi); color: var(--text); }
-    .status-text {
-      font-family: 'Prata', Georgia, serif;
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--gold); text-align: center; min-height: 18px; margin-top: 12px;
-    }
 
     /* ─── RESULT ─── */
     /* ─── PARCHMENT RESULT CARD ─── */
@@ -418,54 +313,7 @@ const firstWords = words.slice(0, -1).join(' ')
         <div class="hero-eyebrow">AI Antique Identification</div>
         <h1 class="hero-h1">{firstWords} <em>{lastWord}</em></h1>
       </div>
-      <div class="upload-panel a1">
-        <div class="upload-dual">
-          <!-- PRIMARY SLOT -->
-          <div class="upload-slot" id="slot-primary">
-            <div class="upload-slot-zone" id="zone-primary">
-              <input type="file" id="file-input" accept="image/*" style="display:none" />
-              <img id="preview-img" alt="Front" />
-              <div class="scan-overlay scan-corners" id="scan-overlay">
-                <div class="scan-line"></div>
-              </div>
-              <div class="upload-slot-placeholder" id="placeholder-primary">
-                <div class="upload-slot-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                    <rect x="3" y="3" width="18" height="18" rx="0"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                </div>
-                <div class="upload-slot-hint"><span class="slot-required">Front</span> · Required</div>
-              </div>
-            </div>
-            <div class="upload-slot-label">Front / Main View</div>
-          </div>
-          <!-- SECONDARY SLOT -->
-          <div class="upload-slot" id="slot-secondary">
-            <div class="upload-slot-zone" id="zone-secondary">
-              <input type="file" id="file-input-secondary" accept="image/*" style="display:none" />
-              <img id="preview-img-secondary" alt="Back" />
-              <div class="upload-slot-placeholder" id="placeholder-secondary">
-                <div class="upload-slot-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                    <circle cx="12" cy="12" r="9"/>
-                    <line x1="12" y1="8" x2="12" y2="16"/>
-                    <line x1="8" y1="12" x2="16" y2="12"/>
-                  </svg>
-                </div>
-                <div class="upload-slot-hint"><span class="slot-optional">Mark</span> · Optional</div>
-              </div>
-            </div>
-            <div class="upload-slot-label">Signature · Mark · Hallmark</div>
-          </div>
-        </div>
-        <div class="upload-actions">
-          <button class="btn-primary" id="identify-btn" disabled>Identify This Item</button>
-          <button class="btn-ghost" id="camera-btn">Use Camera — Front</button>
-        </div>
-        <div class="status-text" id="status"></div>
-      </div>
+      <AIHeroWidget context="general" category="Antiques" />
     </div>
   </section>
 
@@ -548,182 +396,96 @@ const firstWords = words.slice(0, -1).join(' ')
 <script>
   import { supabase } from '../lib/supabase-browser'
 
-
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
+    window.__gauk_user_id = session.user.id
   }
 
-  const zonePrimary = document.getElementById('zone-primary') as HTMLElement
-  const zoneSecondary = document.getElementById('zone-secondary') as HTMLElement
-  const fileInput = document.getElementById('file-input') as HTMLInputElement
-  const fileInputSecondary = document.getElementById('file-input-secondary') as HTMLInputElement
-  const previewImg = document.getElementById('preview-img') as HTMLImageElement
-  const previewImgSecondary = document.getElementById('preview-img-secondary') as HTMLImageElement
-  const placeholderPrimary = document.getElementById('placeholder-primary') as HTMLElement
-  const placeholderSecondary = document.getElementById('placeholder-secondary') as HTMLElement
-  const identifyBtn = document.getElementById('identify-btn') as HTMLButtonElement
-  const cameraBtn = document.getElementById('camera-btn') as HTMLButtonElement
-  const status = document.getElementById('status') as HTMLElement
-  const scanOverlay = document.getElementById('scan-overlay') as HTMLElement
 
-  let selectedFile: File | null = null
-  let selectedFileSecondary: File | null = null
 
-  zonePrimary.addEventListener('click', () => fileInput.click())
-  zoneSecondary.addEventListener('click', () => fileInputSecondary.click())
-
-  cameraBtn.addEventListener('click', () => {
-    fileInput.setAttribute('capture', 'environment')
-    fileInput.click()
-  })
-
-  zonePrimary.addEventListener('dragover', e => { e.preventDefault(); zonePrimary.style.borderColor = 'var(--goldHi)' })
-  zonePrimary.addEventListener('dragleave', () => { zonePrimary.style.borderColor = '' })
-  zonePrimary.addEventListener('drop', e => {
-    e.preventDefault()
-    zonePrimary.style.borderColor = ''
-    const file = (e as DragEvent).dataTransfer?.files?.[0]
-    if (file) setFile(file)
-  })
-
-  zoneSecondary.addEventListener('dragover', e => { e.preventDefault(); zoneSecondary.style.borderColor = 'var(--goldHi)' })
-  zoneSecondary.addEventListener('dragleave', () => { zoneSecondary.style.borderColor = '' })
-  zoneSecondary.addEventListener('drop', e => {
-    e.preventDefault()
-    zoneSecondary.style.borderColor = ''
-    const file = (e as DragEvent).dataTransfer?.files?.[0]
-    if (file) setFileSecondary(file)
-  })
-
-  fileInput.addEventListener('change', () => { if (fileInput.files?.[0]) setFile(fileInput.files[0]) })
-  fileInputSecondary.addEventListener('change', () => { if (fileInputSecondary.files?.[0]) setFileSecondary(fileInputSecondary.files[0]) })
-
-  function setFile(file: File) {
-    selectedFile = file
-    previewImg.src = URL.createObjectURL(file)
-    previewImg.classList.add('visible')
-    placeholderPrimary.style.display = 'none'
-    zonePrimary.classList.add('has-image')
-    identifyBtn.removeAttribute('disabled')
+  document.addEventListener('widget-reset-result', () => {
     const ro = document.getElementById('result-outer') as HTMLElement
     if (ro) ro.style.display = 'none'
-  }
+  })
 
-  function setFileSecondary(file: File) {
-    selectedFileSecondary = file
-    previewImgSecondary.src = URL.createObjectURL(file)
-    previewImgSecondary.classList.add('visible')
-    placeholderSecondary.style.display = 'none'
-    zoneSecondary.classList.add('has-image')
-  }
+  document.addEventListener('identification-complete', (e: any) => {
+    const identifyData = e.detail
+    const r = identifyData.result
 
-  identifyBtn.addEventListener('click', async () => {
-    if (!selectedFile) return
-    identifyBtn.setAttribute('disabled', 'true')
-    status.textContent = 'Uploading...'
-    scanOverlay.classList.add('active')
-    try {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-      const uploadRes = await fetch('/api/upload-url', { method: 'POST', body: formData })
-      const uploadData = await uploadRes.json()
-      if (uploadData.error) throw new Error(uploadData.error)
+    document.getElementById('result-category')!.textContent = r.category
+    document.getElementById('result-confidence')!.textContent = r.confidence
+    document.getElementById('result-title')!.textContent = r.subcategory
+    document.getElementById('result-condition')!.textContent = r.condition
 
-      let secondaryKey: string | null = null
-      if (selectedFileSecondary) {
-        const secFormData = new FormData()
-        secFormData.append('file', selectedFileSecondary)
-        const secUploadRes = await fetch('/api/upload-url', { method: 'POST', body: secFormData })
-        const secUploadData = await secUploadRes.json()
-        if (!secUploadData.error) secondaryKey = secUploadData.key
-      }
+    const notesEl = document.getElementById('result-notes') as HTMLElement
+    const notes = [r.condition_notes, r.confidence_notes].filter(Boolean).join(' ')
+    if (notesEl && notes) notesEl.textContent = notes
 
-      status.textContent = 'Examining the object...'
-      const user_id = session?.user?.id || null
-      const identifyRes = await fetch('/api/identify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: uploadData.key, secondary_key: secondaryKey, user_id })
-      })
-      const identifyData = await identifyRes.json()
-      if (identifyData.error) throw new Error(identifyData.error)
-      const r = identifyData.result
-      status.textContent = ''
-      scanOverlay.classList.remove('active')
-
-      document.getElementById('result-category')!.textContent = r.category
-      document.getElementById('result-confidence')!.textContent = r.confidence
-      document.getElementById('result-title')!.textContent = r.subcategory
-      document.getElementById('result-condition')!.textContent = r.condition
-
-      const notesEl = document.getElementById('result-notes') as HTMLElement
-      const notes = [r.condition_notes, r.confidence_notes].filter(Boolean).join(' ')
-      if (notesEl && notes) notesEl.textContent = notes
-
-      const typedText = document.getElementById('typed-text') as HTMLElement
-      const typedCursor = document.getElementById('typed-cursor') as HTMLElement
-      if (typedText && typedCursor) {
-        const desc = r.description || ''
-        let ti = 0
-        typedText.textContent = ''
-        typedCursor.style.display = 'inline-block'
-        function typeChar() {
-          if (ti < desc.length) {
-            typedText.textContent += desc[ti]; ti++
-            setTimeout(typeChar, 22)
-          } else {
-            typedCursor.style.display = 'none'
-          }
-        }
-        setTimeout(typeChar, 400)
-      }
-      document.getElementById('result-value')!.textContent =
-        '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString()
-
-      if (r.maker) {
-        document.getElementById('result-maker')!.textContent = r.maker
-        document.getElementById('row-maker')!.style.display = 'flex'
-      }
-      if (r.period) {
-        const period = r.period + (r.circa ? ' — ' + r.circa : '')
-        document.getElementById('result-period')!.textContent = period
-        document.getElementById('row-period')!.style.display = 'flex'
-      }
-      if (r.country_of_origin) {
-        document.getElementById('result-origin')!.textContent = r.country_of_origin
-        document.getElementById('row-origin')!.style.display = 'flex'
-      }
-      if (identifyData.id) {
-        localStorage.setItem('pending_identification_id', identifyData.id)
-        const ref = document.getElementById('result-ref') as HTMLElement
-        if (ref) ref.textContent = 'REF ' + identifyData.id.slice(0,8).toUpperCase()
-        if (session) {
-          const viewReport = document.getElementById('result-view-report') as HTMLElement
-          const viewLink = document.getElementById('view-report-link') as HTMLAnchorElement
-          if (viewReport) viewReport.style.display = 'block'
-          if (viewLink) viewLink.href = '/valuation/' + identifyData.id
+    const typedText = document.getElementById('typed-text') as HTMLElement
+    const typedCursor = document.getElementById('typed-cursor') as HTMLElement
+    if (typedText && typedCursor) {
+      const desc = r.description || ''
+      let ti = 0
+      typedText.textContent = ''
+      typedCursor.style.display = 'inline-block'
+      function typeChar() {
+        if (ti < desc.length) {
+          typedText.textContent += desc[ti]; ti++
+          setTimeout(typeChar, 22)
+        } else {
+          typedCursor.style.display = 'none'
         }
       }
+      setTimeout(typeChar, 400)
+    }
 
-      const outer = document.getElementById('result-outer') as HTMLElement
-      outer.style.display = 'block'
-      outer.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document.getElementById('result-value')!.textContent =
+      '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString()
 
+    if (r.maker) {
+      document.getElementById('result-maker')!.textContent = r.maker
+      document.getElementById('row-maker')!.style.display = 'flex'
+    }
+    if (r.period) {
+      const period = r.period + (r.circa ? ' — ' + r.circa : '')
+      document.getElementById('result-period')!.textContent = period
+      document.getElementById('row-period')!.style.display = 'flex'
+    }
+    if (r.country_of_origin) {
+      document.getElementById('result-origin')!.textContent = r.country_of_origin
+      document.getElementById('row-origin')!.style.display = 'flex'
+    }
+    if (identifyData.id) {
+      localStorage.setItem('pending_identification_id', identifyData.id)
+      const ref = document.getElementById('result-ref') as HTMLElement
+      if (ref) ref.textContent = 'REF ' + identifyData.id.slice(0,8).toUpperCase()
       if (session) {
-        const bc = document.getElementById('blur-content') as HTMLElement
-        const bo = document.getElementById('blur-overlay') as HTMLElement
-        if (bc) bc.style.filter = 'none'
-        if (bo) bo.style.display = 'none'
+        const viewReport = document.getElementById('result-view-report') as HTMLElement
+        const viewLink = document.getElementById('view-report-link') as HTMLAnchorElement
+        if (viewReport) viewReport.style.display = 'block'
+        if (viewLink) viewLink.href = '/valuation/' + identifyData.id
       }
+    }
 
-      if (user_id && identifyData.id) {
-              const saveNote = document.getElementById('save-note'); if (saveNote) saveNote.classList.add('visible')
-      }
-    } catch (err: any) {
-      status.textContent = err.message
-      scanOverlay.classList.remove('active')
-    } finally {
-      identifyBtn.removeAttribute('disabled')
+    const outer = document.getElementById('result-outer') as HTMLElement
+    outer.style.display = 'block'
+    outer.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+    if (session) {
+      const bc = document.getElementById('blur-content') as HTMLElement
+      const bo = document.getElementById('blur-overlay') as HTMLElement
+      if (bc) bc.style.filter = 'none'
+      if (bo) bo.style.display = 'none'
+    }
+
+    if (session?.user?.id && identifyData.id) {
+      const saveNote = document.getElementById('save-note')
+      if (saveNote) saveNote.classList.add('visible')
+      fetch('/api/deduct-credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${session.access_token}\` },
+        body: JSON.stringify({ site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744', identification_id: identifyData.id, amount: 1 })
+      })
     }
   })
 </script>
