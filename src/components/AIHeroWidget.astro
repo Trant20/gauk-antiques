@@ -225,6 +225,13 @@ const { context = 'general', category = 'Antiques' } = Astro.props
   .ask-modal-composer .ask-input { flex: 1; }
 
   @media (min-width: 768px) { .ask-modal { display: none !important; } }
+
+  /* MARK CARDS */
+  .ask-mark-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; }
+  .ask-mark-card { background: rgba(255,255,255,.04); border: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .ask-mark-img { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: rgba(255,255,255,.06); }
+  .ask-mark-name { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: var(--textDim); line-height: 1.4; }
+  .ask-mark-source { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); opacity: .7; }
 </style>
 
 <script>
@@ -406,7 +413,7 @@ const { context = 'general', category = 'Antiques' } = Astro.props
       typing.remove()
       askHistory.push({ role: 'user', content: question })
       askHistory.push({ role: 'assistant', content: data.answer })
-      thread.appendChild(buildAIBubble(data.answer, data.sources))
+      thread.appendChild(buildAIBubble(data.answer, data.sources, data.marks || []))
       if (!userId) incrementGuestCount()
     } catch (err) {
       typing.remove()

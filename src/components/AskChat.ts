@@ -6,9 +6,15 @@ export function renderMarkdown(text: string): string {
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/^### (.+)$/gm, '<div class="ask-md-h3">$1</div>')
     .replace(/^## (.+)$/gm, '<div class="ask-md-h2">$1</div>')
-    .replace(/^[-*] (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span>$1</div>')
-    .replace(/^\d+\. (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span>$1</div>')
+    .replace(/^# (.+)$/gm, '<div class="ask-md-h2">$1</div>')
+    .replace(/^[-*] (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span><span>$1</span></div>')
+    .replace(/^\d+\. (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span><span>$1</span></div>')
     .split('\n\n').map(p => p.trim() ? `<p class="ask-md-p">${p.replace(/\n/g, '<br>')}</p>` : '').join('')
+}
+
+/** Humanise a source slug */
+function humaniseSource(slug: string): string {
+  return slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
 }
 
 /** Simple hash for guest session tracking */
@@ -27,9 +33,17 @@ export interface Message {
   content: string
 }
 
+export interface SpineMark {
+  name: string
+  image_url: string
+  source: string
+  gauk_id: string
+}
+
 export interface AskResponse {
   answer: string
   sources: string[]
+  marks: SpineMark[]
   cached: boolean
   error?: string
 }
@@ -63,16 +77,32 @@ export async function sendToAsk(
 export function buildUserBubble(text: string): HTMLElement {
   const wrap = document.createElement('div')
   wrap.className = 'ask-msg ask-msg-user'
-  wrap.innerHTML = `<div class="ask-bubble ask-bubble-user">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  wrap.innerHTML = `<div class="ask-bubble ask-bubble-user">${escaped}</div>`
   return wrap
 }
 
-/** Build an AI message bubble with optional sources */
-export function buildAIBubble(text: string, sources: string[]): HTMLElement {
+/** Build mark image cards from spine results */
+function buildMarkCards(marks: SpineMark[]): string {
+  if (!marks || marks.length === 0) return ''
+  const cards = marks.map(m => `
+    <div class="ask-mark-card">
+      <img class="ask-mark-img" src="${m.image_url}" alt="${m.name}" loading="lazy" />
+      <div class="ask-mark-name">${m.name}</div>
+      <div class="ask-mark-source">Source: ${m.source}</div>
+    </div>`).join('')
+  return `<div class="ask-mark-grid">${cards}</div>`
+}
+
+/** Build an AI message bubble with optional sources and mark images */
+export function buildAIBubble(text: string, sources: string[], marks: SpineMark[] = []): HTMLElement {
   const wrap = document.createElement('div')
   wrap.className = 'ask-msg ask-msg-ai'
   let html = `<div class="ask-bubble ask-bubble-ai">${renderMarkdown(text)}</div>`
-  if (sources && sources.length > 0) {
+  if (marks && marks.length > 0) {
+    html += buildMarkCards(marks)
+  }
+  if (sources && sources.length > 0 && (!marks || marks.length === 0)) {
     html += `<div class="ask-sources">${sources.map(s => `<span class="ask-source-tag">${s}</span>`).join('')}</div>`
   }
   wrap.innerHTML = html

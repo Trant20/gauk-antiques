@@ -59,6 +59,7 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(JSON.stringify({
         answer: cached.answer,
         sources: cached.sources || [],
+        marks: [],
         cached: true,
         tokens: { input: 0, output: 0, cost_pence: 0 }
       }), {
@@ -69,7 +70,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // 2. Spine lookup
     const terms = extractSearchTerms(message)
-    const { sources, contextBlocks } = await lookupSpine(supabase, terms, context, identification_result)
+    const { sources, contextBlocks, marks } = await lookupSpine(supabase, terms, context, identification_result)
 
     // 3. Fetch prompt from ai_prompts
     const { data: promptRow } = await supabase
@@ -154,6 +155,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({
       answer,
       sources,
+      marks,
       cached: false,
       tokens: { input: inputTokens, output: outputTokens, cost_pence: costPence }
     }), {

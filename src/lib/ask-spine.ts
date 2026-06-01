@@ -1,8 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
-
 /** Extract entity names from question for spine lookup */
 export function extractSearchTerms(question: string): string[] {
-  const stop = new Set(['what','is','the','a','an','how','do','i','can','you','tell','me','about','this','my','it','was','are','does','did','has','have','where','when','who','which','why','to','of','in','on','at','for','with','its','that','be'])
+  const stop = new Set(['what','is','the','a','an','how','do','i','can','you','tell','me','about','this','my','it','was','are','does','did','has','have','where','when','who','which','why','to','of','in','on','at','for','with','its','that','be','clean','care','piece','best','place','sell','genuine','tell','identify'])
   return question.toLowerCase()
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
@@ -10,28 +8,59 @@ export function extractSearchTerms(question: string): string[] {
     .slice(0, 6)
 }
 
+/** Humanise a source slug */
+export function humaniseSource(slug: string): string {
+  return slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+export interface SpineMark {
+  name: string
+  image_url: string
+  source: string
+  gauk_id: string
+}
+
+export interface SpineResult {
+  sources: string[]
+  contextBlocks: string[]
+  marks: SpineMark[]
+}
+
 /** Query spine tables for relevant context */
-export async function lookupSpine(supabase: any, terms: string[], context: string, identificationResult: any) {
+export async function lookupSpine(supabase: any, terms: string[], context: string, identificationResult: any): Promise<SpineResult> {
   const sources: string[] = []
   const contextBlocks: string[] = []
+  const marks: SpineMark[] = []
+
+  if (terms.length === 0) return { sources, contextBlocks, marks }
 
   const boostedTerms = [...terms]
   if (identificationResult?.maker) boostedTerms.unshift(identificationResult.maker)
   if (identificationResult?.manufacturer) boostedTerms.unshift(identificationResult.manufacturer)
 
-  const { data: marks } = await supabase
+  // Marks lookup — return images for visual display
+  const { data: markRows } = await supabase
     .from('gauk_marks')
-    .select('name, description, mark_type, date_from, date_to, country')
+    .select('gauk_id, name, description, mark_type, date_from, date_to, country, image_url, sources')
     .or(boostedTerms.map((t: string) => `name.ilike.%${t}%`).join(','))
-    .limit(3)
+    .limit(4)
 
-  if (marks && marks.length > 0) {
-    marks.forEach((m: any) => {
+  if (markRows && markRows.length > 0) {
+    markRows.forEach((m: any) => {
       sources.push(m.name)
       contextBlocks.push(`MARK: ${m.name} — ${m.mark_type || 'mark'}, ${m.country || ''}, ${m.date_from || ''}${m.date_to ? `–${m.date_to}` : ''}. ${m.description || ''}`)
+      if (m.image_url) {
+        marks.push({
+          gauk_id: m.gauk_id,
+          name: m.name,
+          image_url: m.image_url,
+          source: m.sources?.[0] ? humaniseSource(m.sources[0]) : 'GAUK Spine'
+        })
+      }
     })
   }
 
+  // Manufacturers lookup
   const { data: manufacturers } = await supabase
     .from('gauk_manufacturers')
     .select('name, description, founded_year, dissolved_year, location, country')
@@ -45,6 +74,7 @@ export async function lookupSpine(supabase: any, terms: string[], context: strin
     })
   }
 
+  // Artists lookup
   const { data: artists } = await supabase
     .from('gauk_artists')
     .select('preferred_name, description, birth_year, death_year, nationality')
@@ -58,5 +88,5 @@ export async function lookupSpine(supabase: any, terms: string[], context: strin
     })
   }
 
-  return { sources: [...new Set(sources)], contextBlocks }
+  return { sources: [...new Set(sources)], contextBlocks, marks }
 }
