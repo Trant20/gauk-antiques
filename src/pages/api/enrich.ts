@@ -94,18 +94,33 @@ Be authoritative and specific. Use real knowledge about makers, periods and mark
     const clean = raw.replaceAll('```json', '').replaceAll('```', '').trim()
     const enrichment = JSON.parse(clean)
 
-    if (identification_id) {
-      const supabase = await import('@supabase/supabase-js').then(m =>
-        m.createClient(
-          (env as any).PUBLIC_SUPABASE_URL,
-          (env as any).SUPABASE_SERVICE_ROLE_KEY
-        )
+    const supabase = await import('@supabase/supabase-js').then(m =>
+      m.createClient(
+        (env as any).PUBLIC_SUPABASE_URL,
+        (env as any).SUPABASE_SERVICE_ROLE_KEY
       )
+    )
+
+    if (identification_id) {
       await supabase
         .from('identifications')
         .update({ enrichment_json: enrichment })
         .eq('id', identification_id)
     }
+
+    // Log token usage
+    const inputTokens = response.usage.input_tokens
+    const outputTokens = response.usage.output_tokens
+    const costPence = Math.ceil((inputTokens * 0.003) + (outputTokens * 0.015))
+    await supabase.from('token_usage').insert({
+      site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744',
+      user_id: null,
+      feature: 'enrich',
+      model: 'claude-sonnet-4-6',
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      cost_pence: costPence
+    })
 
     return new Response(JSON.stringify({ enrichment }), {
       status: 200,

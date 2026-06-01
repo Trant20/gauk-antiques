@@ -149,6 +149,20 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (dbError) console.error('DB write error:', dbError)
 
+    // Log token usage
+    const inputTokens = response.usage.input_tokens
+    const outputTokens = response.usage.output_tokens
+    const costPence = Math.ceil((inputTokens * 0.003) + (outputTokens * 0.015))
+    await supabase.from('token_usage').insert({
+      site_id: SITE_ID,
+      user_id: user_id || null,
+      feature: 'identify',
+      model: promptConfig.model,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      cost_pence: costPence
+    })
+
     return new Response(JSON.stringify({ result, id: record?.id || null }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
