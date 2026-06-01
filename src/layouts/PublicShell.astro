@@ -191,6 +191,10 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
     color: rgba(239,231,217,.7); text-decoration: none; display: none;
   }
   .pub-nav-account.visible { display: block; }
+  .pub-drawer-select-wrap { margin-bottom: 8px; }
+  .pub-drawer-select-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(239,231,217,.4); margin-bottom: 8px; }
+  .pub-drawer-select { width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); padding: 14px 16px; font-family: 'Prata', Georgia, serif; font-size: 13px; color: #EFE7D9; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C8A060' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
+  .pub-drawer-select option { background: #1C1810; color: #EFE7D9; }
 </style>
 
 <slot name="head" />
@@ -226,7 +230,7 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
     </div>
     <a href="/articles" class="pub-nav-link">Articles</a>
     <a href="/pricing" class="pub-nav-link">Pricing</a>
-    <a href="/auth/signin" class="pub-nav-signin" id="pub-signin">Sign In</a>
+
     <a href="/identify" class="pub-nav-link pub-nav-account" id="pub-account">My Collection</a>
     <a href="/auth/signup" class="pub-nav-cta" id="pub-cta">Start Your Catalogue</a>
   </div>
@@ -234,10 +238,16 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
 
 <!-- MOBILE DRAWER -->
 <div class="pub-drawer" id="pub-drawer">
-  {categories.map((cat: string) => {
-    const slug = cat.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-    return <a href={`/categories/${slug}`} class="pub-drawer-link">{cat}</a>
-  })}
+  <div class="pub-drawer-select-wrap">
+    <div class="pub-drawer-select-label">Browse Categories</div>
+    <select class="pub-drawer-select" id="pub-cat-select">
+      <option value="">Select a category...</option>
+      {categories.map((cat: string) => {
+        const slug = cat.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        return <option value={`/categories/${slug}`}>{cat}</option>
+      })}
+    </select>
+  </div>
   <a href="/pricing" class="pub-drawer-link">Pricing</a>
   <a href="/auth/signup" class="pub-drawer-cta">Start Your Catalogue</a>
 </div>
@@ -320,14 +330,18 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
     lastY = y
   })
 
+  // Category select navigation
+  const catSelect = document.getElementById('pub-cat-select')
+  catSelect?.addEventListener('change', () => {
+    if (catSelect.value) window.location.href = catSelect.value
+  })
+
   const { data: { session } } = await sb.auth.getSession()
   if (session) {
     const cta = document.getElementById('pub-cta')
-    const signin = document.getElementById('pub-signin')
     const account = document.getElementById('pub-account')
     const accountTab = document.getElementById('pub-account-tab')
     if (cta) cta.classList.add('hidden')
-    if (signin) signin.style.display = 'none'
     if (account) account.classList.add('visible')
     if (accountTab) accountTab.setAttribute('href', '/account')
   }

@@ -232,8 +232,8 @@ const { context = 'general', category = 'Antiques' } = Astro.props
   .ask-gate-link:hover { text-decoration: underline; }
 
   /* MOBILE MODAL */
-  .ask-modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(13,11,9,.96); display: flex; flex-direction: column; }
-  .ask-modal { display: flex; flex-direction: column; height: 100%; padding: env(safe-area-inset-top, 20px) 0 env(safe-area-inset-bottom, 0); }
+  .ask-modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(13,11,9,.96); display: flex; flex-direction: column; overflow: hidden; }
+  .ask-modal { display: flex; flex-direction: column; height: 100vh; max-height: 100vh; padding-top: env(safe-area-inset-top, 20px); padding-bottom: env(safe-area-inset-bottom, 0); box-sizing: border-box; }
   .ask-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .ask-modal-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; font-style: italic; color: var(--text); }
   .ask-modal-close { background: none; border: none; color: var(--textDim); cursor: pointer; padding: 4px; display: flex; align-items: center; }
