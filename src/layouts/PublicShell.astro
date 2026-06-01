@@ -59,33 +59,7 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
   }
   .pub-nav-signin:hover { border-color: #EFE7D9; color: #EFE7D9; }
 
-  /* CATEGORIES DROPDOWN */
-  .pub-nav-dropdown { position: relative; }
-  .pub-nav-dropdown-trigger {
-    font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px;
-    text-transform: uppercase; color: rgba(239,231,217,.7);
-    background: none; border: none; cursor: pointer; padding: 0;
-    transition: color .2s; display: flex; align-items: center; gap: 6px;
-  }
-  .pub-nav-dropdown-trigger:hover { color: #EFE7D9; }
-  .pub-nav-dropdown-menu {
-    display: none; position: absolute; top: calc(100% + 16px); left: 50%;
-    transform: translateX(-50%); background: rgba(20,16,10,.98);
-    backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.08);
-    min-width: 200px; z-index: 200; padding: 8px 0;
-  }
-  .pub-nav-dropdown:hover .pub-nav-dropdown-menu { display: block; }
-  .pub-nav-dropdown-menu::before {
-    content: ''; position: absolute; top: -16px; left: 0; right: 0; height: 16px;
-  }
-  .pub-nav-dropdown-item {
-    display: block; font-family: 'Prata', Georgia, serif; font-size: 10px;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(239,231,217,.6); text-decoration: none;
-    padding: 10px 20px; transition: color .2s, background .2s;
-  }
-  .pub-nav-dropdown-item:hover { color: #EFE7D9; background: rgba(255,255,255,.05); }
-  .pub-nav-dropdown-divider { height: 1px; background: rgba(255,255,255,.08); margin: 6px 0; }
+
 
   /* HAMBURGER */
   .pub-ham { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
@@ -216,18 +190,7 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
   <a href="/" class="pub-logo">GAUK <span>Antiques</span></a>
   <button class="pub-ham" id="pub-ham" aria-label="Menu"><span></span><span></span><span></span></button>
   <div class="pub-nav-links">
-    <div class="pub-nav-dropdown">
-      <button class="pub-nav-dropdown-trigger">Categories ▾</button>
-      <div class="pub-nav-dropdown-menu">
-        {categories.map((cat: string) => {
-          const slug = cat.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-          return <a href={`/categories/${slug}`} class="pub-nav-dropdown-item">{cat}</a>
-        })}
-        <div class="pub-nav-dropdown-divider"></div>
-        <a href="/articles" class="pub-nav-dropdown-item">All Articles →</a>
-        <a href="/explore" class="pub-nav-dropdown-item">Explore →</a>
-      </div>
-    </div>
+
     <a href="/articles" class="pub-nav-link">Articles</a>
     <a href="/pricing" class="pub-nav-link">Pricing</a>
 

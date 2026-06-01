@@ -280,6 +280,7 @@ const { context = 'general', category = 'Antiques' } = Astro.props
     panelAsk.style.display = 'block'
     panelIdentify.style.display = 'none'
     if (isMobile()) {
+      document.body.appendChild(modalOverlay)
       modalOverlay.style.display = 'flex'
       document.body.style.overflow = 'hidden'
       activeThread = 'mobile'
