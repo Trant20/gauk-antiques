@@ -82,16 +82,63 @@ export function buildUserBubble(text: string): HTMLElement {
   return wrap
 }
 
+/** Create or retrieve the global lightbox */
+function getLightbox(): HTMLElement {
+  let lb = document.getElementById('gauk-lightbox')
+  if (!lb) {
+    lb = document.createElement('div')
+    lb.id = 'gauk-lightbox'
+    lb.style.cssText = 'display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;flex-direction:column;gap:12px;'
+    lb.innerHTML = `
+      <img id="gauk-lightbox-img" style="max-width:100%;max-height:80vh;object-fit:contain;" alt="" />
+      <div id="gauk-lightbox-caption" style="font-family:Prata,Georgia,serif;font-size:12px;letter-spacing:1px;color:rgba(200,160,96,.7);text-align:center;max-width:480px;line-height:1.6;"></div>
+      <div style="font-family:Prata,Georgia,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3);">Click anywhere to close</div>`
+    lb.addEventListener('click', hideLightbox)
+    document.body.appendChild(lb)
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hideLightbox() })
+  }
+  return lb
+}
+
+/** Show the lightbox with an image */
+export function showLightbox(imageUrl: string, caption: string): void {
+  const lb = getLightbox()
+  const img = document.getElementById('gauk-lightbox-img') as HTMLImageElement
+  const cap = document.getElementById('gauk-lightbox-caption') as HTMLElement
+  if (img) img.src = imageUrl
+  if (cap) cap.textContent = caption
+  lb.style.display = 'flex'
+  document.body.style.overflow = 'hidden'
+}
+
+/** Hide the lightbox */
+function hideLightbox(): void {
+  const lb = document.getElementById('gauk-lightbox')
+  if (lb) lb.style.display = 'none'
+  document.body.style.overflow = ''
+}
+
 /** Build mark image cards from spine results */
 function buildMarkCards(marks: SpineMark[]): string {
   if (!marks || marks.length === 0) return ''
   const cards = marks.map(m => `
-    <div class="ask-mark-card">
+    <div class="ask-mark-card" data-img="${m.image_url}" data-caption="${m.name} — Source: ${m.source}" style="cursor:zoom-in;">
       <img class="ask-mark-img" src="${m.image_url}" alt="${m.name}" loading="lazy" />
       <div class="ask-mark-name">${m.name}</div>
       <div class="ask-mark-source">Source: ${m.source}</div>
     </div>`).join('')
   return `<div class="ask-mark-grid">${cards}</div>`
+}
+
+/** Wire lightbox clicks on mark cards — call after appending to DOM */
+export function wireMarkLightbox(container: HTMLElement): void {
+  container.querySelectorAll('.ask-mark-card[data-img]').forEach(card => {
+    card.addEventListener('click', () => {
+      const img = card.getAttribute('data-img') || ''
+      const cap = card.getAttribute('data-caption') || ''
+      showLightbox(img, cap)
+    })
+  })
 }
 
 /** Build an AI message bubble with optional sources and mark images */

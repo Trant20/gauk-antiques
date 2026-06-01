@@ -158,7 +158,7 @@ const { context = 'general', category = 'Antiques' } = Astro.props
   .status-text { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-align: center; min-height: 18px; margin-top: 12px; }
 
   /* ASK THREAD */
-  .ask-thread { min-height: 220px; max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
+  .ask-thread { min-height: 220px; max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
   .ask-thread::-webkit-scrollbar { width: 3px; }
   .ask-thread::-webkit-scrollbar-track { background: transparent; }
   .ask-thread::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -235,7 +235,7 @@ const { context = 'general', category = 'Antiques' } = Astro.props
 </style>
 
 <script>
-  import { sendToAsk, buildUserBubble, buildAIBubble, buildTyping, buildGuestGate, getGuestCount, incrementGuestCount } from './AskChat'
+  import { sendToAsk, buildUserBubble, buildAIBubble, buildTyping, buildGuestGate, getGuestCount, incrementGuestCount, wireMarkLightbox } from './AskChat'
 
   const widget = document.getElementById('ai-widget')
   const context = widget?.dataset.context || 'general'
@@ -413,7 +413,9 @@ const { context = 'general', category = 'Antiques' } = Astro.props
       typing.remove()
       askHistory.push({ role: 'user', content: question })
       askHistory.push({ role: 'assistant', content: data.answer })
-      thread.appendChild(buildAIBubble(data.answer, data.sources, data.marks || []))
+      const bubble = buildAIBubble(data.answer, data.sources, data.marks || [])
+      thread.appendChild(bubble)
+      wireMarkLightbox(bubble)
       if (!userId) incrementGuestCount()
     } catch (err) {
       typing.remove()
