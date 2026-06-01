@@ -6,7 +6,7 @@ interface Props {
 const { context = 'general', category = 'Antiques' } = Astro.props
 ---
 
-<div class="ai-widget" id="ai-widget">
+<div class="ai-widget" id="ai-widget" data-context={context} data-category={category}>
   <!-- TAB SWITCHER -->
   <div class="widget-tabs">
     <button class="widget-tab active" id="tab-identify">
@@ -227,9 +227,11 @@ const { context = 'general', category = 'Antiques' } = Astro.props
   @media (min-width: 768px) { .ask-modal { display: none !important; } }
 </style>
 
-<script define:vars={{ context }}>
+<script>
   import { sendToAsk, buildUserBubble, buildAIBubble, buildTyping, buildGuestGate, getGuestCount, incrementGuestCount } from './AskChat'
 
+  const widget = document.getElementById('ai-widget')
+  const context = widget?.dataset.context || 'general'
   const GUEST_LIMIT = 3
   const isMobile = () => window.innerWidth < 768
 
