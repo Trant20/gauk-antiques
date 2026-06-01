@@ -245,6 +245,11 @@ const { context = 'general', category = 'Antiques' } = Astro.props
   let askHistory = []
   let isSending = false
 
+  // Clear guest count if user is logged in
+  if (window.__gauk_user_id) {
+    sessionStorage.removeItem('ask_guest_count')
+  }
+
   // ── TABS ──
   const tabIdentify = document.getElementById('tab-identify')
   const tabAsk = document.getElementById('tab-ask')
