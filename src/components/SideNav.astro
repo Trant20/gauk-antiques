@@ -100,7 +100,12 @@
 <!-- Sidebar -->
 <aside class="snav-sidebar" id="snav-sidebar">
   <div class="snav-logo-wrap">
-
+    <a href="/">
+      {logoUrl
+        ? <img src={logoUrl} alt="GAUK Antiques" style={`height:${logoHeight}px;width:auto;display:block;`} />
+        : <span style="font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#1C1810;">GAUK <span style="color:#7A5C20">Antiques</span></span>
+      }
+    </a>
   </div>
 
   <nav class="snav-nav">

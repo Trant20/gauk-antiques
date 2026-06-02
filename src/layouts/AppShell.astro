@@ -56,7 +56,7 @@ logoSettings?.forEach((s: { key: string; value: string }) => {
 </nav>
 
 <div class="snav-layout">
-  <SideNav />
+  <SideNav logoUrl={logoUrl} logoHeight={Math.min(logoHeight, 28)} />
   <div class="snav-main">
     <div class="shell-wrap">
       {pageCap && <div class="shell-cap">{pageCap}</div>}
