@@ -1,0 +1,68 @@
+---
+import PublicShell from '../../layouts/PublicShell.astro'
+---
+<PublicShell title="Confirming your account — GAUK Antiques">
+<style>
+  .callback-wrap {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 20px;
+  }
+  .callback-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; margin-bottom: 40px; }
+  .callback-logo span { color: #7A5C20; }
+  .callback-card { width: 100%; max-width: 400px; text-align: center; }
+  .callback-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 28px; font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 12px; }
+  .callback-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #8A7A66; line-height: 1.7; }
+  .callback-error { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #C46028; background: #F5EDE3; border: 1px solid #E8C8A8; padding: 12px 16px; margin-top: 20px; display: none; }
+</style>
+<div class="callback-wrap">
+  <div class="callback-logo">GAUK <span>Antiques</span></div>
+  <div class="callback-card">
+    <div class="callback-title">Confirming your account…</div>
+    <div class="callback-sub">Please wait while we activate your account.</div>
+    <div class="callback-error" id="callback-error"></div>
+  </div>
+</div>
+</PublicShell>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+  async function handleCallback() {
+    const errorEl = document.getElementById('callback-error')!
+
+    // Exchange token in URL hash for a session
+    const { data, error } = await supabase.auth.getSession()
+
+    if (error || !data.session) {
+      errorEl.textContent = 'Confirmation failed. Please try signing up again.'
+      errorEl.style.display = 'block'
+      setTimeout(() => { window.location.href = '/auth/signup' }, 3000)
+      return
+    }
+
+    const userId = data.session.user.id
+
+    // Grant signup credits
+    await fetch('/api/grant-credits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, site_id: SITE_ID })
+    })
+
+    // Claim any pending anonymous identification
+    const pendingId = localStorage.getItem('pending_identification_id')
+    if (pendingId) {
+      await fetch('/api/claim-identification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identification_id: pendingId, user_id: userId })
+      })
+      localStorage.removeItem('pending_identification_id')
+    }
+
+    window.location.href = '/welcome'
+  }
+
+  handleCallback()
+</script>
