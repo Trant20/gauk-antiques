@@ -32,7 +32,18 @@ import PublicShell from '../../layouts/PublicShell.astro'
     const errorEl = document.getElementById('callback-error')!
 
     // Exchange token in URL hash for a session
-    const { data, error } = await supabase.auth.getSession()
+    const params = new URLSearchParams(window.location.search)
+    const tokenHash = params.get('token_hash')
+    const type = params.get('type') as 'signup' | 'email' | null
+
+    if (!tokenHash || !type) {
+      errorEl.textContent = 'Invalid confirmation link. Please try signing up again.'
+      errorEl.style.display = 'block'
+      setTimeout(() => { window.location.href = '/auth/signup' }, 3000)
+      return
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
 
     if (error || !data.session) {
       errorEl.textContent = 'Confirmation failed. Please try signing up again.'
