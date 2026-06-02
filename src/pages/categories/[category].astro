@@ -312,7 +312,7 @@ const { data: videos } = await supabase
   {heroImage && <div class="cat-hero-bg" style={`background-image:url('${heroImage}')`}></div>}
   <div class="cat-hero-overlay"></div>
   <div class="cat-hero-content">
-    <div class="cat-hero-eyebrow">Category</div>
+    
     <h1 class="cat-hero-title">{meta.headline}</h1>
     {count && <div class="cat-hero-count">{count} pieces identified</div>}
     <AIHeroWidget context={normalisedSlug} category={dbCategory} />
