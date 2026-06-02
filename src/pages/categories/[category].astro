@@ -629,7 +629,25 @@ const { data: videos } = await supabase
       typedCursor.style.display = 'inline-block'
       function typeChar() {
         if (ti < desc.length) { typedText.textContent += desc[ti]; ti++; setTimeout(typeChar, 22) }
-        else { typedCursor.style.display = 'none' }
+        else {
+          typedCursor.style.display = 'none'
+          if (!session) {
+            const ctaWrap = document.getElementById('cat-gate-cta-wrap')
+            const typedEl = document.getElementById('cat-gate-typed')
+            const cursorEl = document.getElementById('cat-gate-cursor')
+            if (!ctaWrap || !typedEl || !cursorEl) return
+            ctaWrap.style.display = 'block'
+            const ctaText = 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
+            let gi = 0
+            typedEl.textContent = ''
+            cursorEl.style.display = 'inline-block'
+            function typeGate() {
+              if (gi < ctaText.length) { typedEl.textContent += ctaText[gi]; gi++; setTimeout(typeGate, 28) }
+              else { cursorEl.style.display = 'none' }
+            }
+            typeGate()
+          }
+        }
       }
       setTimeout(typeChar, 400)
     }
@@ -662,25 +680,6 @@ const { data: videos } = await supabase
     if (outer) {
       outer.style.display = 'block'
       outer.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-
-    if (!session) {
-      setTimeout(() => {
-        const ctaWrap = document.getElementById('cat-gate-cta-wrap')
-        const typedEl = document.getElementById('cat-gate-typed')
-        const cursorEl = document.getElementById('cat-gate-cursor')
-        if (!ctaWrap || !typedEl || !cursorEl) return
-        ctaWrap.style.display = 'block'
-        const ctaText = 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
-        let i = 0
-        typedEl.textContent = ''
-        cursorEl.style.display = 'inline-block'
-        function typeGate() {
-          if (i < ctaText.length) { typedEl.textContent += ctaText[i]; i++; setTimeout(typeGate, 28) }
-          else { cursorEl.style.display = 'none' }
-        }
-        typeGate()
-      }, 1000)
     }
 
     if (session) {

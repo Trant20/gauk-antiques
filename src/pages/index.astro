@@ -399,6 +399,22 @@ const firstWords = words.slice(0, -1).join(' ')
           setTimeout(typeChar, 22)
         } else {
           typedCursor.style.display = 'none'
+          if (!session) {
+            const ctaWrap = document.getElementById('result-gate-cta-wrap') as HTMLElement
+            const typedEl = document.getElementById('result-gate-typed') as HTMLElement
+            const cursorEl = document.getElementById('result-gate-cursor') as HTMLElement
+            if (!ctaWrap || !typedEl || !cursorEl) return
+            ctaWrap.style.display = 'block'
+            const ctaText = 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
+            let gi = 0
+            typedEl.textContent = ''
+            cursorEl.style.display = 'inline-block'
+            function typeGate() {
+              if (gi < ctaText.length) { typedEl.textContent += ctaText[gi]; gi++; setTimeout(typeGate, 28) }
+              else { cursorEl.style.display = 'none' }
+            }
+            typeGate()
+          }
         }
       }
       setTimeout(typeChar, 400)
