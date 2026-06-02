@@ -19,6 +19,18 @@ const path = Astro.url.pathname
 const isIdentify = path === '/'
 const isLibrary  = path.startsWith('/library')
 const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
+
+const { data: heroSettings } = await supabase
+  .from('site_settings')
+  .select('key, value')
+  .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
+  .like('key', 'category_hero_%')
+
+const heroMap: Record<string, string> = {}
+heroSettings?.forEach(s => {
+  const slug = s.key.replace('category_hero_', '')
+  heroMap[slug] = s.value
+})
 ---
 <Layout title={title}>
 <style is:global>
@@ -165,6 +177,53 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
     color: rgba(239,231,217,.7); text-decoration: none; display: none;
   }
   .pub-nav-account.visible { display: block; }
+
+  /* MEGA MENU */
+  .mega-trigger { position: relative; }
+  .mega-btn {
+    font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(239,231,217,.7);
+    background: none; border: none; cursor: pointer; padding: 0;
+    transition: color .2s; display: flex; align-items: center; gap: 6px;
+  }
+  .mega-btn:hover { color: #EFE7D9; }
+  .mega-panel {
+    display: none; position: fixed; top: 64px; left: 0; right: 0; z-index: 200;
+    background: rgba(13,11,9,.98); backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 32px 40px 40px;
+  }
+  .mega-panel.open { display: block; }
+  .mega-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 12px; max-width: 1200px; margin: 0 auto;
+  }
+  .mega-card {
+    display: block; text-decoration: none; position: relative;
+    aspect-ratio: 4/3; overflow: hidden;
+    background: rgba(255,255,255,.05);
+    transition: transform .2s;
+  }
+  .mega-card:hover { transform: scale(1.03); }
+  .mega-card-img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .6; transition: opacity .2s;
+  }
+  .mega-card:hover .mega-card-img { opacity: .85; }
+  .mega-card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(13,11,9,.9) 0%, rgba(13,11,9,.2) 100%);
+  }
+  .mega-card-name {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 10px;
+    font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase; color: #EFE7D9; line-height: 1.3;
+  }
+  .mega-card-placeholder {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06);
+  }
+  @media (max-width: 767px) { .mega-trigger { display: none; } .mega-panel { display: none !important; } }
   .pub-drawer-select-wrap { margin-bottom: 8px; }
   .pub-drawer-select-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(239,231,217,.4); margin-bottom: 8px; }
   .pub-drawer-select { width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); padding: 14px 16px; font-family: 'Prata', Georgia, serif; font-size: 13px; color: #EFE7D9; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C8A060' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
@@ -191,6 +250,12 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
   <button class="pub-ham" id="pub-ham" aria-label="Menu"><span></span><span></span><span></span></button>
   <div class="pub-nav-links">
 
+    <div class="mega-trigger" id="mega-trigger">
+      <button class="mega-btn" id="mega-btn">
+        Categories
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
     <a href="/articles" class="pub-nav-link">Articles</a>
     <a href="/pricing" class="pub-nav-link">Pricing</a>
 
@@ -198,6 +263,25 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
     <a href="/auth/signup" class="pub-nav-cta" id="pub-cta">Start Your Catalogue</a>
   </div>
 </nav>
+
+<div class="mega-panel" id="mega-panel">
+  <div class="mega-grid">
+    {categories.map((cat: string) => {
+      const slug = cat.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      const img = heroMap[slug]
+      return (
+        <a href={`/categories/${slug}`} class="mega-card">
+          {img
+            ? <img class="mega-card-img" src={img} alt={cat} loading="lazy" />
+            : <div class="mega-card-placeholder"></div>
+          }
+          <div class="mega-card-overlay"></div>
+          <div class="mega-card-name">{cat}</div>
+        </a>
+      )
+    })}
+  </div>
+</div>
 
 <!-- MOBILE DRAWER -->
 <div class="pub-drawer" id="pub-drawer">
@@ -297,6 +381,23 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
   const catSelect = document.getElementById('pub-cat-select')
   catSelect?.addEventListener('change', () => {
     if (catSelect.value) window.location.href = catSelect.value
+  })
+
+  // Mega menu
+  const megaTrigger = document.getElementById('mega-trigger')
+  const megaPanel = document.getElementById('mega-panel')
+  let megaTimeout: ReturnType<typeof setTimeout>
+
+  megaTrigger?.addEventListener('mouseenter', () => {
+    clearTimeout(megaTimeout)
+    setTimeout(() => megaPanel?.classList.add('open'), 150)
+  })
+  megaTrigger?.addEventListener('mouseleave', () => {
+    megaTimeout = setTimeout(() => megaPanel?.classList.remove('open'), 200)
+  })
+  megaPanel?.addEventListener('mouseenter', () => clearTimeout(megaTimeout))
+  megaPanel?.addEventListener('mouseleave', () => {
+    megaTimeout = setTimeout(() => megaPanel?.classList.remove('open'), 200)
   })
 
   const { data: { session } } = await sb.auth.getSession()
