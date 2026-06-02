@@ -1,7 +1,7 @@
 ---
-import AppShell from '../layouts/AppShell.astro'
+import PublicShell from '../layouts/PublicShell.astro'
 ---
-<AppShell title="The Vault — GAUK Antiques" pageCap="The Vault" pageTitle="The Vault" pageSubtitle="Your identification history.">
+<PublicShell title="The Vault — GAUK Antiques">
 <style is:global>
   body { background: #EFE7D9; color: #1C1810; }
 
@@ -90,10 +90,6 @@ import AppShell from '../layouts/AppShell.astro'
 </style>
 
 <div id="page-wrap">
-
-  <!-- HEADER -->
-  <header class="lib-header">
-  </header>
 
   <!-- LOADING STATE -->
   <div id="lib-loading">
@@ -276,4 +272,4 @@ import AppShell from '../layouts/AppShell.astro'
     }
   }
 </script>
-</AppShell>
+</PublicShell>
