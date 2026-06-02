@@ -1,15 +1,60 @@
 ---
 import Layout from './Layout.astro'
 import SideNav from '../components/SideNav.astro'
+import { supabase } from '../lib/supabase'
+
 const { title, pageTitle, pageSubtitle, pageCap } = Astro.props
+
+const { data: logoSettings } = await supabase
+  .from('site_settings')
+  .select('key, value')
+  .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
+  .in('key', ['logo_url', 'logo_height_desktop'])
+
+let logoUrl = ''
+let logoHeight = 36
+logoSettings?.forEach((s: { key: string; value: string }) => {
+  if (s.key === 'logo_url') logoUrl = s.value
+  if (s.key === 'logo_height_desktop') logoHeight = parseInt(s.value)
+})
 ---
 <Layout title={title}>
 <style is:global>
+  .app-top-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 56px; background: #EFE7D9; border-bottom: 1px solid #C4B49E;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+  }
+  .app-top-nav-logo { text-decoration: none; display: flex; align-items: center; }
+  .app-top-nav-logo-text { font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
+  .app-top-nav-logo-text span { color: #7A5C20; }
+  .app-top-nav-links { display: flex; align-items: center; gap: 20px; }
+  .app-top-nav-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; text-decoration: none; transition: color .2s; }
+  .app-top-nav-link:hover { color: #1C1810; }
+  .app-top-nav-home { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
   .shell-wrap { max-width: 900px; padding: 40px 24px 120px; }
   .shell-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 8px; }
   .shell-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(24px,5vw,36px); font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 4px; }
   .shell-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; padding-bottom: 24px; border-bottom: 1px solid #C4B49E; margin-bottom: 32px; }
+  .snav-layout { padding-top: 56px; }
 </style>
+
+<nav class="app-top-nav">
+  <a href="/" class="app-top-nav-logo">
+    {logoUrl
+      ? <img src={logoUrl} alt="GAUK Antiques" style={`height:${Math.min(logoHeight, 32)}px;width:auto;display:block;`} />
+      : <span class="app-top-nav-logo-text">GAUK <span>Antiques</span></span>
+    }
+  </a>
+  <div class="app-top-nav-links">
+    <a href="/" class="app-top-nav-link">Home</a>
+    <a href="/categories/ceramics" class="app-top-nav-link">Browse</a>
+    <a href="/articles" class="app-top-nav-link">Articles</a>
+    <a href="/identify" class="app-top-nav-link">Identify</a>
+  </div>
+</nav>
+
 <div class="snav-layout">
   <SideNav />
   <div class="snav-main">
