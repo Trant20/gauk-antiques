@@ -89,14 +89,14 @@ export const POST: APIRoute = async ({ request }) => {
     // 4. Fetch prompt from ai_prompts
     const { data: promptRow } = await supabase
       .from('ai_prompts')
-      .select('ask_system_prompt, model, max_tokens')
+      .select('ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3')
       .eq('site_id', SITE_ID)
       .eq('context', context)
       .single()
 
     const { data: fallbackRow } = !promptRow ? await supabase
       .from('ai_prompts')
-      .select('ask_system_prompt, model, max_tokens')
+      .select('ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3')
       .eq('site_id', SITE_ID)
       .eq('context', 'general')
       .single() : { data: null }
@@ -170,6 +170,10 @@ export const POST: APIRoute = async ({ request }) => {
       answer,
       sources,
       marks,
+      hints: {
+        message_2: activePrompt.hint_message_2 || null,
+        message_3: activePrompt.hint_message_3 || null,
+      },
       cached: false,
       tokens: { input: inputTokens, output: outputTokens, cost_pence: costPence }
     }), {

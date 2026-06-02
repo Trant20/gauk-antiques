@@ -165,14 +165,47 @@ export function buildTyping(): HTMLElement {
   return el
 }
 
-/** Build soft hint appended to message 2 */
+/** Build soft hint for message 2 — inline HTML from DB */
+export function buildMessage2Hint(html: string): HTMLElement {
+  const el = document.createElement('div')
+  el.className = 'ask-hint'
+  el.style.fontSize = '16px'
+  el.innerHTML = html
+  return el
+}
+
+/** Build typewriter hint for message 3 — gold cursor, HTML from DB */
+export function buildMessage3Hint(html: string): HTMLElement {
+  const wrap = document.createElement('div')
+  wrap.className = 'ask-hint ask-hint-warm'
+  wrap.style.fontSize = '16px'
+
+  const cursor = document.createElement('span')
+  cursor.className = 'typed-cursor-gold'
+
+  const temp = document.createElement('div')
+  temp.innerHTML = html
+  const plainText = temp.textContent || ''
+
+  wrap.appendChild(cursor)
+
+  let i = 0
+  const interval = setInterval(() => {
+    if (i < plainText.length) {
+      wrap.insertBefore(document.createTextNode(plainText[i]), cursor)
+      i++
+    } else {
+      clearInterval(interval)
+      cursor.style.display = 'none'
+      wrap.innerHTML = html
+    }
+  }, 28)
+
+  return wrap
+}
+
+/** Legacy — kept for fallback */
 export function buildMessageHint(messageNum: number): string {
-  if (messageNum === 2) {
-    return `<div class="ask-hint">I can go much deeper on this — your conversation and collection are saved when you register free.</div>`
-  }
-  if (messageNum === 3) {
-    return `<div class="ask-hint ask-hint-warm">That is your third question — you clearly know your subject. Register free and I will remember everything we have discussed, save your identifications and give you unlimited access.</div>`
-  }
   return ''
 }
 
