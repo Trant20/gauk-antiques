@@ -24,10 +24,12 @@ const { data: heroSettings } = await supabase
   .from('site_settings')
   .select('key, value')
   .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
-  .like('key', 'category_hero_%')
+  .or('key.like.category_hero_%,key.eq.logo_url')
 
 const heroMap: Record<string, string> = {}
+let logoUrl: string = ''
 heroSettings?.forEach(s => {
+  if (s.key === 'logo_url') { logoUrl = s.value; return }
   const slug = s.key.replace('category_hero_', '')
   heroMap[slug] = s.value
 })
@@ -246,7 +248,12 @@ heroSettings?.forEach(s => {
 
 <!-- NAV -->
 <nav class="pub-nav">
-  <a href="/" class="pub-logo">GAUK <span>Antiques</span></a>
+  <a href="/" class="pub-logo">
+    {logoUrl
+      ? <img src={logoUrl} alt="GAUK Antiques" style="height:36px;width:auto;display:block;" />
+      : <span>GAUK <span style="color:#7A5C20">Antiques</span></span>
+    }
+  </a>
   <button class="pub-ham" id="pub-ham" aria-label="Menu"><span></span><span></span><span></span></button>
   <div class="pub-nav-links">
 
@@ -308,7 +315,12 @@ heroSettings?.forEach(s => {
 <footer class="pub-footer">
   <div class="pub-footer-inner">
     <div>
-      <div class="pub-footer-logo">GAUK <span>Antiques</span></div>
+      <div class="pub-footer-logo">
+        {logoUrl
+          ? <img src={logoUrl} alt="GAUK Antiques" style="height:28px;width:auto;display:block;opacity:.8;" />
+          : <span>GAUK <span style="color:#7A5C20">Antiques</span></span>
+        }
+      </div>
       <div class="pub-footer-tagline">AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.</div>
     </div>
     <div>
