@@ -405,7 +405,7 @@ const firstWords = words.slice(0, -1).join(' ')
             const cursorEl = document.getElementById('result-gate-cursor') as HTMLElement
             if (!ctaWrap || !typedEl || !cursorEl) return
             ctaWrap.style.display = 'block'
-            const ctaText = 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
+            const ctaText = identifyData.gate_cta_text || 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
             let gi = 0
             typedEl.textContent = ''
             cursorEl.style.display = 'inline-block'
@@ -464,7 +464,7 @@ const firstWords = words.slice(0, -1).join(' ')
         const cursorEl = document.getElementById('result-gate-cursor') as HTMLElement
         if (!ctaWrap || !typedEl || !cursorEl) return
         ctaWrap.style.display = 'block'
-        const ctaText = 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
+        const ctaText = identifyData.gate_cta_text || 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
         let i = 0
         typedEl.textContent = ''
         cursorEl.style.display = 'inline-block'

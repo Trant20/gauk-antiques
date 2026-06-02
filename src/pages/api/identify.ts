@@ -17,7 +17,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 async function getPromptConfig(supabase: any, siteId: string, context: string) {
   const { data } = await supabase
     .from('ai_prompts')
-    .select('system_prompt, description_instruction, model, max_tokens')
+    .select('system_prompt, description_instruction, model, max_tokens, gate_cta_text')
     .eq('site_id', siteId)
     .eq('context', context)
     .single()
@@ -26,7 +26,7 @@ async function getPromptConfig(supabase: any, siteId: string, context: string) {
 
   const { data: fallback } = await supabase
     .from('ai_prompts')
-    .select('system_prompt, description_instruction, model, max_tokens')
+    .select('system_prompt, description_instruction, model, max_tokens, gate_cta_text')
     .eq('site_id', siteId)
     .eq('context', 'general')
     .single()
@@ -163,7 +163,7 @@ export const POST: APIRoute = async ({ request }) => {
       cost_pence: costPence
     })
 
-    return new Response(JSON.stringify({ result, id: record?.id || null }), {
+    return new Response(JSON.stringify({ result, id: record?.id || null, gate_cta_text: promptConfig.gate_cta_text || null }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     })
