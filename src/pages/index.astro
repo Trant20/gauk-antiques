@@ -55,7 +55,7 @@ const firstWords = words.slice(0, -1).join(' ')
     .hero {
       position: relative; width: 100%; min-height: 100vh;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center; justify-content: flex-start;
       overflow-x: hidden; padding: 60px 16px 24px;
       box-sizing: border-box;
     }
@@ -177,9 +177,9 @@ const firstWords = words.slice(0, -1).join(' ')
     .result-blur-overlay {
       position: absolute; inset: 0;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center; justify-content: flex-start;
       padding: 24px; gap: 10px;
-      background: linear-gradient(to bottom, transparent 0%, rgba(239,231,217,.8) 20%, rgba(239,231,217,.98) 100%);
+      background: linear-gradient(to bottom, rgba(239,231,217,.95) 0%, rgba(239,231,217,.98) 40%, rgba(239,231,217,.99) 100%);
     }
     .result-gate-headline {
       font-family: 'Playfair Display', Didot, Georgia, serif;
