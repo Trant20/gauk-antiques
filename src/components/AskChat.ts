@@ -165,14 +165,40 @@ export function buildTyping(): HTMLElement {
   return el
 }
 
-/** Build guest gate message */
+/** Build soft hint appended to message 2 */
+export function buildMessageHint(messageNum: number): string {
+  if (messageNum === 2) {
+    return `<div class="ask-hint">I can go much deeper on this — your conversation and collection are saved when you register free.</div>`
+  }
+  if (messageNum === 3) {
+    return `<div class="ask-hint ask-hint-warm">That is your third question — you clearly know your subject. Register free and I will remember everything we have discussed, save your identifications and give you unlimited access.</div>`
+  }
+  return ''
+}
+
+/** Build guest gate message — fires after 3rd message */
 export function buildGuestGate(): HTMLElement {
   const el = document.createElement('div')
   el.className = 'ask-msg ask-msg-ai ask-gate-msg'
   el.innerHTML = `
     <div class="ask-bubble ask-bubble-ai ask-bubble-gate">
       <p class="ask-md-p">You are asking great questions — I can already tell you have a good eye. To give you better answers, remember your conversation history and unlock your personal library, all I need is a free account. It takes thirty seconds and there is no card required.</p>
-      <a href="/auth/signup" class="ask-gate-btn">Register free →</a>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+        <a href="/auth/signup" class="ask-gate-btn">Register free →</a>
+        <a href="/auth/signin" class="ask-gate-btn ask-gate-btn-secondary">Already registered? Sign in →</a>
+      </div>
+    </div>`
+  return el
+}
+
+/** Build credit gate for logged-in users with no credits */
+export function buildCreditGate(): HTMLElement {
+  const el = document.createElement('div')
+  el.className = 'ask-msg ask-msg-ai ask-gate-msg'
+  el.innerHTML = `
+    <div class="ask-bubble ask-bubble-ai ask-bubble-gate">
+      <p class="ask-md-p">You have used all your credits. Top up to continue — prices start from £3.99 for 35 tokens.</p>
+      <a href="/pricing" class="ask-gate-btn">Top up credits →</a>
     </div>`
   return el
 }

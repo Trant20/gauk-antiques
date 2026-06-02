@@ -55,19 +55,6 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    // New session — deduct 1 credit
-    const { data: ok } = await supabase.rpc('deduct_ask_credit', {
-      p_user_id: user.id,
-      p_site_id: SITE_ID,
-      p_session_id: sessionId
-    })
-
-    if (!ok) {
-      return new Response(JSON.stringify({ error: 'Insufficient credits' }), {
-        status: 402, headers: { 'Content-Type': 'application/json' }
-      })
-    }
-
     // Store session in KV with TTL
     if (kv) {
       await kv.put(existingKey, JSON.stringify({

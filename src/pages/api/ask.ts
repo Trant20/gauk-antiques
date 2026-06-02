@@ -40,7 +40,21 @@ export const POST: APIRoute = async ({ request }) => {
       (env as any).SUPABASE_SERVICE_ROLE_KEY
     )
 
-    // 1. Cache check
+    // 1. Deduct credit for logged-in users
+    if (user_id) {
+      const { data: creditOk } = await supabase.rpc('deduct_ask_message_credit', {
+        p_user_id: user_id,
+        p_site_id: SITE_ID
+      })
+      if (!creditOk) {
+        return new Response(JSON.stringify({ error: 'Insufficient credits' }), {
+          status: 402,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+    }
+
+    // 2. Cache check
     const questionHash = hashQuestion(message, context)
     const { data: cached } = await supabase
       .from('ask_cache')
@@ -68,11 +82,11 @@ export const POST: APIRoute = async ({ request }) => {
       })
     }
 
-    // 2. Spine lookup
+    // 3. Spine lookup
     const terms = extractSearchTerms(message)
     const { sources, contextBlocks, marks } = await lookupSpine(supabase, terms, context, identification_result)
 
-    // 3. Fetch prompt from ai_prompts
+    // 4. Fetch prompt from ai_prompts
     const { data: promptRow } = await supabase
       .from('ai_prompts')
       .select('ask_system_prompt, model, max_tokens')
@@ -104,12 +118,12 @@ export const POST: APIRoute = async ({ request }) => {
       systemPrompt += `\n\nCURRENT IDENTIFICATION CONTEXT:\nCategory: ${identification_result.category || ''}\nItem: ${identification_result.subcategory || ''}\nMaker: ${identification_result.maker || 'unknown'}\nPeriod: ${identification_result.period || 'unknown'}\nCondition: ${identification_result.condition || 'unknown'}`
     }
 
-    // 4. Summarise history if getting long
+    // 5. Summarise history if getting long
     const trimmedHistory = history.length > 12
       ? history.slice(-8)
       : history
 
-    // 5. Call Claude
+    // 6. Call Claude
     const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
 
     const response = await client.messages.create({
@@ -127,7 +141,7 @@ export const POST: APIRoute = async ({ request }) => {
     const outputTokens = response.usage.output_tokens
     const costPence = Math.ceil((inputTokens * 0.003) + (outputTokens * 0.015))
 
-    // 6. Write to ask_cache
+    // 7. Write to ask_cache
     await supabase
       .from('ask_cache')
       .insert({
@@ -139,7 +153,7 @@ export const POST: APIRoute = async ({ request }) => {
         hit_count: 1
       })
 
-    // 7. Log token usage
+    // 8. Log token usage
     await supabase
       .from('token_usage')
       .insert({

@@ -204,6 +204,10 @@ const { context = 'general', category = 'Antiques' } = Astro.props
   /* GATE */
   .ask-gate-btn { display: inline-block; margin-top: 12px; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--goldHi); text-decoration: none; border-bottom: 1px solid rgba(200,160,96,.4); padding-bottom: 2px; transition: border-color .2s; }
   .ask-gate-btn:hover { border-color: var(--goldHi); }
+  .ask-gate-btn-secondary { color: var(--textDim); border-color: rgba(200,160,96,.2); font-size: 10px; }
+  .ask-gate-btn-secondary:hover { border-color: var(--goldHi); color: var(--goldHi); }
+  .ask-hint { font-family: 'Prata', Georgia, serif; font-size: 12px; color: rgba(200,160,96,.6); line-height: 1.6; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(200,160,96,.15); font-style: italic; }
+  .ask-hint-warm { color: rgba(200,160,96,.8); }
 
   /* COMPOSER */
   .ask-composer { display: flex; gap: 8px; align-items: flex-end; }
@@ -235,7 +239,7 @@ const { context = 'general', category = 'Antiques' } = Astro.props
 </style>
 
 <script>
-  import { sendToAsk, buildUserBubble, buildAIBubble, buildTyping, buildGuestGate, getGuestCount, incrementGuestCount, wireMarkLightbox } from './AskChat'
+  import { sendToAsk, buildUserBubble, buildAIBubble, buildTyping, buildGuestGate, buildCreditGate, buildMessageHint, getGuestCount, incrementGuestCount, wireMarkLightbox } from './AskChat'
 
   const widget = document.getElementById('ai-widget')
   const context = widget?.dataset.context || 'general'
@@ -279,10 +283,6 @@ const { context = 'general', category = 'Antiques' } = Astro.props
       const res = await fetch('/api/ask-session', { method: 'POST', headers })
       const data = await res.json()
       if (data.ok) askSessionId = data.session_id
-      if (data.error === 'Insufficient credits') {
-        askSessionOpened = false
-        window.location.href = '/pricing'
-      }
     } catch (e) {
       askSessionOpened = false
     }
@@ -442,12 +442,28 @@ const { context = 'general', category = 'Antiques' } = Astro.props
       askHistory.push({ role: 'user', content: question })
       askHistory.push({ role: 'assistant', content: data.answer })
       const bubble = buildAIBubble(data.answer, data.sources, data.marks || [])
+
+      if (!userId) {
+        const newCount = incrementGuestCount()
+        const hint = buildMessageHint(newCount)
+        if (hint) {
+          const hintEl = document.createElement('div')
+          hintEl.innerHTML = hint
+          if (hintEl.firstChild) bubble.appendChild(hintEl.firstChild)
+        }
+      }
+
       thread.appendChild(bubble)
       wireMarkLightbox(bubble)
-      if (!userId) incrementGuestCount()
+
     } catch (err) {
       typing.remove()
-      thread.appendChild(buildAIBubble('Something went wrong — please try again.', []))
+      const errMsg = err && err.message ? err.message : ''
+      if (errMsg === 'Insufficient credits') {
+        thread.appendChild(buildCreditGate())
+      } else {
+        thread.appendChild(buildAIBubble('Something went wrong — please try again.', []))
+      }
     } finally {
       isSending = false
       scrollThread()
