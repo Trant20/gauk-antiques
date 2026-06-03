@@ -11,7 +11,6 @@ import AccountPlans from '../components/AccountPlans.astro'
   .credit-big { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 64px; color: #7A5C20; line-height: 1; }
   .credit-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-top: 6px; }
   .account-email { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; margin-bottom: 4px; }
-  .account-plan { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; }
   .account-btn { display: inline-block; padding: 12px 28px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; cursor: pointer; text-decoration: none; text-align: center; margin-bottom: 8px; margin-right: 8px; transition: opacity .2s; }
   .account-btn:hover { opacity: .85; }
   .account-btn.ghost { background: transparent; border: 1px solid #C4B49E; color: #5C5040; }
@@ -51,7 +50,6 @@ import AccountPlans from '../components/AccountPlans.astro'
       </div>
       <div style="text-align:right">
         <div class="account-email" id="account-email"></div>
-        <div class="account-plan" id="account-plan">Free</div>
       </div>
     </div>
 
@@ -139,7 +137,6 @@ import AccountPlans from '../components/AccountPlans.astro'
       subSection.style.display = 'block'
       const planName = (userPlan.plans as any)?.name || 'Subscription'
       document.getElementById('sub-plan-name')!.textContent = planName
-      document.getElementById('account-plan')!.textContent = planName
 
       if (userPlan.status === 'cancelling') {
         const statusEl = document.getElementById('sub-status')!
