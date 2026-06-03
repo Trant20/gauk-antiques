@@ -65,6 +65,16 @@ import PublicShell from '../../layouts/PublicShell.astro'
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) { showError(error.message); btn.removeAttribute('disabled'); btn.textContent = 'Create Account'; return }
 
+    // Store pending claim server-side so it survives cross-browser confirmation
+    const pendingId = localStorage.getItem('pending_identification_id')
+    if (pendingId && data.user?.email) {
+      await fetch('/api/pending-claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.user.email, identification_id: pendingId, site_id: SITE_ID })
+      })
+    }
+
     // Show confirm email message — credits and claim handled in /auth/callback after confirmation
     btn.setAttribute('disabled', 'true')
     btn.textContent = 'Account created'

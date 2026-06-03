@@ -61,15 +61,23 @@ import PublicShell from '../../layouts/PublicShell.astro'
       body: JSON.stringify({ user_id: userId, site_id: SITE_ID })
     })
 
-    // Claim any pending anonymous identification
-    const pendingId = localStorage.getItem('pending_identification_id')
-    if (pendingId) {
+    // Claim pending identification — check localStorage first, then server-side pending_claims
+    const localPendingId = localStorage.getItem('pending_identification_id')
+    if (localPendingId) {
       await fetch('/api/claim-identification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identification_id: pendingId, user_id: userId })
+        body: JSON.stringify({ identification_id: localPendingId, user_id: userId })
       })
       localStorage.removeItem('pending_identification_id')
+    } else {
+      // Cross-browser confirmation — look up pending claim by email
+      const email = data.session.user.email
+      const claimRes = await fetch('/api/claim-identification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, user_id: userId, site_id: SITE_ID })
+      })
     }
 
     window.location.href = '/welcome'
