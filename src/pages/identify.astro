@@ -1,6 +1,16 @@
 ---
 import AppShell from '../layouts/AppShell.astro'
 import AIHeroWidget from '../components/AIHeroWidget.astro'
+import { supabase } from '../lib/supabase'
+
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const { data: creditSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', 'credit_cost_identify')
+  .single()
+const creditCostIdentify = Number(creditSetting?.value ?? 1)
 ---
 <AppShell title="Identify — GAUK Antiques" pageCap="New Identification" pageTitle="Identify a piece" pageSubtitle="Upload a clear photograph. Our AI identifies your antique and returns a professional valuation.">
 
@@ -35,7 +45,7 @@ import AIHeroWidget from '../components/AIHeroWidget.astro'
   .save-note.visible { display: block; }
 </style>
 
-<div class="identify-widget-wrap">
+<div class="identify-widget-wrap" id="identify-widget-wrap" data-credit-cost={creditCostIdentify}>
   <AIHeroWidget context="general" category="Antiques" />
 </div>
 
@@ -143,7 +153,7 @@ import AIHeroWidget from '../components/AIHeroWidget.astro'
       fetch('/api/deduct-credits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744', identification_id: identifyData.id, amount: 1 })
+        body: JSON.stringify({ site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744', identification_id: identifyData.id, amount: Number(document.getElementById('identify-widget-wrap')?.dataset.creditCost ?? 1) })
       })
     }
   })
