@@ -1,5 +1,6 @@
 ---
 import AppShell from '../layouts/AppShell.astro'
+import AccountPlans from '../components/AccountPlans.astro'
 ---
 <AppShell title="My Account — GAUK Antiques" pageCap="Account" pageTitle="My Account">
 <style>
@@ -70,8 +71,7 @@ import AppShell from '../layouts/AppShell.astro'
       </div>
     </div>
 
-    <a href="/pricing" class="account-btn">Top Up Credits</a>
-    <a href="/pricing" class="account-btn ghost">View All Plans</a>
+    <AccountPlans />
 
     <div style="height:32px"></div>
     <div class="section-cap">Recent Activity</div>

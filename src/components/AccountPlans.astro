@@ -1,0 +1,102 @@
+---
+import { supabase } from '../lib/supabase'
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const { data: plans } = await supabase.from('plans').select('*').eq('site_id', SITE_ID).eq('active', true).order('sort_order')
+const subs = plans?.filter(p => p.plan_type === 'subscription') || []
+const topups = plans?.filter(p => p.plan_type === 'topup') || []
+---
+<style is:global>
+  .ap-section-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .ap-section-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .ap-plan-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 28px 24px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .ap-plan-card.featured { background: #1C1810; border-color: #1C1810; }
+  @media (max-width: 480px) { .ap-plan-card { flex-direction: column; align-items: flex-start; gap: 16px; } .ap-plan-right { text-align: left !important; } }
+  .ap-plan-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
+  .ap-plan-card.featured .ap-plan-name { color: #EFE7D9; }
+  .ap-plan-detail { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; line-height: 1.7; }
+  .ap-plan-right { text-align: right; flex-shrink: 0; }
+  .ap-plan-price { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 32px; color: #7A5C20; line-height: 1; }
+  .ap-plan-card.featured .ap-plan-price { color: #C8A060; }
+  .ap-plan-period { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; margin-bottom: 14px; }
+  .ap-plan-btn { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 12px 24px; border: 1px solid #C4B49E; background: transparent; color: #5C5040; cursor: pointer; transition: all .2s; white-space: nowrap; }
+  .ap-plan-btn:hover { border-color: #7A5C20; color: #1C1810; }
+  .ap-plan-card.featured .ap-plan-btn { background: #C8A060; border-color: #C8A060; color: #1C1810; font-weight: 600; }
+  .ap-plan-card.featured .ap-plan-btn:hover { background: #B8960A; }
+  .ap-plan-credits { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A5C20; margin-top: 6px; }
+  .ap-plan-card.featured .ap-plan-credits { color: #C8A060; }
+  .ap-topup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 32px; }
+  @media (max-width: 480px) { .ap-topup-grid { grid-template-columns: 1fr; } }
+  .ap-topup-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 24px 16px; text-align: center; transition: border-color .2s; }
+  .ap-topup-card:hover { border-color: #7A5C20; }
+  .ap-topup-credits { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 40px; color: #7A5C20; line-height: 1; }
+  .ap-topup-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; margin: 4px 0 12px; }
+  .ap-topup-price { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; color: #1C1810; margin-bottom: 14px; }
+  .ap-topup-btn { width: 100%; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 10px; border: 1px solid #C4B49E; background: transparent; color: #5C5040; cursor: pointer; transition: all .2s; }
+  .ap-topup-btn:hover { border-color: #7A5C20; color: #1C1810; background: rgba(196,180,158,.2); }
+  .ap-explainer { background: #E6DCCB; border-left: 3px solid #7A5C20; padding: 20px 24px; margin-top: 8px; }
+  .ap-explainer-title { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 10px; }
+  .ap-explainer-body { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #5C5040; line-height: 1.9; }
+</style>
+
+<div style="height:32px"></div>
+<div class="ap-section-cap">Upgrade</div>
+
+{subs.map(plan => (
+  <div class={`ap-plan-card${plan.name === 'Pro' ? ' featured' : ''}`}>
+    <div>
+      <div class="ap-plan-name">{plan.name}</div>
+      <div class="ap-plan-detail">{plan.credits} credits per month · never expire · use across all GAUK properties</div>
+      <div class="ap-plan-credits">{plan.credits} credits / {plan.name.includes('Annual') ? 'year' : 'month'}</div>
+    </div>
+    <div class="ap-plan-right">
+      <div class="ap-plan-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+      <div class="ap-plan-period">{plan.name.includes('Annual') ? 'per year' : 'per month'}</div>
+      <button class="ap-plan-btn ap-checkout-btn" data-price={plan.stripe_price_id} data-mode="subscription">Subscribe</button>
+    </div>
+  </div>
+))}
+
+<div style="height:32px"></div>
+<div class="ap-section-cap">Top Up</div>
+<div class="ap-topup-grid">
+  {topups.map(plan => (
+    <div class="ap-topup-card">
+      <div class="ap-topup-credits">{plan.credits}</div>
+      <div class="ap-topup-label">Credits</div>
+      <div class="ap-topup-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+      <button class="ap-topup-btn ap-checkout-btn" data-price={plan.stripe_price_id} data-mode="payment">{plan.name}</button>
+    </div>
+  ))}
+</div>
+
+<div class="ap-explainer">
+  <div class="ap-explainer-title">How credits work</div>
+  <div class="ap-explainer-body">Credits power every AI feature across GAUK. An identification costs 2 credits — category, maker, period, condition and estimated value, saved to your library. A full valuation report costs 5 credits — expert notes, market history, comparable sales and your options. Credits never expire and work across all GAUK properties.</div>
+</div>
+
+<script>
+  import { supabase } from '../lib/supabase-browser'
+  const { data: { session } } = await supabase.auth.getSession()
+
+  document.querySelectorAll('.ap-checkout-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!session) { window.location.href = '/auth/signup'; return }
+      const price_id = (btn as HTMLElement).dataset.price
+      const mode = (btn as HTMLElement).dataset.mode
+      ;(btn as HTMLButtonElement).textContent = 'Loading...'
+      ;(btn as HTMLButtonElement).setAttribute('disabled', 'true')
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price_id, mode, user_id: session.user.id, email: session.user.email })
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else {
+        alert('Checkout error — please try again')
+        ;(btn as HTMLButtonElement).removeAttribute('disabled')
+        ;(btn as HTMLButtonElement).textContent = mode === 'subscription' ? 'Subscribe' : 'Buy'
+      }
+    })
+  })
+</script>
