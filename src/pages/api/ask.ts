@@ -94,7 +94,7 @@ export const POST: APIRoute = async ({ request }) => {
       .eq('context', context)
       .single()
 
-    const { data: fallbackRow } = promptRow ? null : await supabase
+    const { data: fallbackRow } = !promptRow ? await supabase
       .from('ai_prompts')
       .select('ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3, gate_cta_text')
       .eq('site_id', SITE_ID)

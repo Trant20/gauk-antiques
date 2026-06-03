@@ -37,7 +37,7 @@ async function verifySignature(payload: string, sig: string, secret: string): Pr
 async function upsertCredits(supabase: ReturnType<typeof getSupabase>, user_id: string, site_id: string, credits: number) {
   const { data: existing } = await supabase
     .from('credits').select('balance')
-    .eq('user_id', user_id).eq('site_id', site_id).single() as { data: { balance: number } | null, error: unknown }
+    .eq('user_id', user_id).eq('site_id', site_id).single()
 
   if (existing) {
     await supabase.from('credits')
