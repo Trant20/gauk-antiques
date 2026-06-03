@@ -26,6 +26,13 @@ import AppShell from '../layouts/AppShell.astro'
   .auth-gate-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 24px; font-style: italic; color: #5C5040; margin-bottom: 16px; }
   .notice { font-family: 'Prata', Georgia, serif; font-size: 14px; padding: 12px 16px; margin-bottom: 24px; }
   .notice.success { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; }
+  .sub-section { background: #E6DCCB; border: 1px solid #C4B49E; padding: 24px; margin-bottom: 12px; }
+  .sub-plan-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
+  .sub-status { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 16px; }
+  .sub-status.cancelling { color: #C46028; }
+  .sub-cancel-note { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.8; margin-top: 16px; padding-top: 16px; border-top: 1px solid #C4B49E; }
+  .account-btn.danger { background: transparent; border: 1px solid #C46028; color: #C46028; }
+  .account-btn.danger:hover { background: #C46028; color: #EFE7D9; }
 </style>
 <div id="auth-gate" class="auth-gate" style="display:none">
     <div class="auth-gate-title">Sign in to view your account</div>
@@ -44,6 +51,22 @@ import AppShell from '../layouts/AppShell.astro'
       <div style="text-align:right">
         <div class="account-email" id="account-email"></div>
         <div class="account-plan" id="account-plan">Free</div>
+      </div>
+    </div>
+
+    <div id="subscription-section" style="display:none">
+      <div style="height:32px"></div>
+      <div class="section-cap">Subscription</div>
+      <div class="sub-section">
+        <div class="sub-plan-name" id="sub-plan-name"></div>
+        <div class="sub-status" id="sub-status"></div>
+        <div id="sub-cancel-wrap">
+          <button class="account-btn danger" id="cancel-sub-btn">Cancel Subscription</button>
+          <div class="sub-cancel-note">Cancelling simply stops future payments. Your account is downgraded to a free user but you keep your credits indefinitely and can use them across the GAUK Network.</div>
+        </div>
+        <div id="sub-cancelling-msg" style="display:none">
+          <div class="sub-cancel-note">Your subscription will remain active until <strong id="sub-period-end"></strong>, after which your account returns to free. Your credits never expire.</div>
+        </div>
       </div>
     </div>
 
@@ -103,6 +126,54 @@ import AppShell from '../layouts/AppShell.astro'
     document.getElementById('credit-balance')!.textContent = String(credits?.balance ?? 0)
 
     // Plan
+    const { data: userPlan } = await supabase
+      .from('user_plans')
+      .select('status, current_period_end, plans(name)')
+      .eq('user_id', session.user.id)
+      .eq('site_id', SITE_ID)
+      .in('status', ['active', 'cancelling'])
+      .single()
+
+    if (userPlan) {
+      const subSection = document.getElementById('subscription-section')!
+      subSection.style.display = 'block'
+      const planName = (userPlan.plans as any)?.name || 'Subscription'
+      document.getElementById('sub-plan-name')!.textContent = planName
+      document.getElementById('account-plan')!.textContent = planName
+
+      if (userPlan.status === 'cancelling') {
+        const statusEl = document.getElementById('sub-status')!
+        statusEl.textContent = 'Cancels at period end'
+        statusEl.classList.add('cancelling')
+        document.getElementById('sub-cancel-wrap')!.style.display = 'none'
+        document.getElementById('sub-cancelling-msg')!.style.display = 'block'
+        if (userPlan.current_period_end) {
+          document.getElementById('sub-period-end')!.textContent = new Date(userPlan.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+        }
+      } else {
+        document.getElementById('sub-status')!.textContent = 'Active'
+      }
+
+      document.getElementById('cancel-sub-btn')?.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to cancel your subscription? You will keep your credits and access until the end of your billing period.')) return
+        const btn = document.getElementById('cancel-sub-btn') as HTMLButtonElement
+        btn.setAttribute('disabled', 'true')
+        btn.textContent = 'Cancelling...'
+        const res = await fetch('/api/stripe/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: session.user.id, site_id: SITE_ID })
+        })
+        const data = await res.json()
+        if (data.error) {
+          btn.removeAttribute('disabled')
+          btn.textContent = 'Cancel Subscription'
+          alert('Something went wrong: ' + data.error)
+        } else {
+          window.location.reload()
+        }
+      })
+    }
 
     // Transactions
     const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', SITE_ID).order('created_at', { ascending: false }).limit(10)

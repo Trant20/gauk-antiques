@@ -48,6 +48,16 @@ async function upsertCredits(supabase: ReturnType<typeof getSupabase>, user_id: 
   }
 }
 
+async function handleSubscriptionDeleted(subscription: Record<string, unknown>) {
+  const supabase = getSupabase()
+  const subscriptionId = subscription.id as string
+  if (!subscriptionId) return
+  await supabase
+    .from('user_plans')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .eq('stripe_subscription_id', subscriptionId)
+}
+
 async function handleCheckoutCompleted(session: Record<string, unknown>) {
   const user_id = (session.metadata as Record<string, string>)?.user_id
   const site_id = (session.metadata as Record<string, string>)?.site_id
@@ -101,6 +111,9 @@ export const POST: APIRoute = async ({ request }) => {
     const event = JSON.parse(payload)
     if (event.type === 'checkout.session.completed') {
       await handleCheckoutCompleted(event.data.object)
+    }
+    if (event.type === 'customer.subscription.deleted') {
+      await handleSubscriptionDeleted(event.data.object)
     }
 
     return new Response('OK', { status: 200 })
