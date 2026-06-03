@@ -12,6 +12,15 @@ const { data: item } = await supabase
 
 if (!item) return Astro.redirect('/')
 
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+const { data: enrichCreditSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', SITE_ID)
+  .eq('key', 'credit_cost_enrich')
+  .single()
+const creditCostEnrich = Number(enrichCreditSetting?.value ?? 5)
+
 const r = item.result_json
 const enrichment = item.enrichment_json || null
 const imageUrl = `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.image_key}`
@@ -606,9 +615,9 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#7A5C20;margin-bottom:12px;">Full Valuation Report</div>
         <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:22px;font-style:italic;color:#1C1810;margin-bottom:10px;">Unlock the complete report</div>
         <div style="font-family:'Prata',Georgia,serif;font-size:14px;color:#8A7A66;line-height:1.8;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;">Expert notes, maker biography, market history, comparable sales, desirability index and your options.</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:12px;color:#8A7A66;margin-bottom:20px;letter-spacing:1px;">Cost: 2 credits</div>
-        <div>
-          <button id="enrich-btn" style="display:block;width:100%;max-width:320px;margin:0 auto 10px;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;cursor:pointer;transition:opacity .2s;">Generate Full Report — 2 Credits</button>
+        <div style="font-family:'Prata',Georgia,serif;font-size:12px;color:#8A7A66;margin-bottom:20px;letter-spacing:1px;">Cost: {creditCostEnrich} credits</div>
+        <div id="enrich-gate-wrap" data-credit-cost={creditCostEnrich}>
+          <button id="enrich-btn" style="display:block;width:100%;max-width:320px;margin:0 auto 10px;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;cursor:pointer;transition:opacity .2s;">Generate Full Report — {creditCostEnrich} Credits</button>
           <a href="/pricing" id="enrich-topup" style="display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">Top Up Credits to Unlock</a>
           <a href="/auth/signup" id="enrich-register" style="display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">Register Free to Unlock</a>
         </div>
@@ -797,7 +806,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         await fetch('/api/deduct-credits', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-          body: JSON.stringify({ site_id: SITE_ID, identification_id: itemId, amount: 2 })
+          body: JSON.stringify({ site_id: SITE_ID, identification_id: itemId, amount: Number(document.getElementById('enrich-gate-wrap')?.dataset.creditCost ?? 5) })
         })
 
         // Fire enrichment
