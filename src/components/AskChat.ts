@@ -1,15 +1,15 @@
 /** Lightweight markdown renderer — GAUK aesthetic */
 export function renderMarkdown(text: string): string {
   return text
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^### (.+)$/gm, '<div class="ask-md-h3">$1</div>')
-    .replace(/^## (.+)$/gm, '<div class="ask-md-h2">$1</div>')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replaceAll(/\*(.+?)\*/g, '<em>$1</em>')
+    .replaceAll(/^### (.+)$/gm, '<div class="ask-md-h3">$1</div>')
+    .replaceAll(/^## (.+)$/gm, '<div class="ask-md-h2">$1</div>')
     .replace(/^# (.+)$/gm, '<div class="ask-md-h2">$1</div>')
-    .replace(/^[-*] (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span><span>$1</span></div>')
-    .replace(/^\d+\. (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span><span>$1</span></div>')
-    .split('\n\n').map(p => p.trim() ? `<p class="ask-md-p">${p.replace(/\n/g, '<br>')}</p>` : '').join('')
+    .replaceAll(/^[-*] (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span><span>$1</span></div>')
+    .replaceAll(/^\d+\. (.+)$/gm, '<div class="ask-md-li"><span class="ask-md-dot">◆</span><span>$1</span></div>')
+    .split('\n\n').map(p => p.trim() ? `<p class="ask-md-p">${p.replaceAll('\n', '<br>')}</p>` : '').join('')
 }
 
 /** Humanise a source slug */
@@ -19,7 +19,7 @@ function humaniseSource(slug: string): string {
 
 /** Simple hash for guest session tracking */
 export function getGuestCount(): number {
-  return parseInt(sessionStorage.getItem('ask_guest_count') || '0')
+  return Number.parseInt(sessionStorage.getItem('ask_guest_count') ?? '0', 10)
 }
 
 export function incrementGuestCount(): number {
@@ -54,7 +54,7 @@ export async function sendToAsk(
   history: Message[],
   context: string,
   userId: string | null,
-  identificationResult: any | null
+  identificationResult: { category?: string; subcategory?: string; maker?: string; period?: string; condition?: string } | null
 ): Promise<AskResponse> {
   const res = await fetch('/api/ask', {
     method: 'POST',

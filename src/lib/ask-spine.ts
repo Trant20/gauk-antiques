@@ -10,7 +10,7 @@ export function extractSearchTerms(question: string): string[] {
 
 /** Humanise a source slug */
 export function humaniseSource(slug: string): string {
-  return slug.replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase())
+  return slug.replaceAll('_', ' ').replaceAll(/\b\w/g, c => c.toUpperCase())
 }
 
 export interface SpineMark {

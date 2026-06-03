@@ -11,7 +11,7 @@ function hashQuestion(question: string, context: string): string {
   const str = `${context}::${question.toLowerCase().trim()}`
   let hash = 0
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
+    const char = str.codePointAt(i) ?? 0
     hash = ((hash << 5) - hash) + char
     hash = hash & hash
   }
@@ -94,7 +94,7 @@ export const POST: APIRoute = async ({ request }) => {
       .eq('context', context)
       .single()
 
-    const { data: fallbackRow } = !promptRow ? await supabase
+    const { data: fallbackRow } = promptRow ? null : await supabase
       .from('ai_prompts')
       .select('ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3, gate_cta_text')
       .eq('site_id', SITE_ID)
