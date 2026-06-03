@@ -24,6 +24,10 @@ import PublicShell from '../../layouts/PublicShell.astro'
   .auth-error { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #C46028; background: #F5EDE3; border: 1px solid #E8C8A8; padding: 12px 16px; margin-bottom: 20px; display: none; }
   .auth-footer { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; text-align: center; margin-top: 24px; }
   .auth-footer a { color: #7A5C20; text-decoration: none; }
+  .auth-confirm-icon { width: 64px; height: 64px; border: 1px solid #C4B49E; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; }
+  .auth-confirm-email { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; font-style: italic; color: #7A5C20; margin: 16px 0 8px; }
+  .auth-confirm-hint { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.8; margin-bottom: 24px; }
+  .auth-confirm-divider { width: 40px; height: 1px; background: #C4B49E; margin: 20px auto; }
 </style>
 <div class="auth-wrap">
   <div class="auth-logo">GAUK <span>Antiques</span></div>
@@ -81,10 +85,20 @@ import PublicShell from '../../layouts/PublicShell.astro'
     document.getElementById('auth-error')!.style.display = 'none'
     const card = document.querySelector('.auth-card')!
     card.innerHTML = `
-      <div class="auth-eyebrow">Almost there</div>
-      <div class="auth-title">Check your email</div>
-      <div class="auth-sub">We've sent a confirmation link to <strong>${email}</strong>. Click it to activate your account and get your free credits.</div>
-      <div class="auth-footer">Wrong address? <a href="/auth/signup">Start over</a></div>
+      <div style="text-align:center;">
+        <div class="auth-confirm-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7A5C20" stroke-width="1.2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div class="auth-eyebrow">Almost there</div>
+        <div class="auth-title">Check your email</div>
+        <div class="auth-confirm-email">${email}</div>
+        <div class="auth-confirm-hint">We've sent a confirmation link to the address above.<br>Click it to activate your account and claim your free credits.</div>
+        <div class="auth-confirm-divider"></div>
+        <div class="auth-footer">Wrong address? <a href="/auth/signup">Start over</a></div>
+      </div>
     `
   })
 
