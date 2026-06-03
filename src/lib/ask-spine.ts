@@ -2,7 +2,7 @@
 export function extractSearchTerms(question: string): string[] {
   const stop = new Set(['what','is','the','a','an','how','do','i','can','you','tell','me','about','this','my','it','was','are','does','did','has','have','where','when','who','which','why','to','of','in','on','at','for','with','its','that','be','clean','care','piece','best','place','sell','genuine','tell','identify'])
   return question.toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
+    .replaceAll(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length > 2 && !stop.has(w))
     .slice(0, 6)
@@ -10,7 +10,7 @@ export function extractSearchTerms(question: string): string[] {
 
 /** Humanise a source slug */
 export function humaniseSource(slug: string): string {
-  return slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  return slug.replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 export interface SpineMark {
@@ -49,7 +49,8 @@ export async function lookupSpine(supabase: any, terms: string[], context: strin
     const seenImages = new Set<string>()
     markRows.forEach((m: any) => {
       sources.push(m.name)
-      contextBlocks.push(`MARK: ${m.name} — ${m.mark_type || 'mark'}, ${m.country || ''}, ${m.date_from || ''}${m.date_to ? `–${m.date_to}` : ''}. ${m.description || ''}`)
+      const markDateTo = m.date_to ? `–${m.date_to}` : ''
+      contextBlocks.push(`MARK: ${m.name} — ${m.mark_type || 'mark'}, ${m.country || ''}, ${m.date_from || ''}${markDateTo}. ${m.description || ''}`)
       if (m.image_url && !seenImages.has(m.image_url)) {
         seenImages.add(m.image_url)
         marks.push({
@@ -86,7 +87,8 @@ export async function lookupSpine(supabase: any, terms: string[], context: strin
   if (artists && artists.length > 0) {
     artists.forEach((a: any) => {
       sources.push(a.preferred_name)
-      contextBlocks.push(`ARTIST: ${a.preferred_name} — ${a.nationality || ''}, ${a.birth_year || ''}${a.death_year ? `–${a.death_year}` : ''}. ${a.description || ''}`)
+      const artistDateTo = a.death_year ? `–${a.death_year}` : ''
+      contextBlocks.push(`ARTIST: ${a.preferred_name} — ${a.nationality || ''}, ${a.birth_year || ''}${artistDateTo}. ${a.description || ''}`)
     })
   }
 

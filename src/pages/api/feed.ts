@@ -37,7 +37,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   const userId = await resolveUserId(request)
   if (!userId) return errorResponse('Unauthorised', 401)
 
-  const limit = parseInt(url.searchParams.get('limit') || '8')
+  const limit = Number.parseInt(url.searchParams.get('limit') ?? '8', 10)
   const categorySlug = url.searchParams.get('category') || ''
   const supabase = getSupabase()
 
@@ -74,7 +74,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       .single()
     const allCats: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
     categoryFilter = allCats.find(c =>
-      c.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === categorySlug
+      c.toLowerCase().replaceAll('&', 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === categorySlug
     ) || null
   }
 
@@ -113,7 +113,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     { data: suggested },
   ] = await Promise.all([
     feedQuery,
-    suggestQuery ? suggestQuery : Promise.resolve({ data: [] }),
+    suggestQuery ?? Promise.resolve({ data: [] }),
   ])
 
   return jsonResponse({ videos: videos || [], suggested: suggested || [] })

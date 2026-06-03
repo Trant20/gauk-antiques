@@ -5,7 +5,7 @@ const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 const PAGE_SIZE = 24
 
 export const GET: APIRoute = async ({ url }) => {
-  const page = parseInt(url.searchParams.get('page') || '1')
+  const page = Number.parseInt(url.searchParams.get('page') ?? '1', 10)
   const category = url.searchParams.get('category') || ''
   const search = url.searchParams.get('search') || ''
   const offset = (page - 1) * PAGE_SIZE
@@ -69,7 +69,7 @@ export const GET: APIRoute = async ({ url }) => {
     .eq('active', true)
     .not('default_category', 'is', null)
 
-  const categories = [...new Set(catRows?.map(r => r.default_category).filter(Boolean))].sort()
+  const categories = [...new Set(catRows?.map(r => r.default_category).filter(Boolean))].sort((a, b) => a.localeCompare(b))
 
   const result = (channels || []).map(c => ({
     ...c,

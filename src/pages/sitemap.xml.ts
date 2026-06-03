@@ -11,7 +11,7 @@ function url(loc: string, priority: string, changefreq: string, lastmod?: string
     `    <loc>${DOMAIN}${loc}</loc>`,
     `    <changefreq>${changefreq}</changefreq>`,
     `    <priority>${priority}</priority>`,
-    lastmod ? `    <lastmod>${lastmod}</lastmod>` : '',
+    lastmod && `    <lastmod>${lastmod}</lastmod>`,
     '  </url>',
   ].filter(Boolean).join('\n')
 }
@@ -40,7 +40,7 @@ export const GET: APIRoute = async () => {
     .eq('key', 'categories')
     .single()
 
-  const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
+  const categories: string[] = catSetting?.value && JSON.parse(catSetting.value) || []
   const categoryUrls = categories.map(cat =>
     url(`/categories/${slugify(cat)}`, '0.8', 'daily', today)
   )

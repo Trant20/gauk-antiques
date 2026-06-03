@@ -77,7 +77,7 @@ export async function sendToAsk(
 export function buildUserBubble(text: string): HTMLElement {
   const wrap = document.createElement('div')
   wrap.className = 'ask-msg ask-msg-user'
-  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  const escaped = text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
   wrap.innerHTML = `<div class="ask-bubble ask-bubble-user">${escaped}</div>`
   return wrap
 }
@@ -134,8 +134,8 @@ function buildMarkCards(marks: SpineMark[]): string {
 export function wireMarkLightbox(container: HTMLElement): void {
   container.querySelectorAll('.ask-mark-card[data-img]').forEach(card => {
     card.addEventListener('click', () => {
-      const img = card.getAttribute('data-img') || ''
-      const cap = card.getAttribute('data-caption') || ''
+      const img = card.dataset.img || ''
+      const cap = card.dataset.caption || ''
       showLightbox(img, cap)
     })
   })
@@ -150,7 +150,8 @@ export function buildAIBubble(text: string, sources: string[], marks: SpineMark[
     html += buildMarkCards(marks)
   }
   if (sources && sources.length > 0 && (!marks || marks.length === 0)) {
-    html += `<div class="ask-sources">${sources.map(s => `<span class="ask-source-tag">${s}</span>`).join('')}</div>`
+    const sourceTags = sources.map(s => `<span class="ask-source-tag">${s}</span>`).join('')
+  html += `<div class="ask-sources">${sourceTags}</div>`
   }
   wrap.innerHTML = html
   return wrap
