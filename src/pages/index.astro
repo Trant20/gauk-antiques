@@ -457,23 +457,6 @@ const firstWords = words.slice(0, -1).join(' ')
       if (bc) bc.style.filter = 'none'
       const ctaWrap = document.getElementById('result-gate-cta-wrap') as HTMLElement
       if (ctaWrap) ctaWrap.style.display = 'none'
-    } else {
-      setTimeout(() => {
-        const ctaWrap = document.getElementById('result-gate-cta-wrap') as HTMLElement
-        const typedEl = document.getElementById('result-gate-typed') as HTMLElement
-        const cursorEl = document.getElementById('result-gate-cursor') as HTMLElement
-        if (!ctaWrap || !typedEl || !cursorEl) return
-        ctaWrap.style.display = 'block'
-        const ctaText = identifyData.gate_cta_text || 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
-        let i = 0
-        typedEl.textContent = ''
-        cursorEl.style.display = 'inline-block'
-        function typeGate() {
-          if (i < ctaText.length) { typedEl.textContent += ctaText[i]; i++; setTimeout(typeGate, 28) }
-          else { cursorEl.style.display = 'none' }
-        }
-        typeGate()
-      }, 1000)
     }
 
     if (session?.user?.id && identifyData.id) {
