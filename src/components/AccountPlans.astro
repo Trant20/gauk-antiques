@@ -49,7 +49,7 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
       <div class="ap-plan-credits">{plan.credits} credits / {plan.name.includes('Annual') ? 'year' : 'month'}</div>
     </div>
     <div class="ap-plan-right">
-      <div class="ap-plan-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+      <div class="ap-plan-price">${(plan.price_pence / 100).toFixed(2)}</div>
       <div class="ap-plan-period">{plan.name.includes('Annual') ? 'per year' : 'per month'}</div>
       <button class="ap-plan-btn ap-checkout-btn" data-price={plan.stripe_price_id} data-mode="subscription">Subscribe</button>
     </div>
@@ -63,7 +63,7 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
     <div class="ap-topup-card">
       <div class="ap-topup-credits">{plan.credits}</div>
       <div class="ap-topup-label">Credits</div>
-      <div class="ap-topup-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+      <div class="ap-topup-price">${(plan.price_pence / 100).toFixed(2)}</div>
       <button class="ap-topup-btn ap-checkout-btn" data-price={plan.stripe_price_id} data-mode="payment">{plan.name}</button>
     </div>
   ))}

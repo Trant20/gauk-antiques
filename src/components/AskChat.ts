@@ -231,7 +231,7 @@ export function buildCreditGate(): HTMLElement {
   el.className = 'ask-msg ask-msg-ai ask-gate-msg'
   el.innerHTML = `
     <div class="ask-bubble ask-bubble-ai ask-bubble-gate">
-      <p class="ask-md-p">You have used all your credits. Top up to continue — prices start from £3.99 for 35 tokens.</p>
+      <p class="ask-md-p">You have used all your credits. Top up to continue — prices start from $3.99 for 35 tokens.</p>
       <a href="/pricing" class="ask-gate-btn">Top up credits →</a>
     </div>`
   return el

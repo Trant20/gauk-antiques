@@ -60,7 +60,7 @@ const url = Astro.url.searchParams.get('payment')
         <div class="plan-credits">{plan.credits} credits / month</div>
       </div>
       <div class="plan-right">
-        <div class="plan-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+        <div class="plan-price">${(plan.price_pence / 100).toFixed(2)}</div>
         <div class="plan-period">{plan.name.includes('Annual') ? 'per year' : 'per month'}</div>
         <button class="plan-btn" data-price={plan.stripe_price_id} data-mode="subscription">Subscribe</button>
       </div>
@@ -74,7 +74,7 @@ const url = Astro.url.searchParams.get('payment')
       <div class="topup-card">
         <div class="topup-credits">{plan.credits}</div>
         <div class="topup-label">Credits</div>
-        <div class="topup-price">£{(plan.price_pence / 100).toFixed(2)}</div>
+        <div class="topup-price">${(plan.price_pence / 100).toFixed(2)}</div>
         <button class="topup-btn" data-price={plan.stripe_price_id} data-mode="payment">{plan.name}</button>
       </div>
     ))}
