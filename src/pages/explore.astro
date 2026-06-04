@@ -1,4 +1,5 @@
 ---
+import { formatValueRange } from '../lib/currency'
 import PublicShell from '../layouts/PublicShell.astro'
 import { supabase } from '../lib/supabase'
 
@@ -182,7 +183,7 @@ const articles = [
               <div class="id-body">
                 {r.maker && <div class="id-maker">{r.maker}</div>}
                 <div class="id-title">{r.subcategory || 'Antique Item'}</div>
-                <div class="id-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+                <div class="id-value">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
                 <div class="id-cat">{item.category}</div>
               </div>
             </div>

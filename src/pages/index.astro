@@ -421,7 +421,7 @@ const firstWords = words.slice(0, -1).join(' ')
     }
 
     document.getElementById('result-value')!.textContent =
-      '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString()
+      '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString() + ' / $' + Math.round((r.value_range_low || 0) * 1.27).toLocaleString() + ' – $' + Math.round((r.value_range_high || 0) * 1.27).toLocaleString()
 
     if (r.maker) {
       document.getElementById('result-maker')!.textContent = r.maker

@@ -1,4 +1,5 @@
 ---
+import { formatValueRange } from '../../lib/currency'
 import PublicShell from '../../layouts/PublicShell.astro'
 import { supabase } from '../../lib/supabase'
 
@@ -284,7 +285,7 @@ const pubDate = video.published_at
               <div class="vid-id-body">
                 {r.maker && <div class="vid-id-maker">{r.maker}</div>}
                 <div class="vid-id-title">{r.subcategory || 'Antique Item'}</div>
-                <div class="vid-id-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+                <div class="vid-id-value">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
               </div>
             </div>
           )

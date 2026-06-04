@@ -194,7 +194,7 @@ import AppShell from '../layouts/AppShell.astro'
     const lo = r.value_range_low || 0
     const hi = r.value_range_high || 0
     if (!lo && !hi) return '\u2014'
-    return '\u00a3' + lo.toLocaleString() + ' \u2013 \u00a3' + hi.toLocaleString()
+    return '£' + lo.toLocaleString() + ' – £' + hi.toLocaleString() + ' / $' + Math.round(lo * 1.27).toLocaleString() + ' – $' + Math.round(hi * 1.27).toLocaleString()
   }
 
   function thumbEl(imageKey, alt) {

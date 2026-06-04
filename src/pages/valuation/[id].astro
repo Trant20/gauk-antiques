@@ -1,6 +1,7 @@
 ---
 import AppShell from '../../layouts/AppShell.astro'
 import { supabase } from '../../lib/supabase'
+import { formatValueRange, formatSingleValue } from '../../lib/currency'
 
 const { id } = Astro.params
 
@@ -269,16 +270,16 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <!-- VALUE -->
   <div class="value-section">
     <div class="cap" style="margin-bottom:12px">Estimated Value</div>
-    <div class="value-number">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+    <div class="value-number">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
     <div class="value-sub">AI appraisal estimate · not a formal valuation</div>
     <div class="value-strip">
       <div class="value-strip-cell">
         <div class="value-strip-label">Low estimate</div>
-        <div class="value-strip-val">£{(r.value_range_low || 0).toLocaleString()}</div>
+        <div class="value-strip-val">{formatSingleValue(r.value_range_low || 0)}</div>
       </div>
       <div class="value-strip-cell">
         <div class="value-strip-label">High estimate</div>
-        <div class="value-strip-val">£{(r.value_range_high || 0).toLocaleString()}</div>
+        <div class="value-strip-val">{formatSingleValue(r.value_range_high || 0)}</div>
       </div>
     </div>
   </div>

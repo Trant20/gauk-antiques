@@ -1,4 +1,5 @@
 ---
+import { formatValueRange } from '../../lib/currency'
 import PublicShell from '../../layouts/PublicShell.astro'
 import AIHeroWidget from '../../components/AIHeroWidget.astro'
 import { supabase } from '../../lib/supabase'
@@ -430,7 +431,7 @@ const { data: videos } = await supabase
               <div class="id-strip-body">
                 {r.maker && <div class="id-strip-maker">{r.maker}</div>}
                 <div class="id-strip-title">{r.subcategory || 'Antique Item'}</div>
-                <div class="id-strip-value">£{(r.value_range_low || 0).toLocaleString()} – £{(r.value_range_high || 0).toLocaleString()}</div>
+                <div class="id-strip-value">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
               </div>
             </div>
           )
@@ -653,7 +654,7 @@ const { data: videos } = await supabase
     }
 
     document.getElementById('cat-result-value')!.textContent =
-      '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString()
+      '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString() + ' / $' + Math.round((r.value_range_low || 0) * 1.27).toLocaleString() + ' – $' + Math.round((r.value_range_high || 0) * 1.27).toLocaleString()
 
     if (r.maker) {
       document.getElementById('cat-result-maker')!.textContent = r.maker
