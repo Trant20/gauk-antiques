@@ -41,8 +41,8 @@ const { data: initialArticles, count } = await supabase
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  "name": `${displayName} Articles — GAUK Antiques`,
-  "description": `Collector guides, histories and reference articles for ${displayName.toLowerCase()}.`,
+  "name": `${dbCategory} Articles — GAUK Antiques`,
+  "description": `Collector guides, histories and reference articles for ${dbCategory.toLowerCase()}.`,
   "url": `https://gaukantiques.com/category/${slug}/articles`,
   "publisher": { "@type": "Organization", "name": "GAUK Antiques", "url": "https://gaukantiques.com" }
 })} />
