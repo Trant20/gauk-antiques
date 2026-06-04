@@ -21,6 +21,7 @@
     "astro": "^6.1.7",
     "dotenv": "^17.4.2",
     "node-fetch": "^3.3.2",
+    "posthog-js": "^1.379.2",
     "tailwindcss": "^4.2.2",
     "wrangler": "^4.83.0"
   },
