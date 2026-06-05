@@ -4,53 +4,38 @@ import PublicShell from '../layouts/PublicShell.astro'
 import { supabase } from '../lib/supabase'
 
 
-const { data: heroSetting } = await supabase
-  .from('site_settings').select('value')
-  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'articles_index_hero').single()
-const { data: heroTitleSetting } = await supabase
-  .from('site_settings').select('value')
-  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'articles_index_title').single()
-const { data: heroSubSetting } = await supabase
-  .from('site_settings').select('value')
-  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'articles_index_subtitle').single()
+const [{ data: settings }, { data: allArticles }] = await Promise.all([
+  supabase
+    .from('site_settings')
+    .select('key, value')
+    .eq('site_id', ANTIQUES_SITE_ID)
+    .in('key', ['articles_index_hero', 'articles_index_title', 'articles_index_subtitle', 'categories']),
+  supabase
+    .from('articles')
+    .select('id, title, slug, excerpt, image_url, category, published_at')
+    .eq('site_id', ANTIQUES_SITE_ID)
+    .eq('published', true)
+    .order('published_at', { ascending: false })
+    .limit(110)
+])
 
-const heroImage = heroSetting?.value || ''
-const heroTitle = heroTitleSetting?.value || 'The Knowledge Library'
-const heroSubtitle = heroSubSetting?.value || 'Guides, histories and collector reference — everything you need to buy, sell and identify antiques with confidence.'
-
-const { data: catSetting } = await supabase
-  .from('site_settings').select('value')
-  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'categories').single()
-const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
+const settingsMap = Object.fromEntries((settings ?? []).map(s => [s.key, s.value]))
+const heroImage = settingsMap['articles_index_hero'] || ''
+const heroTitle = settingsMap['articles_index_title'] || 'The Knowledge Library'
+const heroSubtitle = settingsMap['articles_index_subtitle'] || 'Guides, histories and collector reference — everything you need to buy, sell and identify antiques with confidence.'
+const categories: string[] = settingsMap['categories'] ? JSON.parse(settingsMap['categories']) : []
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
 const categoryArticles: Record<string, any[]> = {}
-await Promise.all(
-  categories.map(async (cat) => {
-    const { data } = await supabase
-      .from('articles')
-      .select('id, title, slug, excerpt, image_url, category, published_at')
-      .eq('site_id', ANTIQUES_SITE_ID)
-      .eq('category', cat)
-      .eq('published', true)
-      .order('published_at', { ascending: false })
-      .limit(5)
-    if (data && data.length > 0) categoryArticles[cat] = data
-  })
-)
+for (const article of (allArticles ?? [])) {
+  if (!categoryArticles[article.category]) categoryArticles[article.category] = []
+  if (categoryArticles[article.category].length < 5) categoryArticles[article.category].push(article)
+}
 
-const { data: latest } = await supabase
-  .from('articles')
-  .select('id, title, slug, excerpt, image_url, category, published_at')
-  .eq('site_id', ANTIQUES_SITE_ID)
-  .eq('published', true)
-  .order('published_at', { ascending: false })
-  .limit(5)
-
-const featuredArticles = latest?.slice(1, 5) || []
+const featuredArticles = (allArticles ?? []).slice(1, 5)
 ---
 <PublicShell title={`${heroTitle} — GAUK Antiques`} description={heroSubtitle} ogImage={heroImage}>
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
