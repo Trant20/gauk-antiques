@@ -12,6 +12,9 @@ export const CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN = 0.015
 /** Guest identification limit per 24-hour window */
 export const GUEST_IDENTIFY_LIMIT = 2
 
+/** Guest ask message limit per 24-hour window */
+export const GUEST_ASK_LIMIT = 3
+
 /** Cloudflare Workers environment bindings */
 export type CloudflareEnv = {
   PUBLIC_SUPABASE_URL: string

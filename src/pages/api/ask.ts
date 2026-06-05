@@ -4,7 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { getPromptConfig } from '../../lib/ai'
 import { extractSearchTerms, lookupSpine } from '../../lib/ask-spine'
-import { ANTIQUES_ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
+import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN, GUEST_ASK_LIMIT } from '../../lib/constants'
 import type { CloudflareEnv } from '../../lib/constants'
 
 
@@ -42,7 +42,7 @@ export const POST: APIRoute = async ({ request }) => {
       (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
     )
 
-    // 1. Deduct credit for logged-in users
+    // 1. Deduct credit for logged-in users / rate-limit guests
     if (user_id) {
       const { data: creditOk } = await supabase.rpc('deduct_ask_message_credit', {
         p_user_id: user_id,
@@ -53,6 +53,22 @@ export const POST: APIRoute = async ({ request }) => {
           status: 402,
           headers: { 'Content-Type': 'application/json' }
         })
+      }
+    } else {
+      // Guest — enforce ask limit via KV
+      const kv = (env as unknown as CloudflareEnv).SESSION
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
+      const kvKey = `guest_ask:${ip}`
+      if (kv) {
+        const existing = await kv.get(kvKey)
+        const count = existing ? parseInt(existing, 10) : 0
+        if (count >= GUEST_ASK_LIMIT) {
+          return new Response(JSON.stringify({ error: 'Insufficient credits' }), {
+            status: 402,
+            headers: { 'Content-Type': 'application/json' }
+          })
+        }
+        await kv.put(kvKey, String(count + 1), { expirationTtl: 60 * 60 * 24 })
       }
     }
 

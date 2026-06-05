@@ -272,30 +272,11 @@ const { context = 'general', category = 'Antiques' } = Astro.props
     if (modal) { modal.style.display = 'none'; document.body.style.overflow = '' }
   })
 
-  let askSessionId = null
-  let askSessionOpened = false
-
-  async function openAskSession() {
-    if (askSessionOpened) return
-    askSessionOpened = true
-    try {
-      const headers = {}
-      const token = window.__gauk_token
-      if (token) headers['Authorization'] = `Bearer ${token}`
-      const res = await fetch('/api/ask-session', { method: 'POST', headers })
-      const data = await res.json()
-      if (data.ok) askSessionId = data.session_id
-    } catch (e) {
-      askSessionOpened = false
-    }
-  }
-
   tabAsk.addEventListener('click', () => {
     tabAsk.classList.add('active')
     tabIdentify.classList.remove('active')
     panelIdentify.style.display = 'none'
     panelAsk.style.display = 'flex'
-    openAskSession()
     if (isMobile()) {
       document.body.appendChild(modal)
       modal.style.display = 'flex'
