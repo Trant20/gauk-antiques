@@ -29,6 +29,8 @@ export const GET: APIRoute = async () => {
     url('/', '1.0', 'daily', today),
     url('/explore', '0.8', 'daily', today),
     url('/articles', '0.8', 'weekly', today),
+    url('/videos', '0.8', 'daily', today),
+    url('/channels', '0.7', 'weekly', today),
     url('/pricing', '0.6', 'monthly', today),
   ]
 
