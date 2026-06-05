@@ -3,52 +3,38 @@ import { ANTIQUES_SITE_ID } from '../../lib/constants'
 import PublicShell from '../../layouts/PublicShell.astro'
 import { supabase } from '../../lib/supabase'
 
-// Initial load — first 24 channels and category list
-const { data: initialChannels } = await supabase
-  .from('publishers')
-  .select('id, name, slug, logo_url, description, default_category')
-  .eq('has_youtube', true)
-  .eq('active', true)
-  .order('name')
-  .limit(24)
-
-const { count: totalCount } = await supabase
-  .from('publishers')
-  .select('*', { count: 'exact', head: true })
-  .eq('has_youtube', true)
-  .eq('active', true)
-
-const { data: catRows } = await supabase
-  .from('publishers')
-  .select('default_category')
-  .eq('has_youtube', true)
-  .eq('active', true)
-  .not('default_category', 'is', null)
+// Parallelise all initial queries
+const [
+  { data: initialChannels },
+  { count: totalCount },
+  { data: catRows },
+  { data: channelsHeroSetting },
+] = await Promise.all([
+  supabase.from('publishers').select('id, name, slug, logo_url, description, default_category').eq('has_youtube', true).eq('active', true).order('name').limit(24),
+  supabase.from('publishers').select('*', { count: 'exact', head: true }).eq('has_youtube', true).eq('active', true),
+  supabase.from('publishers').select('default_category').eq('has_youtube', true).eq('active', true).not('default_category', 'is', null),
+  supabase.from('site_settings').select('value').eq('site_id', ANTIQUES_SITE_ID).eq('key', 'channels_hero').single(),
+])
 
 const categories = [...new Set(catRows?.map(r => r.default_category).filter(Boolean))].sort() as string[]
-
-
-// Load channels hero
-const { data: channelsHeroSetting } = await supabase
-  .from('site_settings')
-  .select('value')
-  .eq('site_id', ANTIQUES_SITE_ID)
-  .eq('key', 'channels_hero')
-  .single()
 const channelsHeroImage: string = channelsHeroSetting?.value || ''
 
-// Video counts for initial channels
+// Video counts via COUNT per publisher — no row pulls
 const initialIds = (initialChannels || []).map(c => c.id)
 const videoCounts: Record<string, number> = {}
 if (initialIds.length > 0) {
-  const { data: counts } = await supabase
-    .from('external_articles')
-    .select('publisher_id')
-    .eq('site_id', ANTIQUES_SITE_ID)
-    .eq('content_type', 'video')
-    .eq('is_public', true)
-    .in('publisher_id', initialIds)
-  counts?.forEach(r => { videoCounts[r.publisher_id] = (videoCounts[r.publisher_id] || 0) + 1 })
+  const countResults = await Promise.all(
+    initialIds.map(id =>
+      supabase
+        .from('external_articles')
+        .select('*', { count: 'exact', head: true })
+        .eq('site_id', ANTIQUES_SITE_ID)
+        .eq('content_type', 'video')
+        .eq('is_public', true)
+        .eq('publisher_id', id)
+    )
+  )
+  initialIds.forEach((id, i) => { videoCounts[id] = countResults[i].count || 0 })
 }
 
 const channelsWithCounts = (initialChannels || []).map(c => ({
