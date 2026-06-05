@@ -1,13 +1,14 @@
 ---
-const { title, description = 'AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.', ogImage = '', canonical = '' } = Astro.props
-const canonicalURL = canonical || ('https://gaukantiques.com' + Astro.url.pathname)
+import { ANTIQUES_SITE_ID } from '../lib/constants'
 import Layout from './Layout.astro'
 import { supabase } from '../lib/supabase'
+const { title, description = 'AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.', ogImage = '', canonical = '' } = Astro.props
+const canonicalURL = canonical || ('https://gaukantiques.com' + Astro.url.pathname)
 
 const { data: catSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', 'categories')
   .single()
 
@@ -23,7 +24,7 @@ const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
 const { data: heroSettings } = await supabase
   .from('site_settings')
   .select('key, value')
-  .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
+  .eq('site_id', ANTIQUES_SITE_ID)
   .or('key.like.category_hero_%,key.eq.logo_url,key.eq.logo_height_desktop,key.eq.logo_height_mobile')
 
 const heroMap: Record<string, string> = {}

@@ -3,8 +3,8 @@ import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { extractSearchTerms, lookupSpine } from '../../lib/ask-spine'
+import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
 /** Simple hash for cache key */
 function hashQuestion(question: string, context: string): string {
@@ -139,7 +139,7 @@ export const POST: APIRoute = async ({ request }) => {
     const answer = response.content[0].type === 'text' ? response.content[0].text : ''
     const inputTokens = response.usage.input_tokens
     const outputTokens = response.usage.output_tokens
-    const costPence = Math.ceil((inputTokens * 0.003) + (outputTokens * 0.015))
+    const costPence = Math.ceil((inputTokens * CLAUDE_INPUT_COST_PENCE_PER_TOKEN) + (outputTokens * CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN))
 
     // 7. Write to ask_cache
     await supabase

@@ -1,6 +1,7 @@
 ---
 import AppShell from '../layouts/AppShell.astro'
 import AccountPlans from '../components/AccountPlans.astro'
+import { ANTIQUES_SITE_ID } from '../lib/constants'
 ---
 <AppShell title="My Account — GAUK Antiques" pageCap="Account" pageTitle="My Account">
 <style>
@@ -86,8 +87,7 @@ import AccountPlans from '../components/AccountPlans.astro'
 
 <script>
   import { supabase } from '../lib/supabase-browser'
-  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-
+  
   const REASON_LABELS: Record<string, string> = {
     signup_bonus: 'Signup bonus',
     subscription_grant: 'Subscription grant',

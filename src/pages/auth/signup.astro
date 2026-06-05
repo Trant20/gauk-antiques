@@ -1,5 +1,6 @@
 ---
 import PublicShell from '../../layouts/PublicShell.astro'
+import { ANTIQUES_SITE_ID } from '../../lib/constants'
 ---
 <PublicShell title="Create Account — GAUK Antiques">
 <style>
@@ -52,8 +53,7 @@ import PublicShell from '../../layouts/PublicShell.astro'
 
 <script>
   import { supabase } from '../../lib/supabase-browser'
-  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-
+  
   const btn = document.getElementById('signup-btn')
   const errorEl = document.getElementById('auth-error')
 

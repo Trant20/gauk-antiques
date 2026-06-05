@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro'
 import { supabase } from '../lib/supabase'
+import { ANTIQUES_SITE_ID } from '../lib/constants'
 
 const DOMAIN = 'https://gaukantiques.com'
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
 /** Build a <url> block for the sitemap */
 function url(loc: string, priority: string, changefreq: string, lastmod?: string): string {

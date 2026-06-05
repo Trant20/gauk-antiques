@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
+import { ANTIQUES_SITE_ID } from '../../../lib/constants'
 
 type CloudflareEnv = {
   STRIPE_SECRET_KEY: string
@@ -10,7 +11,6 @@ type StripeSession = {
   error?: { message: string }
 }
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status,

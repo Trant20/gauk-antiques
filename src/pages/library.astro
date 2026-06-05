@@ -1,5 +1,6 @@
 ---
 import AppShell from '../layouts/AppShell.astro'
+import { ANTIQUES_SITE_ID, R2_CDN } from '../lib/constants'
 ---
 <AppShell title="The Vault — GAUK Antiques" pageCap="The Vault" pageTitle="The Vault" pageSubtitle="Your identification history.">
 <style is:global>
@@ -156,8 +157,7 @@ import AppShell from '../layouts/AppShell.astro'
 <script>
   import { supabase } from '../lib/supabase-browser'
 
-  const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
-
+  
   const elLoading   = document.getElementById('lib-loading')
   const elAuthGate  = document.getElementById('lib-auth-gate')
   const elEmpty     = document.getElementById('lib-empty')
@@ -263,7 +263,7 @@ import AppShell from '../layouts/AppShell.astro'
       .from('identifications')
       .select('id, image_key, result_json, created_at')
       .eq('user_id', session.user.id)
-      .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
+      .eq('site_id', ANTIQUES_SITE_ID)
       .order('created_at', { ascending: false })
 
     elLoading.classList.add('hidden')

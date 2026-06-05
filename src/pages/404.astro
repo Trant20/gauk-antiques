@@ -1,10 +1,9 @@
 ---
+import { ANTIQUES_SITE_ID, R2_CDN } from '../lib/constants'
 import { formatValueRange } from '../lib/currency'
 import PublicShell from '../layouts/PublicShell.astro'
 import { supabase } from '../lib/supabase'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-const R2 = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
 
 const { data: recent } = await supabase
   .from('identifications')

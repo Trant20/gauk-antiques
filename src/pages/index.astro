@@ -1,9 +1,9 @@
 ---
+import { ANTIQUES_SITE_ID } from '../lib/constants'
 import PublicShell from '../layouts/PublicShell.astro'
 import { supabase } from '../lib/supabase'
 import AIHeroWidget from '../components/AIHeroWidget.astro'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
 const { data: settings } = await supabase
   .from('site_settings')

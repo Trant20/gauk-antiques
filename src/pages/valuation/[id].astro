@@ -1,4 +1,5 @@
 ---
+import { ANTIQUES_SITE_ID, R2_CDN } from '../../lib/constants'
 import AppShell from '../../layouts/AppShell.astro'
 import { supabase } from '../../lib/supabase'
 import { formatValueRange, formatSingleValue } from '../../lib/currency'
@@ -13,7 +14,6 @@ const { data: item } = await supabase
 
 if (!item) return Astro.redirect('/')
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 const { data: enrichCreditSetting } = await supabase
   .from('site_settings')
   .select('value')
@@ -24,8 +24,8 @@ const creditCostEnrich = Number(enrichCreditSetting?.value ?? 5)
 
 const r = item.result_json
 const enrichment = item.enrichment_json || null
-const imageUrl = `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.image_key}`
-const secondaryImageUrl = item.secondary_image_key ? `https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev/${item.secondary_image_key}` : null
+const imageUrl = `R2_CDN/${item.image_key}`
+const secondaryImageUrl = item.secondary_image_key ? `R2_CDN/${item.secondary_image_key}` : null
 const conditionScore = enrichment?.condition_score || (r.condition === 'Mint' ? 98 : r.condition === 'Excellent' ? 88 : r.condition === 'Good' ? 72 : r.condition === 'Fair' ? 50 : 30)
 const desirabilityScore = enrichment?.desirability_score || 70
 const rarityScore = r.rarity_score || 65
@@ -690,8 +690,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!enrichment, itemOwnerId: item.user_id }}>
   import { supabase } from '../../lib/supabase-browser'
 
-  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-
+  
   // Single auth call — used throughout
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) { window.location.href = '/auth/signin' }

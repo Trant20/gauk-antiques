@@ -1,9 +1,9 @@
 ---
+import { ANTIQUES_SITE_ID } from '../lib/constants'
 import AppShell from '../layouts/AppShell.astro'
 import AIHeroWidget from '../components/AIHeroWidget.astro'
 import { supabase } from '../lib/supabase'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 const { data: creditSetting } = await supabase
   .from('site_settings')
   .select('value')

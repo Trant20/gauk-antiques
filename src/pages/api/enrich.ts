@@ -2,8 +2,8 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 const MODEL = 'claude-sonnet-4-6'
 
 function getSupabase() {
@@ -154,7 +154,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const inputTokens = response.usage.input_tokens
     const outputTokens = response.usage.output_tokens
-    const costPence = Math.ceil((inputTokens * 0.003) + (outputTokens * 0.015))
+    const costPence = Math.ceil((inputTokens * CLAUDE_INPUT_COST_PENCE_PER_TOKEN) + (outputTokens * CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN))
     await supabase.from('token_usage').insert({
       site_id: SITE_ID,
       user_id: user.id,

@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
+import { ANTIQUES_SITE_ID } from '../../lib/constants'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
 export const POST: APIRoute = async ({ request }) => {
   try {

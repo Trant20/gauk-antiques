@@ -1,4 +1,5 @@
 /** Lightweight markdown renderer — GAUK aesthetic */
+import { ANTIQUES_SITE_ID } from '../lib/constants'
 export function renderMarkdown(text: string): string {
   return text
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -64,7 +65,7 @@ export async function sendToAsk(
       history,
       context,
       user_id: userId,
-      site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744',
+      site_id: ANTIQUES_SITE_ID,
       identification_result: identificationResult
     })
   })

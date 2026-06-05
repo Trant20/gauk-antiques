@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
+import { ANTIQUES_SITE_ID } from '../../lib/constants'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function json(data: unknown, status = 200) {

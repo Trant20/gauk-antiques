@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
+import { ANTIQUES_SITE_ID } from '../../lib/constants'
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 const SESSION_TTL_MS = 60 * 60 * 1000 // 60 minutes
 
 /** Generate a simple session ID */

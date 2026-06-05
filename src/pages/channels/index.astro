@@ -1,4 +1,5 @@
 ---
+import { ANTIQUES_SITE_ID } from '../../lib/constants'
 import PublicShell from '../../layouts/PublicShell.astro'
 import { supabase } from '../../lib/supabase'
 
@@ -26,7 +27,6 @@ const { data: catRows } = await supabase
 
 const categories = [...new Set(catRows?.map(r => r.default_category).filter(Boolean))].sort() as string[]
 
-const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
 // Load channels hero
 const { data: channelsHeroSetting } = await supabase
