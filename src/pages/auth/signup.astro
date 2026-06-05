@@ -62,7 +62,7 @@ import PublicShell from '../../layouts/PublicShell.astro'
     const password = (document.getElementById('password') as HTMLInputElement).value
     if (!email || !password) { showError('Please fill in all fields'); return }
     if (password.length < 8) { showError('Password must be at least 8 characters'); return }
-    if (!/[0-9!@#$%^&*()_+\-=\[\]{};:\'",.<>?/\\|`~]/.test(password)) { showError('Password must contain at least one number or special character'); return }
+    if (!/[0-9!@#$%^&*()_+\-=\[\]{};:\'",.<>?\/\\|`~]/.test(password)) { showError('Password must contain at least one number or special character'); return }
     btn.setAttribute('disabled', 'true')
     btn.textContent = 'Creating account...'
     errorEl!.style.display = 'none'

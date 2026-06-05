@@ -257,6 +257,7 @@ import AppShell from '../layouts/AppShell.astro'
       .from('identifications')
       .select('id, image_key, result_json, created_at')
       .eq('user_id', session.user.id)
+      .eq('site_id', 'add6d12c-ecd8-4517-b2e5-0f4977603744')
       .order('created_at', { ascending: false })
 
     elLoading.classList.add('hidden')
