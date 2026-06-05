@@ -175,7 +175,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     }
 
     // Transactions
-    const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).order('created_at', { ascending: false }).limit(10)
+    const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).order('created_at', { ascending: false }).limit(25)
     const txList = document.getElementById('tx-list')!
     if (!txs || txs.length === 0) {
       txList.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:14px;color:#8A7A66;">No activity yet.</div>'

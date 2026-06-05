@@ -164,6 +164,13 @@ const featuredArticles = (allArticles ?? []).slice(1, 5)
     )
   })}
 
+  {categories.filter(cat => categoryArticles[cat]?.length > 0).length === 0 && (
+    <div style="text-align:center;padding:80px 24px;">
+      <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:24px;font-style:italic;color:#5C5040;margin-bottom:12px;">No articles yet</div>
+      <div style="font-family:'Prata',Georgia,serif;font-size:14px;color:#8A7A66;line-height:1.8;">The knowledge library is being built. Check back soon.</div>
+    </div>
+  )}
+
   <div class="art-idx-cta">
     <div class="art-idx-cta-eye">Free Identification</div>
     <div class="art-idx-cta-title">Have a piece to identify?</div>
