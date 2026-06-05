@@ -75,26 +75,26 @@ Last updated: 2026-06-05 (Post-audit reconciliation)
 - M31: broken /makers links removed from category pages; route build deferred to future feature ✅
 
 ## Remaining Low Priority
-- L1: Layout.astro CSS tokens unused — components use hardcoded hex values
-- L2: PublicShell.astro bottom nav active state uses JS — could be CSS :local-link
-- L3: No loading state on feed.astro channel filter
-- L4: No error boundary on AskChat — silent failure if API down
-- L5: articles.astro has no empty state UI
-- L6: channels/index.astro pulls all videos to count — wasteful
-- L7: videos/[id].astro related videos query pulls 6 but only shows 3
-- L8: SideNav hamburger state not restored on back navigation
-- L9: No skeleton loader on valuation/[id].astro enrichment section
-- L10: identify.astro image preview has no remove/reset option
-- L11: No pagination on library.astro — will degrade at scale
-- L12: account.astro transaction history limited to 10 — no load more
-- L13: 404.astro pulls recent identifications — unnecessary DB call on error page
-- L14: learn/[slug].astro has no 404 handling if article not found
-- L15: feed.astro personalisation only filters videos — articles unfiltered
-- L16: PublicShell search input has no debounce
-- L17: No sitemap entry for /feed, /library, /account
-- L18: OG images are static — no dynamic OG for valuation pages
-- L19: No canonical tag on paginated or filtered views
-- L20: videos.astro category filter state lost on page refresh
+- L1: Layout.astro CSS tokens unused — components use hardcoded hex values (deferred — full CSS audit needed)
+- L2: PublicShell bottom nav active state uses JS ✅ (acceptable — :local-link not widely supported)
+- L3: Feed channel filter loading state already implemented ✅
+- L4: AskChat error boundary already implemented in AIHeroWidget ✅
+- L5: Empty state added to articles index ✅
+- L6: Channel video counts use COUNT queries — fixed as part of M17 ✅
+- L7: Related videos renders all 6 — stale audit item, no fix needed ✅
+- L8: SideNav hamburger state not restored on back navigation (minor UX, deferred)
+- L9: Enrichment skeleton/progress UI already implemented ✅
+- L10: identify.astro image preview no reset (deferred — UX improvement)
+- L11: Library pagination added — loads 24 at a time with load more ✅
+- L12: Transaction history limit raised to 25 ✅
+- L13: 404 page rebuilt as static — 3 DB queries removed ✅
+- L14: learn/[slug] redirects to /explore if not found ✅
+- L15: Feed articles unfiltered (deferred — personalised articles feed future feature)
+- L16: No search input in PublicShell — stale audit item ✅
+- L17: /videos and /channels added to sitemap; /feed /library /account correctly excluded (auth-protected) ✅
+- L18: Dynamic OG for valuation pages deferred — blocked until public sharing feature built
+- L19: Canonical implemented in PublicShell with pathname fallback ✅
+- L20: Videos category filter state lost on refresh (deferred — URL state persistence future improvement)
 
 ## Future Features (not debt)
 - Public valuation sharing route /report/[id] with blur gate for non-owners
