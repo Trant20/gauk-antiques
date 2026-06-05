@@ -249,13 +249,15 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   const btnList = document.getElementById('btn-list')
 
   function cardHTML(c) {
+    const name = escapeHtml(c.name || '')
+    const cat_label = escapeHtml(c.default_category || '')
     const logo = c.logo_url
-      ? `<img class="chl-card-logo" src="${c.logo_url}" alt="${c.name}" loading="lazy" />`
-      : `<div class="chl-card-logo-placeholder">${c.name.charAt(0)}</div>`
-    const cat = c.default_category ? `<div class="chl-card-cat">${c.default_category}</div>` : ''
-    return `<a href="/channels/${c.slug}" class="chl-card" data-name="${c.name.toLowerCase()}" data-cat="${c.default_category || ''}" data-id="${c.id}">
+      ? `<img class="chl-card-logo" src="${c.logo_url}" alt="${name}" loading="lazy" />`
+      : `<div class="chl-card-logo-placeholder">${escapeHtml(c.name.charAt(0))}</div>`
+    const cat = cat_label ? `<div class="chl-card-cat">${cat_label}</div>` : ''
+    return `<a href="/channels/${c.slug}" class="chl-card" data-name="${escapeHtml(c.name.toLowerCase())}" data-cat="${cat_label}" data-id="${c.id}">
       ${logo}
-      <div class="chl-card-name">${c.name}</div>
+      <div class="chl-card-name">${name}</div>
       ${cat}
       <div class="chl-card-count">${c.video_count} video${c.video_count !== 1 ? 's' : ''}</div>
       <div class="chl-card-following">Following</div>
@@ -263,15 +265,17 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
   }
 
   function listItemHTML(c) {
+    const name = escapeHtml(c.name || '')
+    const cat_label = escapeHtml(c.default_category || '')
     const logo = c.logo_url
-      ? `<img class="chl-list-logo" src="${c.logo_url}" alt="${c.name}" loading="lazy" />`
-      : `<div class="chl-list-logo-placeholder">${c.name.charAt(0)}</div>`
-    const cat = c.default_category ? `<div class="chl-list-cat">${c.default_category}</div>` : ''
-    const desc = c.description ? `<div class="chl-list-desc">${c.description.slice(0, 120)}</div>` : ''
-    return `<a href="/channels/${c.slug}" class="chl-list-item" data-name="${c.name.toLowerCase()}" data-cat="${c.default_category || ''}">
+      ? `<img class="chl-list-logo" src="${c.logo_url}" alt="${name}" loading="lazy" />`
+      : `<div class="chl-list-logo-placeholder">${escapeHtml(c.name.charAt(0))}</div>`
+    const cat = cat_label ? `<div class="chl-list-cat">${cat_label}</div>` : ''
+    const desc = c.description ? `<div class="chl-list-desc">${escapeHtml(c.description.slice(0, 120))}</div>` : ''
+    return `<a href="/channels/${c.slug}" class="chl-list-item" data-name="${escapeHtml(c.name.toLowerCase())}" data-cat="${cat_label}">
       ${logo}
       <div class="chl-list-body">
-        <div class="chl-list-name">${c.name}</div>
+        <div class="chl-list-name">${name}</div>
         ${desc}
       </div>
       <div class="chl-list-meta">
@@ -386,6 +390,7 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
 
 <script>
   import { supabase } from '../../lib/supabase-browser'
+  import { escapeHtml } from '../../lib/utils'
 
   /** Marks followed channel cards with data-following="true" */
   async function markFollowedChannels() {

@@ -95,7 +95,7 @@ import PublicShell from '../../layouts/PublicShell.astro'
         </div>
         <div class="auth-eyebrow">Almost there</div>
         <div class="auth-title">Check your email</div>
-        <div class="auth-confirm-email">${email}</div>
+        <div class="auth-confirm-email">${email.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}</div>
         <div class="auth-confirm-hint">We've sent a confirmation link to the address above.<br>Click it to activate your account and claim your free credits.</div>
         <div class="auth-confirm-divider"></div>
         <div class="auth-footer">Wrong address? <a href="/auth/signup">Start over</a></div>

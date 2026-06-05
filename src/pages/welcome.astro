@@ -4,15 +4,19 @@ import { supabase } from '../lib/supabase'
 
 const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 
-const { data: plan } = await supabase
-  .from('plans')
-  .select('credits')
-  .eq('site_id', SITE_ID)
-  .eq('plan_type', 'free')
-  .eq('active', true)
-  .single()
+const [
+  { data: plan },
+  { data: identifyCost },
+  { data: enrichCost },
+] = await Promise.all([
+  supabase.from('plans').select('credits').eq('site_id', SITE_ID).eq('plan_type', 'free').eq('active', true).single(),
+  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'credit_cost_identify').single(),
+  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'credit_cost_enrich').single(),
+])
 
 const freeCredits = plan?.credits || 5
+const creditCostIdentify = parseInt(identifyCost?.value ?? '1', 10)
+const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
 ---
 <PublicShell title="Welcome — GAUK Antiques">
 <style>
@@ -54,7 +58,7 @@ const freeCredits = plan?.credits || 5
   <a href="/library" class="welcome-btn">Go to My Collection</a>
   <a href="/" class="welcome-sub-link">Identify a new piece</a>
   <div class="welcome-divider"></div>
-  <div class="welcome-body">Each credit unlocks one full valuation report — expert notes, market history, comparable sales, and your options.</div>
+  <div class="welcome-body">Use {creditCostIdentify} credit to identify a piece — maker, period, condition and estimated value. Use {creditCostEnrich} credits to unlock the full valuation report — expert notes, market history, comparable sales and your options.</div>
   <div class="welcome-hint">When you need more, top up any time. Credits never expire.</div>
 </div>
 </PublicShell>

@@ -129,6 +129,9 @@ const { data: initialArticles, count } = await supabase
 </div>
 
 <script define:vars={{ dbCategory, SITE_ID, initialCount: count }}>
+function escapeHtml(str) {
+  return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;')
+}
 const SUPA_URL = import.meta.env.PUBLIC_SUPABASE_URL
 const SUPA_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 const BATCH = 12
@@ -144,8 +147,8 @@ function makeCard(a) {
   card.innerHTML = `
     ${a.image_url ? `<img class="cat-art-card-img" src="${a.image_url}" alt="" loading="lazy"/>` : '<div class="cat-art-card-img"></div>'}
     <div class="cat-art-card-body">
-      <div class="cat-art-card-title">${a.title}</div>
-      ${a.excerpt ? `<div class="cat-art-card-excerpt">${a.excerpt.slice(0,120)}...</div>` : ''}
+      <div class="cat-art-card-title">${escapeHtml(a.title)}</div>
+      ${a.excerpt ? `<div class="cat-art-card-excerpt">${escapeHtml(a.excerpt.slice(0,120))}...</div>` : ''}
       ${date ? `<div class="cat-art-card-date">${date}</div>` : ''}
     </div>`
   return card

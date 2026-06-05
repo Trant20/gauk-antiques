@@ -107,6 +107,12 @@ const pageTitle = activeCategoryName
 const pageDescription = activeCategoryName
   ? `Video guides, auction coverage and collector advice for ${activeCategoryName.toLowerCase()} antiques.`
   : 'Video guides, auction coverage and collector advice — curated from the best antiques channels on YouTube.'
+
+function decodeTitle(s: string): string {
+  return s
+    .replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&')
+    .replaceAll('&ndash;', '–').replaceAll('&mdash;', '—').replaceAll('&hellip;', '…')
+}
 ---
 <PublicShell title={pageTitle} description={pageDescription}>
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
@@ -277,7 +283,7 @@ const pageDescription = activeCategoryName
             </div>
             <div class="video-body">
               {v.source_name && <div class="video-source">{v.source_name}</div>}
-              <div class="video-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
+              <div class="video-title" set:text={decodeTitle(v.title)}></div>
             </div>
           </a>
         ))}
@@ -335,7 +341,7 @@ const pageDescription = activeCategoryName
               </div>
               <div class="video-body">
                 {v.source_name && <div class="video-source">{v.source_name}</div>}
-                <div class="video-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
+                <div class="video-title" set:text={decodeTitle(v.title)}></div>
               </div>
             </a>
           ))}
@@ -375,7 +381,7 @@ const pageDescription = activeCategoryName
             </div>
             <div class="video-body">
               {v.source_name && <div class="video-source">{v.source_name}</div>}
-              <div class="video-title" set:html={v.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')}></div>
+              <div class="video-title" set:text={decodeTitle(v.title)}></div>
             </div>
           </a>
         ))}

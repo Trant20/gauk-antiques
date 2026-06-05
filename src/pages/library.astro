@@ -198,27 +198,31 @@ import AppShell from '../layouts/AppShell.astro'
   }
 
   function thumbEl(imageKey, alt) {
-    if (imageKey) return '<div style="width:100%;aspect-ratio:1/1;overflow:hidden;position:relative;background:#E6DCCB;"><img style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#E6DCCB;" src="' + R2 + '/' + imageKey + '" alt="' + alt + '" loading="lazy" /></div>'
+    const safeAlt = escapeHtml(alt)
+    if (imageKey) return '<div style="width:100%;aspect-ratio:1/1;overflow:hidden;position:relative;background:#E6DCCB;"><img style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#E6DCCB;" src="' + R2 + '/' + imageKey + '" alt="' + safeAlt + '" loading="lazy" /></div>'
     return '<div class="lib-card-thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B49E" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
   }
 
   function listThumbEl(imageKey, alt) {
-    if (imageKey) return '<img class="lib-list-thumb" src="' + R2 + '/' + imageKey + '" alt="' + alt + '" loading="lazy" />'
+    const safeAlt = escapeHtml(alt)
+    if (imageKey) return '<img class="lib-list-thumb" src="' + R2 + '/' + imageKey + '" alt="' + safeAlt + '" loading="lazy" />'
     return '<div class="lib-list-thumb" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C4B49E" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
   }
 
   function renderGrid(items) {
     elGridView.innerHTML = items.map(item => {
       const r = item.result_json || {}
-      const title = r.subcategory || 'Unidentified Item'
+      const title = escapeHtml(r.subcategory || 'Unidentified Item')
+      const category = escapeHtml(r.category || 'Antique')
+      const condition = escapeHtml(r.condition || '')
       return '<a href="/valuation/' + item.id + '" class="lib-card">' +
-        thumbEl(item.image_key, title) +
+        thumbEl(item.image_key, r.subcategory || 'Unidentified Item') +
         '<div class="lib-card-body">' +
-          '<div class="lib-card-cat">' + (r.category || 'Antique') + '</div>' +
+          '<div class="lib-card-cat">' + category + '</div>' +
           '<div class="lib-card-title">' + title + '</div>' +
           '<div class="lib-card-value">' + formatValue(r) + '</div>' +
           '<div class="lib-card-meta">' +
-            '<span class="lib-card-condition">' + (r.condition || '') + '</span>' +
+            '<span class="lib-card-condition">' + condition + '</span>' +
             '<span class="lib-card-date">' + formatDate(item.created_at) + '</span>' +
           '</div>' +
         '</div></a>'
@@ -228,14 +232,16 @@ import AppShell from '../layouts/AppShell.astro'
   function renderList(items) {
     elListView.innerHTML = items.map(item => {
       const r = item.result_json || {}
-      const title = r.subcategory || 'Unidentified Item'
-      const maker = r.maker || r.manufacturer || ''
-      const sub = maker ? (maker + (r.condition ? ' \u00b7 ' + r.condition : '')) : ''
+      const title = escapeHtml(r.subcategory || 'Unidentified Item')
+      const category = escapeHtml(r.category || 'Antique')
+      const maker = escapeHtml(r.maker || r.manufacturer || '')
+      const condition = escapeHtml(r.condition || '')
+      const sub = maker ? (maker + (condition ? ' \u00b7 ' + condition : '')) : ''
       return '<a href="/valuation/' + item.id + '" class="lib-list-item">' +
-        listThumbEl(item.image_key, title) +
+        listThumbEl(item.image_key, r.subcategory || 'Unidentified Item') +
         '<div class="lib-list-body">' +
           '<div class="lib-list-left">' +
-            '<div class="lib-list-cat">' + (r.category || 'Antique') + '</div>' +
+            '<div class="lib-list-cat">' + category + '</div>' +
             '<div class="lib-list-title">' + title + '</div>' +
             (sub ? '<div class="lib-list-sub">' + sub + '</div>' : '') +
           '</div>' +
