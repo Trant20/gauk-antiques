@@ -373,6 +373,30 @@ const firstWords = words.slice(0, -1).join(' ')
     if (ro) ro.style.display = 'none'
   })
 
+  document.addEventListener('guest-limit-reached', () => {
+    const outer = document.getElementById('result-outer') as HTMLElement
+    const idTable = document.querySelector('.result-id-table') as HTMLElement
+    const blurContent = document.getElementById('blur-content') as HTMLElement
+    const ctaWrap = document.getElementById('result-gate-cta-wrap') as HTMLElement
+    const typedEl = document.getElementById('result-gate-typed') as HTMLElement
+    const cursorEl = document.getElementById('result-gate-cursor') as HTMLElement
+    if (!outer || !ctaWrap || !typedEl || !cursorEl) return
+    if (idTable) idTable.style.display = 'none'
+    if (blurContent) blurContent.style.display = 'none'
+    ctaWrap.style.display = 'block'
+    outer.style.display = 'block'
+    outer.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const msg = 'You have a good eye. I have identified two pieces for you — to keep going and unlock full valuations, all I need is a free account. Thirty seconds, no card required.'
+    let i = 0
+    typedEl.textContent = ''
+    cursorEl.style.display = 'inline-block'
+    function type() {
+      if (i < msg.length) { typedEl.textContent += msg[i]; i++; setTimeout(type, 24) }
+      else { cursorEl.style.display = 'none' }
+    }
+    setTimeout(type, 300)
+  })
+
   document.addEventListener('identification-complete', (e: any) => {
     const identifyData = e.detail
     const r = identifyData.result
@@ -462,11 +486,6 @@ const firstWords = words.slice(0, -1).join(' ')
     if (session?.user?.id && identifyData.id) {
       const saveNote = document.getElementById('save-note')
       if (saveNote) saveNote.classList.add('visible')
-      fetch('/api/deduct-credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744', identification_id: identifyData.id, amount: 1 })
-      })
     }
   })
 </script>

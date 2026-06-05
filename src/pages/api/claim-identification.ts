@@ -2,62 +2,72 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
 
+const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status, headers: { 'Content-Type': 'application/json' }
+  })
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const body = await request.json()
-    const { user_id, identification_id, email, site_id } = body
+    const auth = request.headers.get('Authorization')
+    if (!auth?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401)
 
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: 'Missing user_id' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
-    }
+    const token = auth.slice(7)
+    const supabase = createClient(
+      (env as any).PUBLIC_SUPABASE_URL,
+      (env as any).SUPABASE_SERVICE_ROLE_KEY
+    )
 
-    const supabase = createClient(env.PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    if (authError || !user) return json({ error: 'Invalid token' }, 401)
+
+    const { identification_id, email } = await request.json()
 
     // Direct claim — identification_id provided via localStorage
     if (identification_id) {
       const { error } = await supabase
         .from('identifications')
-        .update({ user_id })
+        .update({ user_id: user.id })
         .eq('id', identification_id)
         .is('user_id', null)
-      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } })
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      if (error) return json({ error: error.message }, 500)
+      return json({ ok: true })
     }
 
     // Cross-browser claim — look up pending_claims by email + site_id
-    if (email && site_id) {
+    if (email) {
       const { data: claim, error: claimErr } = await supabase
         .from('pending_claims')
         .select('identification_id')
         .eq('email', email)
-        .eq('site_id', site_id)
+        .eq('site_id', SITE_ID)
         .single()
 
-      if (claimErr || !claim) {
-        return new Response(JSON.stringify({ ok: true, note: 'No pending claim found' }), { status: 200, headers: { 'Content-Type': 'application/json' } })
-      }
+      if (claimErr || !claim) return json({ ok: true, note: 'No pending claim found' })
 
       const { error: updateErr } = await supabase
         .from('identifications')
-        .update({ user_id })
+        .update({ user_id: user.id })
         .eq('id', claim.identification_id)
         .is('user_id', null)
 
-      if (updateErr) return new Response(JSON.stringify({ error: updateErr.message }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      if (updateErr) return json({ error: updateErr.message }, 500)
 
-      // Clean up pending claim
       await supabase
         .from('pending_claims')
         .delete()
         .eq('email', email)
-        .eq('site_id', site_id)
+        .eq('site_id', SITE_ID)
 
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      return json({ ok: true })
     }
 
-    return new Response(JSON.stringify({ error: 'Missing identification_id or email+site_id' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+    return json({ error: 'Missing identification_id or email' }, 400)
 
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    return json({ error: err.message }, 500)
   }
 }

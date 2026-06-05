@@ -57,8 +57,7 @@ import PublicShell from '../../layouts/PublicShell.astro'
     // Grant signup credits
     await fetch('/api/grant-credits', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, site_id: SITE_ID })
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` }
     })
 
     // Claim pending identification — check localStorage first, then server-side pending_claims
@@ -66,17 +65,17 @@ import PublicShell from '../../layouts/PublicShell.astro'
     if (localPendingId) {
       await fetch('/api/claim-identification', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identification_id: localPendingId, user_id: userId })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` },
+        body: JSON.stringify({ identification_id: localPendingId })
       })
       localStorage.removeItem('pending_identification_id')
     } else {
       // Cross-browser confirmation — look up pending claim by email
       const email = data.session.user.email
-      const claimRes = await fetch('/api/claim-identification', {
+      await fetch('/api/claim-identification', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, user_id: userId, site_id: SITE_ID })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` },
+        body: JSON.stringify({ email })
       })
     }
 

@@ -150,11 +150,6 @@ const creditCostIdentify = Number(creditSetting?.value ?? 1)
     if (session?.user?.id && identifyData.id) {
       const saveNote = document.getElementById('save-note')
       if (saveNote) saveNote.classList.add('visible')
-      fetch('/api/deduct-credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744', identification_id: identifyData.id, amount: Number(document.getElementById('identify-widget-wrap')?.dataset.creditCost ?? 1) })
-      })
     }
   })
 </script>

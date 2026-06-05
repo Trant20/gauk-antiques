@@ -688,13 +688,7 @@ const { data: videos } = await supabase
       if (bc) bc.style.filter = 'none'
       const ctaWrap = document.getElementById('cat-gate-cta-wrap')
       if (ctaWrap) ctaWrap.style.display = 'none'
-      if (session.user.id && identifyData.id) {
-        fetch('/api/deduct-credits', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-          body: JSON.stringify({ site_id: 'add6d12c-ecd8-4517-b2e5-0f4977603744', identification_id: identifyData.id, amount: 1 })
-        })
-      }
+
     }
   })
 </script>

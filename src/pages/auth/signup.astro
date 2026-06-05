@@ -76,7 +76,7 @@ import PublicShell from '../../layouts/PublicShell.astro'
       await fetch('/api/pending-claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: data.user.email, identification_id: pendingId, site_id: SITE_ID })
+        body: JSON.stringify({ email: data.user.email, identification_id: pendingId })
       })
     }
 

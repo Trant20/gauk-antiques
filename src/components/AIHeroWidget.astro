@@ -409,10 +409,16 @@ const { context = 'general', category = 'Antiques' } = Astro.props
       status.textContent = 'Examining the object...'
       const identifyRes = await fetch('/api/identify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: uploadData.key, secondary_key: secondaryKey, context, user_id: window.__gauk_user_id || null })
+        headers: { 'Content-Type': 'application/json', ...(window.__gauk_token ? { 'Authorization': `Bearer ${window.__gauk_token}` } : {}) },
+        body: JSON.stringify({ key: uploadData.key, secondary_key: secondaryKey, context })
       })
       const identifyData = await identifyRes.json()
+      if (identifyData.guest_limit) {
+        status.textContent = ''
+        scanOverlay.classList.remove('active')
+        document.dispatchEvent(new CustomEvent('guest-limit-reached'))
+        return
+      }
       if (identifyData.error) throw new Error(identifyData.error)
       status.textContent = ''
       scanOverlay.classList.remove('active')

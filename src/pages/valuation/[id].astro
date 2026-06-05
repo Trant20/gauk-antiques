@@ -803,17 +803,10 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         }
         setTimeout(advanceStep, 600)
 
-        // Deduct 2 credits
-        await fetch('/api/deduct-credits', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-          body: JSON.stringify({ site_id: SITE_ID, identification_id: itemId, amount: Number(document.getElementById('enrich-gate-wrap')?.dataset.creditCost ?? 5) })
-        })
-
-        // Fire enrichment
+        // Fire enrichment — credits deducted server-side in /api/enrich
         fetch('/api/enrich', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
           body: JSON.stringify({ identification_id: itemId, result: JSON.parse(enrichCta.dataset.resultJson || '{}') })
         })
         .then(r => r.json())

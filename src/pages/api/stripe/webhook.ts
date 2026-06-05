@@ -103,10 +103,9 @@ export const POST: APIRoute = async ({ request }) => {
     const sig = request.headers.get('stripe-signature') || ''
     const secret = getEnv().STRIPE_WEBHOOK_SECRET
 
-    if (secret) {
-      const valid = await verifySignature(payload, sig, secret)
-      if (!valid) return new Response('Invalid signature', { status: 400 })
-    }
+    if (!secret) return new Response('Webhook secret not configured', { status: 500 })
+    const valid = await verifySignature(payload, sig, secret)
+    if (!valid) return new Response('Invalid signature', { status: 400 })
 
     const event = JSON.parse(payload)
     if (event.type === 'checkout.session.completed') {
