@@ -11,7 +11,6 @@ export const GET: APIRoute = () => {
     'Disallow: /auth/',
     'Disallow: /account',
     'Disallow: /library',
-    'Disallow: /identify',
     'Disallow: /welcome',
     '',
     '# API routes',

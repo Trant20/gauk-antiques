@@ -48,6 +48,53 @@ async function upsertCredits(supabase: ReturnType<typeof getSupabase>, user_id: 
   }
 }
 
+async function handleInvoicePaymentSucceeded(invoice: Record<string, unknown>) {
+  // Only handle subscription renewals — skip setup/initial invoices handled by checkout.session.completed
+  if (invoice.billing_reason !== 'subscription_cycle') return
+
+  const customerId = invoice.customer as string
+  const priceId = (invoice.lines as any)?.data?.[0]?.price?.id as string | undefined
+  if (!customerId || !priceId) return
+
+  const supabase = getSupabase()
+  const SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
+
+  // Look up user from customer_id
+  const { data: userPlan } = await supabase
+    .from('user_plans')
+    .select('user_id, plan_id')
+    .eq('stripe_customer_id', customerId)
+    .eq('site_id', SITE_ID)
+    .single()
+  if (!userPlan) return
+
+  // Look up plan credits
+  const { data: plan } = await supabase
+    .from('plans')
+    .select('id, credits, plan_type')
+    .eq('stripe_price_id', priceId)
+    .single()
+  if (!plan || plan.plan_type !== 'subscription') return
+
+  await upsertCredits(supabase, userPlan.user_id, SITE_ID, plan.credits)
+
+  await supabase.from('credit_transactions').insert({
+    user_id: userPlan.user_id,
+    site_id: SITE_ID,
+    delta: plan.credits,
+    reason: 'subscription_grant',
+    plan_id: plan.id,
+    stripe_payment_id: invoice.payment_intent as string || invoice.id as string,
+  })
+
+  // Keep user_plans status active
+  await supabase
+    .from('user_plans')
+    .update({ status: 'active', updated_at: new Date().toISOString() })
+    .eq('stripe_customer_id', customerId)
+    .eq('site_id', SITE_ID)
+}
+
 async function handleSubscriptionDeleted(subscription: Record<string, unknown>) {
   const supabase = getSupabase()
   const subscriptionId = subscription.id as string
@@ -110,6 +157,9 @@ export const POST: APIRoute = async ({ request }) => {
     const event = JSON.parse(payload)
     if (event.type === 'checkout.session.completed') {
       await handleCheckoutCompleted(event.data.object)
+    }
+    if (event.type === 'invoice.payment_succeeded') {
+      await handleInvoicePaymentSucceeded(event.data.object)
     }
     if (event.type === 'customer.subscription.deleted') {
       await handleSubscriptionDeleted(event.data.object)
