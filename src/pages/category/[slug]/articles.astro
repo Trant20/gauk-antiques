@@ -128,12 +128,10 @@ const { data: initialArticles, count } = await supabase
   </div>
 </div>
 
-<script define:vars={{ dbCategory, ANTIQUES_SITE_ID, initialCount: count }}>
+<script define:vars={{ dbCategory, initialCount: count }}>
 function escapeHtml(str) {
   return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;')
 }
-const SUPA_URL = import.meta.env.PUBLIC_SUPABASE_URL
-const SUPA_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 const BATCH = 12
 let offset = BATCH
 let loading = false
@@ -158,19 +156,9 @@ async function loadMore() {
   if (loading || done) return
   loading = true
   document.getElementById('art-loading').style.display = 'block'
-  const p = new URLSearchParams({
-    select: 'id,title,slug,excerpt,image_url,published_at',
-    site_id: `eq.${ANTIQUES_SITE_ID}`,
-    category: `eq.${dbCategory}`,
-    published: 'eq.true',
-    order: 'published_at.desc',
-    limit: String(BATCH),
-    offset: String(offset),
-  })
-  const res = await fetch(`${SUPA_URL}/rest/v1/articles?${p}`, {
-    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
-  })
-  const data = await res.json()
+  const res = await fetch(`/api/articles?category=${encodeURIComponent(dbCategory)}&offset=${offset}`)
+  const json = await res.json()
+  const data = json.data ?? []
   const grid = document.getElementById('art-grid')
   data.forEach(a => grid.appendChild(makeCard(a)))
   offset += BATCH
