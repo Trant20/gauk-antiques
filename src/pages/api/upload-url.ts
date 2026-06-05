@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
+import type { CloudflareEnv } from '../../lib/constants'
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
 const MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
@@ -34,7 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ error: 'Invalid file type. Only JPEG, PNG, GIF and WebP are accepted.' }, 415)
     }
 
-    const bucket = (env as any).gauk_antiques_images
+    const bucket = (env as unknown as CloudflareEnv).gauk_antiques_images
     if (!bucket) return json({ error: 'Storage not available' }, 500)
 
     // UUID-only key — no user-supplied filename

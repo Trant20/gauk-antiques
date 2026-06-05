@@ -11,3 +11,14 @@ export const CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN = 0.015
 
 /** Guest identification limit per 24-hour window */
 export const GUEST_IDENTIFY_LIMIT = 2
+
+/** Cloudflare Workers environment bindings */
+export type CloudflareEnv = {
+  PUBLIC_SUPABASE_URL: string
+  SUPABASE_SERVICE_ROLE_KEY: string
+  ANTHROPIC_API_KEY: string
+  STRIPE_SECRET_KEY: string
+  STRIPE_WEBHOOK_SECRET: string
+  SESSION: KVNamespace
+  gauk_antiques_images: R2Bucket
+}

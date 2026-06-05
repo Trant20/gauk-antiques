@@ -6,13 +6,13 @@ import { supabase } from '../lib/supabase'
 
 const { data: heroSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'articles_index_hero').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'articles_index_hero').single()
 const { data: heroTitleSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'articles_index_title').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'articles_index_title').single()
 const { data: heroSubSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'articles_index_subtitle').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'articles_index_subtitle').single()
 
 const heroImage = heroSetting?.value || ''
 const heroTitle = heroTitleSetting?.value || 'The Knowledge Library'
@@ -20,7 +20,7 @@ const heroSubtitle = heroSubSetting?.value || 'Guides, histories and collector r
 
 const { data: catSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'categories').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'categories').single()
 const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
 
 function slugify(s: string) {
@@ -33,7 +33,7 @@ await Promise.all(
     const { data } = await supabase
       .from('articles')
       .select('id, title, slug, excerpt, image_url, category, published_at')
-      .eq('site_id', SITE_ID)
+      .eq('site_id', ANTIQUES_SITE_ID)
       .eq('category', cat)
       .eq('published', true)
       .order('published_at', { ascending: false })
@@ -45,7 +45,7 @@ await Promise.all(
 const { data: latest } = await supabase
   .from('articles')
   .select('id, title, slug, excerpt, image_url, category, published_at')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('published', true)
   .order('published_at', { ascending: false })
   .limit(5)

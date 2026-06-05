@@ -1,12 +1,7 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
-
-type CloudflareEnv = {
-  STRIPE_SECRET_KEY: string
-  PUBLIC_SUPABASE_URL: string
-  SUPABASE_SERVICE_ROLE_KEY: string
-}
+import type { CloudflareEnv } from '../../../lib/constants'
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status,

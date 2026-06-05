@@ -32,7 +32,7 @@ const categories = [...new Set(catRows?.map(r => r.default_category).filter(Bool
 const { data: channelsHeroSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', 'channels_hero')
   .single()
 const channelsHeroImage: string = channelsHeroSetting?.value || ''
@@ -44,7 +44,7 @@ if (initialIds.length > 0) {
   const { data: counts } = await supabase
     .from('external_articles')
     .select('publisher_id')
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
     .eq('content_type', 'video')
     .eq('is_public', true)
     .in('publisher_id', initialIds)

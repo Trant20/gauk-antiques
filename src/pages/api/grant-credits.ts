@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
 import { ANTIQUES_SITE_ID } from '../../lib/constants'
+import type { CloudflareEnv } from '../../lib/constants'
 
 
 export const POST: APIRoute = async ({ request }) => {
@@ -15,8 +16,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     const token = auth.slice(7)
     const supabase = createClient(
-      (env as any).PUBLIC_SUPABASE_URL,
-      (env as any).SUPABASE_SERVICE_ROLE_KEY
+      (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
+      (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
     )
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
@@ -28,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { error } = await supabase.rpc('grant_signup_credits', {
       p_user_id: user.id,
-      p_site_id: SITE_ID
+      p_site_id: ANTIQUES_SITE_ID
     })
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {

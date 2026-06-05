@@ -11,7 +11,7 @@ const categoryFilter = Astro.url.searchParams.get('category') || ''
 const { data: catSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', 'categories')
   .single()
 
@@ -31,9 +31,9 @@ const [
   { data: videosHeroSetting },
   { data: categoryHeroSetting },
 ] = await Promise.all([
-  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'videos_hero').single(),
+  supabase.from('site_settings').select('value').eq('site_id', ANTIQUES_SITE_ID).eq('key', 'videos_hero').single(),
   categoryFilter
-    ? supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', `category_hero_${categoryFilter}`).single()
+    ? supabase.from('site_settings').select('value').eq('site_id', ANTIQUES_SITE_ID).eq('key', `category_hero_${categoryFilter}`).single()
     : Promise.resolve({ data: null }),
 ])
 const videosHeroImage: string = videosHeroSetting?.value || ''
@@ -55,7 +55,7 @@ if (activeCategoryName) {
   const { data } = await supabase
     .from('external_articles')
     .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id')
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
     .eq('content_type', 'video')
     .eq('is_public', true)
     .contains('categories', [activeCategoryName])
@@ -68,7 +68,7 @@ if (activeCategoryName) {
 const { data: latestVideos } = !activeCategoryName ? await supabase
   .from('external_articles')
   .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('content_type', 'video')
   .eq('is_public', true)
   .order('published_at', { ascending: false })
@@ -84,7 +84,7 @@ if (!activeCategoryName) {
       supabase
         .from('external_articles')
         .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id', { count: 'exact' })
-        .eq('site_id', SITE_ID)
+        .eq('site_id', ANTIQUES_SITE_ID)
         .eq('content_type', 'video')
         .eq('is_public', true)
         .contains('categories', [cat])

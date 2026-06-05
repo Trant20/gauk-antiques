@@ -8,7 +8,7 @@ const { slug } = Astro.params
 const { data: article } = await supabase
   .from('articles')
   .select('*')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('slug', slug)
   .eq('published', true)
   .single()
@@ -18,7 +18,7 @@ if (!article) return Astro.redirect('/explore')
 const { data: related } = await supabase
   .from('articles')
   .select('id, title, slug, excerpt, image_url, category')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('category', article.category)
   .eq('published', true)
   .neq('slug', slug)

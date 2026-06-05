@@ -2,12 +2,13 @@ import type { APIRoute } from 'astro'
 import { createClient } from '@supabase/supabase-js'
 import { env } from 'cloudflare:workers'
 import { ANTIQUES_SITE_ID } from '../../lib/constants'
+import type { CloudflareEnv } from '../../lib/constants'
 
 
 function getSupabase() {
   return createClient(
-    (env as Record<string, string>).PUBLIC_SUPABASE_URL,
-    (env as Record<string, string>).SUPABASE_SERVICE_ROLE_KEY
+    (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
+    (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
   )
 }
 
@@ -46,7 +47,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     .from('user_channels')
     .select('publisher_id')
     .eq('user_id', userId)
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
 
   if (!follows?.length) return jsonResponse({ videos: [], suggested: [] })
 
@@ -69,7 +70,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     const { data: catSetting } = await supabase
       .from('site_settings')
       .select('value')
-      .eq('site_id', SITE_ID)
+      .eq('site_id', ANTIQUES_SITE_ID)
       .eq('key', 'categories')
       .single()
     const allCats: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []
@@ -82,7 +83,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   let feedQuery = supabase
     .from('external_articles')
     .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
     .eq('content_type', 'video')
     .eq('is_public', true)
     .in('publisher_id', publisherIds)
@@ -93,7 +94,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     ? supabase
         .from('external_articles')
         .select('id, title, video_id, thumbnail_url, published_at, source_name, publisher_id')
-        .eq('site_id', SITE_ID)
+        .eq('site_id', ANTIQUES_SITE_ID)
         .eq('content_type', 'video')
         .eq('is_public', true)
         .not('publisher_id', 'in', `(${publisherIds.join(',')})`)

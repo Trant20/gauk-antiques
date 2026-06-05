@@ -3,13 +3,14 @@ import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
+import type { CloudflareEnv } from '../../lib/constants'
 
 const MODEL = 'claude-sonnet-4-6'
 
 function getSupabase() {
   return createClient(
-    (env as any).PUBLIC_SUPABASE_URL,
-    (env as any).SUPABASE_SERVICE_ROLE_KEY
+    (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
+    (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
   )
 }
 
@@ -105,7 +106,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: costSetting } = await supabase
       .from('site_settings')
       .select('value')
-      .eq('site_id', SITE_ID)
+      .eq('site_id', ANTIQUES_SITE_ID)
       .eq('key', 'credit_cost_enrich')
       .single()
     const creditCost = parseInt(costSetting?.value ?? '5', 10)
@@ -114,13 +115,13 @@ export const POST: APIRoute = async ({ request }) => {
     for (let i = 0; i < creditCost; i++) {
       const { data: ok } = await supabase.rpc('deduct_identification_credit', {
         p_user_id: user.id,
-        p_site_id: SITE_ID,
+        p_site_id: ANTIQUES_SITE_ID,
         p_identification_id: identification_id || null
       })
       if (!ok) return json({ error: 'Insufficient credits' }, 402)
     }
 
-    const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
+    const client = new Anthropic({ apiKey: (env as unknown as CloudflareEnv).ANTHROPIC_API_KEY })
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: 4096,
@@ -156,7 +157,7 @@ export const POST: APIRoute = async ({ request }) => {
     const outputTokens = response.usage.output_tokens
     const costPence = Math.ceil((inputTokens * CLAUDE_INPUT_COST_PENCE_PER_TOKEN) + (outputTokens * CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN))
     await supabase.from('token_usage').insert({
-      site_id: SITE_ID,
+      site_id: ANTIQUES_SITE_ID,
       user_id: user.id,
       feature: 'enrich',
       model: MODEL,

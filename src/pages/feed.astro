@@ -9,8 +9,8 @@ const [
   { data: catSetting },
   { data: heroSetting },
 ] = await Promise.all([
-  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'categories').single(),
-  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'videos_hero').single(),
+  supabase.from('site_settings').select('value').eq('site_id', ANTIQUES_SITE_ID).eq('key', 'categories').single(),
+  supabase.from('site_settings').select('value').eq('site_id', ANTIQUES_SITE_ID).eq('key', 'videos_hero').single(),
 ])
 
 const allCategories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : []

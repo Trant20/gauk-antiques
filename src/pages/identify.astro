@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 const { data: creditSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', 'credit_cost_identify')
   .single()
 const creditCostIdentify = Number(creditSetting?.value ?? 1)

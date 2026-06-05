@@ -2,8 +2,10 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { getPromptConfig } from '../../lib/ai'
 import { extractSearchTerms, lookupSpine } from '../../lib/ask-spine'
-import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
+import { ANTIQUES_ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
+import type { CloudflareEnv } from '../../lib/constants'
 
 
 /** Simple hash for cache key */
@@ -36,15 +38,15 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const supabase = createClient(
-      (env as any).PUBLIC_SUPABASE_URL,
-      (env as any).SUPABASE_SERVICE_ROLE_KEY
+      (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
+      (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
     )
 
     // 1. Deduct credit for logged-in users
     if (user_id) {
       const { data: creditOk } = await supabase.rpc('deduct_ask_message_credit', {
         p_user_id: user_id,
-        p_site_id: SITE_ID
+        p_site_id: ANTIQUES_SITE_ID
       })
       if (!creditOk) {
         return new Response(JSON.stringify({ error: 'Insufficient credits' }), {
@@ -59,7 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: cached } = await supabase
       .from('ask_cache')
       .select('answer, sources, hit_count')
-      .eq('site_id', SITE_ID)
+      .eq('site_id', ANTIQUES_SITE_ID)
       .eq('question_hash', questionHash)
       .single()
 
@@ -67,7 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
       await supabase
         .from('ask_cache')
         .update({ hit_count: (cached.hit_count || 0) + 1, updated_at: new Date().toISOString() })
-        .eq('site_id', SITE_ID)
+        .eq('site_id', ANTIQUES_SITE_ID)
         .eq('question_hash', questionHash)
 
       return new Response(JSON.stringify({
@@ -87,21 +89,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { sources, contextBlocks, marks } = await lookupSpine(supabase, terms, context, identification_result)
 
     // 4. Fetch prompt from ai_prompts
-    const { data: promptRow } = await supabase
-      .from('ai_prompts')
-      .select('ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3, gate_cta_text')
-      .eq('site_id', SITE_ID)
-      .eq('context', context)
-      .single()
-
-    const { data: fallbackRow } = !promptRow ? await supabase
-      .from('ai_prompts')
-      .select('ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3, gate_cta_text')
-      .eq('site_id', SITE_ID)
-      .eq('context', 'general')
-      .single() : { data: null }
-
-    const activePrompt = promptRow || fallbackRow
+    const activePrompt = await getPromptConfig(supabase, context, 'ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3, gate_cta_text')
     if (!activePrompt?.ask_system_prompt) {
       return new Response(JSON.stringify({ error: 'Ask prompt not configured' }), {
         status: 500,
@@ -124,7 +112,7 @@ export const POST: APIRoute = async ({ request }) => {
       : history
 
     // 6. Call Claude
-    const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
+    const client = new Anthropic({ apiKey: (env as unknown as CloudflareEnv).ANTHROPIC_API_KEY })
 
     const response = await client.messages.create({
       model: activePrompt.model || 'claude-sonnet-4-6',
@@ -145,7 +133,7 @@ export const POST: APIRoute = async ({ request }) => {
     await supabase
       .from('ask_cache')
       .insert({
-        site_id: SITE_ID,
+        site_id: ANTIQUES_SITE_ID,
         question_hash: questionHash,
         question: message,
         answer,
@@ -157,7 +145,7 @@ export const POST: APIRoute = async ({ request }) => {
     await supabase
       .from('token_usage')
       .insert({
-        site_id: SITE_ID,
+        site_id: ANTIQUES_SITE_ID,
         user_id: user_id || null,
         feature: 'ask',
         model: activePrompt.model || 'claude-sonnet-4-6',

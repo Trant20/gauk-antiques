@@ -36,7 +36,7 @@ export const GET: APIRoute = async () => {
   const { data: catSetting } = await supabase
     .from('site_settings')
     .select('value')
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
     .eq('key', 'categories')
     .single()
 
@@ -49,7 +49,7 @@ export const GET: APIRoute = async () => {
   const { data: articles } = await supabase
     .from('articles')
     .select('slug, updated_at, published_at')
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
     .eq('published', true)
     .order('published_at', { ascending: false })
 

@@ -2,7 +2,9 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { getPromptConfig } from '../../lib/ai'
 import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
+import type { CloudflareEnv } from '../../lib/constants'
 
 const GUEST_IDENTIFY_LIMIT = 2
 const GUEST_IDENTIFY_TTL = 60 * 60 * 24 // 24 hours in seconds
@@ -20,8 +22,8 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 function getSupabase() {
   return createClient(
-    (env as any).PUBLIC_SUPABASE_URL,
-    (env as any).SUPABASE_SERVICE_ROLE_KEY
+    (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
+    (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
   )
 }
 
@@ -30,23 +32,6 @@ function json(data: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' }
   })
-}
-
-async function getPromptConfig(supabase: ReturnType<typeof getSupabase>, siteId: string, context: string) {
-  const { data } = await supabase
-    .from('ai_prompts')
-    .select('system_prompt, description_instruction, model, max_tokens, gate_cta_text')
-    .eq('site_id', siteId)
-    .eq('context', context)
-    .single()
-  if (data) return data
-  const { data: fallback } = await supabase
-    .from('ai_prompts')
-    .select('system_prompt, description_instruction, model, max_tokens, gate_cta_text')
-    .eq('site_id', siteId)
-    .eq('context', 'general')
-    .single()
-  return fallback
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -70,7 +55,7 @@ export const POST: APIRoute = async ({ request }) => {
       const { data: costSetting } = await supabase
         .from('site_settings')
         .select('value')
-        .eq('site_id', SITE_ID)
+        .eq('site_id', ANTIQUES_SITE_ID)
         .eq('key', 'credit_cost_identify')
         .single()
       const creditCost = parseInt(costSetting?.value ?? '1', 10)
@@ -79,14 +64,14 @@ export const POST: APIRoute = async ({ request }) => {
       for (let i = 0; i < creditCost; i++) {
         const { data: ok } = await supabase.rpc('deduct_identification_credit', {
           p_user_id: userId,
-          p_site_id: SITE_ID,
+          p_site_id: ANTIQUES_SITE_ID,
           p_identification_id: null
         })
         if (!ok) return json({ error: 'Insufficient credits' }, 402)
       }
     } else {
       // Guest — enforce limit via KV
-      const kv = (env as any).SESSION
+      const kv = (env as unknown as CloudflareEnv).SESSION
       const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
       const kvKey = `guest_identify:${ip}`
 
@@ -99,7 +84,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    const promptConfig = await getPromptConfig(supabase, SITE_ID, context)
+    const promptConfig = await getPromptConfig(supabase, context, 'system_prompt, description_instruction, model, max_tokens, gate_cta_text')
     if (!promptConfig) return json({ error: 'Prompt configuration not found' }, 500)
 
     const systemPrompt = promptConfig.system_prompt.replace(
@@ -107,7 +92,7 @@ export const POST: APIRoute = async ({ request }) => {
       promptConfig.description_instruction
     )
 
-    const bucket = (env as any).gauk_antiques_images
+    const bucket = (env as unknown as CloudflareEnv).gauk_antiques_images
     const object = await bucket.get(key)
     if (!object) return json({ error: 'Image not found in R2' }, 404)
 
@@ -130,7 +115,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    const client = new Anthropic({ apiKey: (env as any).ANTHROPIC_API_KEY })
+    const client = new Anthropic({ apiKey: (env as unknown as CloudflareEnv).ANTHROPIC_API_KEY })
     const response = await client.messages.create({
       model: promptConfig.model,
       max_tokens: promptConfig.max_tokens,
@@ -172,7 +157,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: record, error: dbError } = await supabase
       .from('identifications')
       .insert({
-        site_id: SITE_ID,
+        site_id: ANTIQUES_SITE_ID,
         user_id: userId,
         image_key: key,
         secondary_image_key: secondary_key || null,
@@ -194,7 +179,7 @@ export const POST: APIRoute = async ({ request }) => {
     const outputTokens = response.usage.output_tokens
     const costPence = Math.ceil((inputTokens * CLAUDE_INPUT_COST_PENCE_PER_TOKEN) + (outputTokens * CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN))
     await supabase.from('token_usage').insert({
-      site_id: SITE_ID,
+      site_id: ANTIQUES_SITE_ID,
       user_id: userId,
       feature: 'identify',
       model: promptConfig.model,
@@ -205,7 +190,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Increment guest counter after successful identification
     if (!userId) {
-      const kv = (env as any).SESSION
+      const kv = (env as unknown as CloudflareEnv).SESSION
       const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
       const kvKey = `guest_identify:${ip}`
       if (kv) {

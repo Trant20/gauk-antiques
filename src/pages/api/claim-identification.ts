@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
 import { ANTIQUES_SITE_ID } from '../../lib/constants'
+import type { CloudflareEnv } from '../../lib/constants'
 
 
 function json(data: unknown, status = 200) {
@@ -17,8 +18,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     const token = auth.slice(7)
     const supabase = createClient(
-      (env as any).PUBLIC_SUPABASE_URL,
-      (env as any).SUPABASE_SERVICE_ROLE_KEY
+      (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
+      (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
     )
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
@@ -43,7 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
         .from('pending_claims')
         .select('identification_id')
         .eq('email', email)
-        .eq('site_id', SITE_ID)
+        .eq('site_id', ANTIQUES_SITE_ID)
         .single()
 
       if (claimErr || !claim) return json({ ok: true, note: 'No pending claim found' })
@@ -60,7 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
         .from('pending_claims')
         .delete()
         .eq('email', email)
-        .eq('site_id', SITE_ID)
+        .eq('site_id', ANTIQUES_SITE_ID)
 
       return json({ ok: true })
     }

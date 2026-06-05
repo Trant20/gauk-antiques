@@ -31,10 +31,10 @@ const [
     ? supabase.from('publishers').select('id, name, slug, logo_url, description, site_url').eq('id', video.publisher_id).single()
     : Promise.resolve({ data: null }),
   video.publisher_id
-    ? supabase.from('external_articles').select('id, title, video_id, thumbnail_url, source_name, published_at').eq('site_id', SITE_ID).eq('content_type', 'video').eq('publisher_id', video.publisher_id).neq('id', id).order('published_at', { ascending: false }).limit(6)
+    ? supabase.from('external_articles').select('id, title, video_id, thumbnail_url, source_name, published_at').eq('site_id', ANTIQUES_SITE_ID).eq('content_type', 'video').eq('publisher_id', video.publisher_id).neq('id', id).order('published_at', { ascending: false }).limit(6)
     : Promise.resolve({ data: [] }),
   primaryCategory
-    ? supabase.from('external_articles').select('id, title, video_id, thumbnail_url, source_name, published_at').eq('site_id', SITE_ID).eq('content_type', 'video').contains('categories', [primaryCategory]).neq('id', id).neq('publisher_id', video.publisher_id || '').order('published_at', { ascending: false }).limit(6)
+    ? supabase.from('external_articles').select('id, title, video_id, thumbnail_url, source_name, published_at').eq('site_id', ANTIQUES_SITE_ID).eq('content_type', 'video').contains('categories', [primaryCategory]).neq('id', id).neq('publisher_id', video.publisher_id || '').order('published_at', { ascending: false }).limit(6)
     : Promise.resolve({ data: [] }),
 ])
 
@@ -70,10 +70,10 @@ const [
   { data: catIdentifications },
 ] = await Promise.all([
   primaryCategory
-    ? supabase.from('articles').select('id, title, slug, excerpt, image_url, category').eq('site_id', SITE_ID).eq('category', primaryCategory).eq('published', true).order('published_at', { ascending: false }).limit(4)
+    ? supabase.from('articles').select('id, title, slug, excerpt, image_url, category').eq('site_id', ANTIQUES_SITE_ID).eq('category', primaryCategory).eq('published', true).order('published_at', { ascending: false }).limit(4)
     : Promise.resolve({ data: [] }),
   primaryCategory
-    ? supabase.from('identifications').select('id, image_key, result_json, created_at').eq('site_id', SITE_ID).eq('category', primaryCategory).not('image_key', 'is', null).order('created_at', { ascending: false }).limit(4)
+    ? supabase.from('identifications').select('id, image_key, result_json, created_at').eq('site_id', ANTIQUES_SITE_ID).eq('category', primaryCategory).not('image_key', 'is', null).order('created_at', { ascending: false }).limit(4)
     : Promise.resolve({ data: [] }),
 ])
 

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
+import type { CloudflareEnv } from '../../lib/constants'
 
 export const GET: APIRoute = async ({ request }) => {
   try {
@@ -10,7 +11,7 @@ export const GET: APIRoute = async ({ request }) => {
     if (!site_id) return new Response(JSON.stringify({ error: 'Missing site_id' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
 
     const supabase = await import('@supabase/supabase-js').then(m =>
-      m.createClient((env as any).PUBLIC_SUPABASE_URL, (env as any).SUPABASE_SERVICE_ROLE_KEY)
+      m.createClient((env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL, (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY)
     )
 
     // Verify JWT and get user

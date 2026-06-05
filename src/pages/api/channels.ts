@@ -52,7 +52,7 @@ export const GET: APIRoute = async ({ url }) => {
     const { data: counts } = await supabase
       .from('external_articles')
       .select('publisher_id')
-      .eq('site_id', SITE_ID)
+      .eq('site_id', ANTIQUES_SITE_ID)
       .eq('content_type', 'video')
       .eq('is_public', true)
       .in('publisher_id', channelIds)

@@ -391,8 +391,6 @@ heroSettings?.forEach(s => {
   let lastY = 0
   window.addEventListener('scroll', () => {
     const y = window.scrollY
-    if (y > 40) nav?.classList.add('scrolled')
-    else nav?.classList.remove('scrolled')
     if (y > 100 && y > lastY) nav?.classList.add('hidden-nav')
     else nav?.classList.remove('hidden-nav')
     lastY = y

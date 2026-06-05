@@ -2,12 +2,13 @@ import type { APIRoute } from 'astro'
 import { createClient } from '@supabase/supabase-js'
 import { env } from 'cloudflare:workers'
 import { ANTIQUES_SITE_ID } from '../../../lib/constants'
+import type { CloudflareEnv } from '../../../lib/constants'
 
 
 function getSupabase() {
   return createClient(
-    (env as Record<string, string>).PUBLIC_SUPABASE_URL,
-    (env as Record<string, string>).SUPABASE_SERVICE_ROLE_KEY
+    (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
+    (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY
   )
 }
 
@@ -34,7 +35,7 @@ export const GET: APIRoute = async ({ request }) => {
     .from('user_channels')
     .select('publisher_id')
     .eq('user_id', userId)
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
 
   return new Response(JSON.stringify({
     publisher_ids: (data || []).map(r => r.publisher_id)

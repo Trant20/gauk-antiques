@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
+import type { CloudflareEnv } from '../../lib/constants'
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -9,7 +10,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { site_id, identification_id, amount = 1 } = await request.json()
 
     const supabase = await import('@supabase/supabase-js').then(m =>
-      m.createClient((env as any).PUBLIC_SUPABASE_URL, (env as any).SUPABASE_SERVICE_ROLE_KEY)
+      m.createClient((env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL, (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY)
     )
 
     const token = auth.replace('Bearer ', '')

@@ -120,7 +120,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     }
 
     // Credits
-    const { data: credits } = await supabase.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', SITE_ID).single()
+    const { data: credits } = await supabase.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).single()
     document.getElementById('credit-balance')!.textContent = String(credits?.balance ?? 0)
 
     // Plan
@@ -128,7 +128,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
       .from('user_plans')
       .select('status, current_period_end, plans(name)')
       .eq('user_id', session.user.id)
-      .eq('site_id', SITE_ID)
+      .eq('site_id', ANTIQUES_SITE_ID)
       .in('status', ['active', 'cancelling'])
       .single()
 
@@ -159,7 +159,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
         const res = await fetch('/api/stripe/cancel', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: session.user.id, site_id: SITE_ID })
+          body: JSON.stringify({ user_id: session.user.id, site_id: ANTIQUES_SITE_ID })
         })
         const data = await res.json()
         if (data.error) {
@@ -173,7 +173,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     }
 
     // Transactions
-    const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', SITE_ID).order('created_at', { ascending: false }).limit(10)
+    const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).order('created_at', { ascending: false }).limit(10)
     const txList = document.getElementById('tx-list')!
     if (!txs || txs.length === 0) {
       txList.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:14px;color:#8A7A66;">No activity yet.</div>'

@@ -1,10 +1,7 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { ANTIQUES_SITE_ID } from '../../../lib/constants'
-
-type CloudflareEnv = {
-  STRIPE_SECRET_KEY: string
-}
+import type { CloudflareEnv } from '../../../lib/constants'
 
 type StripeSession = {
   url?: string
@@ -34,7 +31,7 @@ export const POST: APIRoute = async ({ request }) => {
       'cancel_url': `${origin}/pricing?payment=cancelled`,
       'customer_email': email,
       'metadata[user_id]': user_id,
-      'metadata[site_id]': SITE_ID,
+      'metadata[site_id]': ANTIQUES_SITE_ID,
     })
 
     const stripeKey = (env as unknown as CloudflareEnv).STRIPE_SECRET_KEY

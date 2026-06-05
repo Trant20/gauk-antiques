@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 const { data: recent } = await supabase
   .from('identifications')
   .select('id, image_key, result_json, category, created_at')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .not('image_key', 'is', null)
   .order('created_at', { ascending: false })
   .limit(6)
@@ -16,7 +16,7 @@ const { data: recent } = await supabase
 const { data: catSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', 'categories')
   .single()
 
@@ -25,7 +25,7 @@ const allCategories: string[] = catSetting?.value ? JSON.parse(catSetting.value)
 const { data: catRows } = await supabase
   .from('identifications')
   .select('category')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .not('category', 'is', null)
 
 const catCounts: Record<string, number> = {}

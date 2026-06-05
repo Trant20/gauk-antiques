@@ -17,7 +17,7 @@ if (!item) return Astro.redirect('/')
 const { data: enrichCreditSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', 'credit_cost_enrich')
   .single()
 const creditCostEnrich = Number(enrichCreditSetting?.value ?? 5)
@@ -743,7 +743,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       if (enrichBtn) enrichBtn.style.display = 'none'
       if (enrichRegister) enrichRegister.style.display = 'block'
     } else {
-      const creditsRes = await fetch(`/api/credits?site_id=${SITE_ID}`, {
+      const creditsRes = await fetch(`/api/credits?site_id=${ANTIQUES_SITE_ID}`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       })
       const creditsData = await creditsRes.json()

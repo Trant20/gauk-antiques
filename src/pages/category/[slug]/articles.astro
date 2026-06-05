@@ -8,7 +8,7 @@ if (!slug) return Astro.redirect('/articles')
 
 const { data: catSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'categories').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'categories').single()
 
 const validCategories = catSetting?.value ? JSON.parse(catSetting.value) : []
 function slugify(s) {
@@ -19,7 +19,7 @@ if (!dbCategory) return Astro.redirect('/articles')
 
 const { data: allSettings } = await supabase
   .from('site_settings').select('key,value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .in('key', [`category_hero_${slug}`, `category_title_${slug}`, `category_subtitle_${slug}`])
 
 const settingsMap = {}
@@ -31,7 +31,7 @@ const heroSubtitle = settingsMap[`category_subtitle_${slug}`] || `Explore ${dbCa
 const { data: initialArticles, count } = await supabase
   .from('articles')
   .select('id, title, slug, excerpt, image_url, category, published_at', { count: 'exact' })
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('category', dbCategory)
   .eq('published', true)
   .order('published_at', { ascending: false })
@@ -128,7 +128,7 @@ const { data: initialArticles, count } = await supabase
   </div>
 </div>
 
-<script define:vars={{ dbCategory, SITE_ID, initialCount: count }}>
+<script define:vars={{ dbCategory, ANTIQUES_SITE_ID, initialCount: count }}>
 function escapeHtml(str) {
   return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;')
 }
@@ -160,7 +160,7 @@ async function loadMore() {
   document.getElementById('art-loading').style.display = 'block'
   const p = new URLSearchParams({
     select: 'id,title,slug,excerpt,image_url,published_at',
-    site_id: `eq.${SITE_ID}`,
+    site_id: `eq.${ANTIQUES_SITE_ID}`,
     category: `eq.${dbCategory}`,
     published: 'eq.true',
     order: 'published_at.desc',

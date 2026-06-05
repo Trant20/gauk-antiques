@@ -9,9 +9,9 @@ const [
   { data: identifyCost },
   { data: enrichCost },
 ] = await Promise.all([
-  supabase.from('plans').select('credits').eq('site_id', SITE_ID).eq('plan_type', 'free').eq('active', true).single(),
-  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'credit_cost_identify').single(),
-  supabase.from('site_settings').select('value').eq('site_id', SITE_ID).eq('key', 'credit_cost_enrich').single(),
+  supabase.from('plans').select('credits').eq('site_id', ANTIQUES_SITE_ID).eq('plan_type', 'free').eq('active', true).single(),
+  supabase.from('site_settings').select('value').eq('site_id', ANTIQUES_SITE_ID).eq('key', 'credit_cost_identify').single(),
+  supabase.from('site_settings').select('value').eq('site_id', ANTIQUES_SITE_ID).eq('key', 'credit_cost_enrich').single(),
 ])
 
 const freeCredits = plan?.credits || 5

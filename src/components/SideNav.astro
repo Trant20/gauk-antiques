@@ -166,7 +166,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     document.getElementById('snav-signin')!.style.display = 'none'
     const credits = document.getElementById('snav-credits')!
     credits.classList.add('visible')
-    const { data } = await supabase.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', SITE_ID).single()
+    const { data } = await supabase.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).single()
     document.getElementById('snav-credits-val')!.textContent = String(data?.balance ?? 0)
     document.getElementById('snav-signout')!.addEventListener('click', async () => {
       await supabase.auth.signOut(); window.location.href = '/'

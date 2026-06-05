@@ -1,12 +1,13 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { ANTIQUES_SITE_ID } from '../../lib/constants'
+import type { CloudflareEnv } from '../../lib/constants'
 
 const SESSION_TTL_MS = 60 * 60 * 1000 // 60 minutes
 
-/** Generate a simple session ID */
+/** Generate a cryptographically random session ID */
 function generateSessionId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2)
+  return crypto.randomUUID()
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -14,7 +15,7 @@ export const POST: APIRoute = async ({ request }) => {
     const auth = request.headers.get('Authorization')
 
     const supabase = await import('@supabase/supabase-js').then(m =>
-      m.createClient((env as any).PUBLIC_SUPABASE_URL, (env as any).SUPABASE_SERVICE_ROLE_KEY)
+      m.createClient((env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL, (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY)
     )
 
     // Guest session — no credit deduction, just return a session ID
@@ -37,7 +38,7 @@ export const POST: APIRoute = async ({ request }) => {
     const sessionId = generateSessionId()
 
     // Check for existing active session in KV
-    const kv = (env as any).SESSION
+    const kv = (env as unknown as CloudflareEnv).SESSION
     const existingKey = `ask_session:${user.id}`
     const existing = kv ? await kv.get(existingKey) : null
 

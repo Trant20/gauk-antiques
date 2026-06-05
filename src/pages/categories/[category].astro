@@ -16,7 +16,7 @@ const decodedCategory = decodeURIComponent(category)
 const { data: catListSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', 'categories')
   .single()
 
@@ -35,7 +35,7 @@ const dbCategory = validCategories.find((c: string) =>
 const { data: redirectSetting } = await supabase
   .from('site_settings')
   .select('value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('key', `category_redirect_${category}`)
   .single()
 
@@ -56,7 +56,7 @@ if (category !== normalisedSlug) {
 const { data: allSettings } = await supabase
   .from('site_settings')
   .select('key, value')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .in('key', [
     `category_hero_${category}`,
     `category_title_${category}`,
@@ -83,7 +83,7 @@ const meta = {
 const { data: recent, count } = await supabase
   .from('identifications')
   .select('id, image_key, result_json, created_at', { count: 'exact' })
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('category', dbCategory)
   .not('image_key', 'is', null)
   .order('created_at', { ascending: false })
@@ -93,7 +93,7 @@ const { data: recent, count } = await supabase
 const { data: makerRows } = await supabase
   .from('identifications')
   .select('result_json')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('category', dbCategory)
   .not('result_json->>maker', 'is', null)
 
@@ -108,7 +108,7 @@ const makers = Object.entries(makerCounts).sort((a, b) => b[1] - a[1]).slice(0, 
 const { data: articles } = await supabase
   .from('articles')
   .select('id, title, slug, excerpt, image_url, published_at')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('category', dbCategory)
   .eq('published', true)
   .order('published_at', { ascending: false })
@@ -118,7 +118,7 @@ const { data: articles } = await supabase
 const { data: auctions } = await supabase
   .from('auction_results')
   .select('id, title, maker, price_pence, auction_house, sold_date')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('category', dbCategory)
   .order('sold_date', { ascending: false })
   .limit(4)
@@ -127,7 +127,7 @@ const { data: auctions } = await supabase
 const { data: external } = await supabase
   .from('external_articles')
   .select('id, title, url, source_name, published_at, image_url')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('content_type', 'article')
   .contains('categories', [dbCategory])
   .order('published_at', { ascending: false })
@@ -137,7 +137,7 @@ const { data: external } = await supabase
 const { data: videos } = await supabase
   .from('external_articles')
   .select('id, title, url, video_id, thumbnail_url, published_at, source_name')
-  .eq('site_id', SITE_ID)
+  .eq('site_id', ANTIQUES_SITE_ID)
   .eq('content_type', 'video')
   .contains('categories', [dbCategory])
   .order('published_at', { ascending: false })

@@ -22,15 +22,15 @@ const stats = {
 
 const { data: heroSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'category_hero_collections').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'category_hero_collections').single()
 
 const { data: titleSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'category_title_collections').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'category_title_collections').single()
 
 const { data: subtitleSetting } = await supabase
   .from('site_settings').select('value')
-  .eq('site_id', SITE_ID).eq('key', 'category_subtitle_collections').single()
+  .eq('site_id', ANTIQUES_SITE_ID).eq('key', 'category_subtitle_collections').single()
 
 // Fetch public source IDs
 const { data: publicSources } = await supabase

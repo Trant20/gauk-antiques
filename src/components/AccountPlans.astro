@@ -1,6 +1,6 @@
 ---
 import { supabase } from '../lib/supabase'
-const { data: plans } = await supabase.from('plans').select('*').eq('site_id', SITE_ID).eq('active', true).order('sort_order')
+const { data: plans } = await supabase.from('plans').select('*').eq('site_id', ANTIQUES_SITE_ID).eq('active', true).order('sort_order')
 const subs = plans?.filter(p => p.plan_type === 'subscription') || []
 const topups = plans?.filter(p => p.plan_type === 'topup') || []
 import { ANTIQUES_SITE_ID } from '../lib/constants'

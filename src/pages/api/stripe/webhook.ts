@@ -2,13 +2,7 @@ import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
 import { ANTIQUES_SITE_ID } from '../../../lib/constants'
-
-type CloudflareEnv = {
-  STRIPE_WEBHOOK_SECRET: string
-  STRIPE_SECRET_KEY: string
-  PUBLIC_SUPABASE_URL: string
-  SUPABASE_SERVICE_ROLE_KEY: string
-}
+import type { CloudflareEnv } from '../../../lib/constants'
 
 function getEnv() {
   return env as unknown as CloudflareEnv
@@ -64,7 +58,7 @@ async function handleInvoicePaymentSucceeded(invoice: Record<string, unknown>) {
     .from('user_plans')
     .select('user_id, plan_id')
     .eq('stripe_customer_id', customerId)
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
     .single()
   if (!userPlan) return
 
@@ -76,11 +70,11 @@ async function handleInvoicePaymentSucceeded(invoice: Record<string, unknown>) {
     .single()
   if (!plan || plan.plan_type !== 'subscription') return
 
-  await upsertCredits(supabase, userPlan.user_id, SITE_ID, plan.credits)
+  await upsertCredits(supabase, userPlan.user_id, ANTIQUES_SITE_ID, plan.credits)
 
   await supabase.from('credit_transactions').insert({
     user_id: userPlan.user_id,
-    site_id: SITE_ID,
+    site_id: ANTIQUES_SITE_ID,
     delta: plan.credits,
     reason: 'subscription_grant',
     plan_id: plan.id,
@@ -92,7 +86,7 @@ async function handleInvoicePaymentSucceeded(invoice: Record<string, unknown>) {
     .from('user_plans')
     .update({ status: 'active', updated_at: new Date().toISOString() })
     .eq('stripe_customer_id', customerId)
-    .eq('site_id', SITE_ID)
+    .eq('site_id', ANTIQUES_SITE_ID)
 }
 
 async function handleSubscriptionDeleted(subscription: Record<string, unknown>) {
