@@ -5,27 +5,28 @@ import { supabase } from '../lib/supabase'
 const { title, description = 'AI-powered antique identification and valuation. Built for collectors, dealers and curious minds.', ogImage = '', canonical = '' } = Astro.props
 const canonicalURL = canonical || ('https://gaukantiques.com' + Astro.url.pathname)
 
-const { data: catSetting } = await supabase
-  .from('site_settings')
-  .select('value')
-  .eq('site_id', ANTIQUES_SITE_ID)
-  .eq('key', 'categories')
-  .single()
-
-const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : [
-  'Ceramics','Glass','Jewellery','Metalware','Furniture','Art','Clocks & Watches','Textiles','Books & Literature','Toys','Militaria','Associations','Music','Film & Media','Articles & Guides','Artists, Authors, Designers','Stamps & Coins','Memorabilia','Collectibles & Decorative Arts','Factories, Studios & Workshops','Historical Figures & History','Collections'
-]
-
 const path = Astro.url.pathname
 const isIdentify = path === '/'
 const isLibrary  = path.startsWith('/library')
 const isAccount  = path.startsWith('/account') || path.startsWith('/auth')
 
-const { data: heroSettings } = await supabase
-  .from('site_settings')
-  .select('key, value')
-  .eq('site_id', ANTIQUES_SITE_ID)
-  .or('key.like.category_hero_%,key.eq.logo_url,key.eq.logo_height_desktop,key.eq.logo_height_mobile')
+const [{ data: catSetting }, { data: heroSettings }] = await Promise.all([
+  supabase
+    .from('site_settings')
+    .select('value')
+    .eq('site_id', ANTIQUES_SITE_ID)
+    .eq('key', 'categories')
+    .single(),
+  supabase
+    .from('site_settings')
+    .select('key, value')
+    .eq('site_id', ANTIQUES_SITE_ID)
+    .or('key.like.category_hero_%,key.eq.logo_url,key.eq.logo_height_desktop,key.eq.logo_height_mobile')
+])
+
+const categories: string[] = catSetting?.value ? JSON.parse(catSetting.value) : [
+  'Ceramics','Glass','Jewellery','Metalware','Furniture','Art','Clocks & Watches','Textiles','Books & Literature','Toys','Militaria','Associations','Music','Film & Media','Articles & Guides','Artists, Authors, Designers','Stamps & Coins','Memorabilia','Collectibles & Decorative Arts','Factories, Studios & Workshops','Historical Figures & History','Collections'
+]
 
 const heroMap: Record<string, string> = {}
 let logoUrl: string = ''
