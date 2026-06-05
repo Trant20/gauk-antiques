@@ -167,7 +167,7 @@ const articles = [
           return (
             <div class="id-card">
               <div class="id-img-wrap">
-                {item.image_key && <img class="id-img" src={`${R2}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
+                {item.image_key && <img class="id-img" src={`${R2_CDN}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
               </div>
               <div class="id-body">
                 {r.maker && <div class="id-maker">{r.maker}</div>}

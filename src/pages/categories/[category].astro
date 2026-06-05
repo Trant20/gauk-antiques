@@ -372,7 +372,7 @@ const { data: videos } = await supabase
           return (
             <div class="id-strip-card">
               <div class="id-strip-img">
-                {item.image_key && <img src={`${R2}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
+                {item.image_key && <img src={`${R2_CDN}/${item.image_key}`} alt={r.subcategory || ''} loading="lazy" />}
               </div>
               <div class="id-strip-body">
                 {r.maker && <div class="id-strip-maker">{r.maker}</div>}
