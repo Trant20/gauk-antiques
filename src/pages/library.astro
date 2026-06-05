@@ -149,6 +149,9 @@ import { ANTIQUES_SITE_ID, R2_CDN } from '../lib/constants'
     </div>
     <div id="lib-grid-view" class="lib-grid"></div>
     <div id="lib-list-view" class="lib-list hidden"></div>
+    <div style="padding:24px;text-align:center;">
+      <button id="lib-load-more" style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#EFE7D9;background:#1C1810;border:none;padding:14px 28px;cursor:pointer;display:none;">Load more</button>
+    </div>
   </div>
 
 </div>
@@ -261,23 +264,70 @@ import { ANTIQUES_SITE_ID, R2_CDN } from '../lib/constants'
     window.location.href = '/auth/signin'
   } else {
 
+    const BATCH = 24
+    let offset = 0
+    let totalCount = 0
+    let allItems: any[] = []
+
+    const { count } = await supabase
+      .from('identifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', session.user.id)
+      .eq('site_id', ANTIQUES_SITE_ID)
+    totalCount = count || 0
+
     const { data, error } = await supabase
       .from('identifications')
       .select('id, image_key, result_json, created_at')
       .eq('user_id', session.user.id)
       .eq('site_id', ANTIQUES_SITE_ID)
       .order('created_at', { ascending: false })
+      .range(0, BATCH - 1)
 
     elLoading.classList.add('hidden')
 
     if (error || !data || data.length === 0) {
       elEmpty.classList.remove('hidden')
     } else {
-      const n = data.length
-      elCount.textContent = n + ' identification' + (n === 1 ? '' : 's')
-      renderGrid(data)
-      renderList(data)
+      allItems = data
+      offset = data.length
+      elCount.textContent = totalCount + ' identification' + (totalCount === 1 ? '' : 's')
+      renderGrid(allItems)
+      renderList(allItems)
       elContent.classList.remove('hidden')
+      updateLoadMore()
+    }
+
+    const loadMoreBtn = document.getElementById('lib-load-more')
+    loadMoreBtn?.addEventListener('click', async () => {
+      loadMoreBtn.textContent = 'Loading...'
+      loadMoreBtn.setAttribute('disabled', 'true')
+      const { data: more } = await supabase
+        .from('identifications')
+        .select('id, image_key, result_json, created_at')
+        .eq('user_id', session.user.id)
+        .eq('site_id', ANTIQUES_SITE_ID)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + BATCH - 1)
+      if (more && more.length > 0) {
+        allItems = [...allItems, ...more]
+        offset += more.length
+        renderGrid(allItems)
+        renderList(allItems)
+        updateLoadMore()
+      }
+    })
+
+    function updateLoadMore() {
+      const btn = document.getElementById('lib-load-more')
+      if (!btn) return
+      if (offset >= totalCount) {
+        btn.style.display = 'none'
+      } else {
+        btn.textContent = 'Load more'
+        btn.removeAttribute('disabled')
+        btn.style.display = 'block'
+      }
     }
   }
 </script>
