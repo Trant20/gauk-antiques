@@ -24,8 +24,8 @@ const creditCostEnrich = Number(enrichCreditSetting?.value ?? 5)
 
 const r = item.result_json
 const enrichment = item.enrichment_json || null
-const imageUrl = `R2_CDN/${item.image_key}`
-const secondaryImageUrl = item.secondary_image_key ? `R2_CDN/${item.secondary_image_key}` : null
+const imageUrl = `${R2_CDN}/${item.image_key}`
+const secondaryImageUrl = item.secondary_image_key ? `${R2_CDN}/${item.secondary_image_key}` : null
 const conditionScore = enrichment?.condition_score || (r.condition === 'Mint' ? 98 : r.condition === 'Excellent' ? 88 : r.condition === 'Good' ? 72 : r.condition === 'Fair' ? 50 : 30)
 const desirabilityScore = enrichment?.desirability_score || 70
 const rarityScore = r.rarity_score || 65
@@ -687,7 +687,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <a href="/identify" class="action-btn primary">New Identification</a>
 </div>
 
-<script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!enrichment, itemOwnerId: item.user_id }}>
+<script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!enrichment, itemOwnerId: item.user_id, ANTIQUES_SITE_ID }}>
   import { supabase } from '../../lib/supabase-browser'
 
   
