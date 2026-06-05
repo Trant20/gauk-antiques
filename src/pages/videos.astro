@@ -75,30 +75,26 @@ const { data: latestVideos } = !activeCategoryName ? await supabase
   .order('published_at', { ascending: false })
   .limit(8) : { data: [] }
 
-// Build category sections — one query per category so counts are accurate
+// Build category sections — single query, group in JS
 type CategorySection = { videos: VideoRow[]; total: number }
 const categoryVideos: Record<string, CategorySection> = {}
 
 if (!activeCategoryName) {
-  const results = await Promise.all(
-    allCategories.map(cat =>
-      supabase
-        .from('external_articles')
-        .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id', { count: 'exact' })
-        .eq('site_id', ANTIQUES_SITE_ID)
-        .eq('content_type', 'video')
-        .eq('is_public', true)
-        .contains('categories', [cat])
-        .order('published_at', { ascending: false })
-        .limit(8)
-    )
-  )
-  allCategories.forEach((cat, i) => {
-    const { data: vids, count } = results[i]
-    if (vids && vids.length > 0) {
-      categoryVideos[cat] = { videos: vids, total: count || vids.length }
+  const { data: allCatVideos } = await supabase
+    .from('external_articles')
+    .select('id, title, url, video_id, thumbnail_url, published_at, source_name, categories, publisher_id')
+    .eq('site_id', ANTIQUES_SITE_ID)
+    .eq('content_type', 'video')
+    .eq('is_public', true)
+    .order('published_at', { ascending: false })
+    .limit(500)
+
+  for (const cat of allCategories) {
+    const vids = (allCatVideos ?? []).filter(v => Array.isArray(v.categories) && v.categories.includes(cat)).slice(0, 8)
+    if (vids.length > 0) {
+      categoryVideos[cat] = { videos: vids, total: vids.length }
     }
-  })
+  }
 }
 
 const pageTitle = activeCategoryName
