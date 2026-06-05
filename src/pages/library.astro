@@ -156,6 +156,8 @@ import { ANTIQUES_SITE_ID, R2_CDN } from '../lib/constants'
 
 <script>
   import { supabase } from '../lib/supabase-browser'
+  import { escapeHtml } from '../lib/utils'
+  import { formatValueRange } from '../lib/currency'
 
   
   const elLoading   = document.getElementById('lib-loading')

@@ -230,6 +230,9 @@ const channelsWithCounts = (initialChannels || []).map(c => ({
 </div>
 
 <script define:vars={{ initialTotal: totalCount, initialHasMore: (totalCount || 0) > 24 }}>
+  function escapeHtml(str) {
+    return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;')
+  }
   let currentPage = 1
   let currentCategory = ''
   let currentSearch = ''
