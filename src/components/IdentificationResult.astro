@@ -1,0 +1,63 @@
+---
+interface Props {
+  prefix?: string
+}
+const { prefix = '' } = Astro.props
+const p = prefix ? prefix + '-' : ''
+---
+<div id={`${p}result-outer`} style="display:none; background:#EFE7D9;">
+  <div id={`${p}result-section`} class="result-section">
+    <div class="result-badges">
+      <span class="result-category" id={`${p}result-category`}></span>
+      <span class="result-confidence" id={`${p}result-confidence`}></span>
+    </div>
+    <h2 class="result-title" id={`${p}result-title`}></h2>
+    <p class="result-desc">
+      <span id={`${p}typed-text`}></span>
+      <span class="typed-cursor" id={`${p}typed-cursor`}></span>
+    </p>
+    <div class="result-id-table">
+      <div class="result-id-row" id={`${p}row-maker`} style="display:none">
+        <div class="result-id-key">Maker</div>
+        <div class="result-id-val" id={`${p}result-maker`}></div>
+      </div>
+      <div class="result-id-row" id={`${p}row-period`} style="display:none">
+        <div class="result-id-key">Period</div>
+        <div class="result-id-val" id={`${p}result-period`}></div>
+      </div>
+      <div class="result-id-row" id={`${p}row-origin`} style="display:none">
+        <div class="result-id-key">Origin</div>
+        <div class="result-id-val" id={`${p}result-origin`}></div>
+      </div>
+      <div class="result-id-row">
+        <div class="result-id-key">Condition</div>
+        <div class="result-id-val" id={`${p}result-condition`}></div>
+      </div>
+    </div>
+    <div id={`${p}result-gate-cta-wrap`} class="result-gate-cta" style="display:none">
+      <div class="result-gate-cta-text">
+        <span id={`${p}result-gate-typed`}></span>
+        <span class="result-gate-cta-cursor" id={`${p}result-gate-cursor`}></span>
+      </div>
+      <a href="/auth/signup" class="result-gate-register">Register Free to Unlock</a>
+    </div>
+    <div style="filter:blur(5px);pointer-events:none;user-select:none;" id={`${p}blur-content`}>
+      <div class="result-value-block">
+        <div class="result-value-label">Estimated Value</div>
+        <div class="result-value" id={`${p}result-value`}></div>
+      </div>
+      <div class="result-notes-preview">
+        <div class="result-notes-label">Appraiser Notes</div>
+        <div class="result-notes-text" id={`${p}result-notes`}></div>
+      </div>
+    </div>
+    <div class="result-view-report" id={`${p}result-view-report`} style="display:none; padding:16px 20px; box-sizing:border-box; width:100%;">
+      <a id={`${p}view-report-link`} href="#" style="display:block;width:100%;max-width:100%;padding:16px;background:#1C1810;font-family:Prata,Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#EFE7D9;text-align:center;text-decoration:none;box-sizing:border-box;">View Full Report</a>
+    </div>
+    <div class="result-footer-bar">
+      <span class="result-footer-brand">GAUK Antiques</span>
+      <span class="result-footer-ref" id={`${p}result-ref`}></span>
+    </div>
+    <div class="save-note" id={`${p}save-note`}>Saved to your library</div>
+  </div>
+</div>

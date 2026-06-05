@@ -3,6 +3,7 @@ import { ANTIQUES_SITE_ID, R2_CDN } from '../../lib/constants'
 import { formatValueRange } from '../../lib/currency'
 import PublicShell from '../../layouts/PublicShell.astro'
 import AIHeroWidget from '../../components/AIHeroWidget.astro'
+import IdentificationResult from '../../components/IdentificationResult.astro'
 import { supabase } from '../../lib/supabase'
 
 
@@ -314,55 +315,7 @@ const { data: videos } = await supabase
 </div>
 
 <!-- RESULT SECTION -->
-<div id="cat-result-outer" style="display:none; background:#EFE7D9;">
-  <div id="cat-result-section" style="max-width:800px;margin:0 auto;">
-    <div class="result-badges" style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 0;">
-      <span style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#7A5C20;" id="cat-result-category"></span>
-      <span style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border:1px solid #C4B49E;color:#8A7A66;" id="cat-result-confidence"></span>
-    </div>
-    <h2 style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:clamp(22px,5vw,32px);font-weight:400;line-height:1.2;color:#1C1810;padding:12px 20px 0;margin:0;font-style:italic;" id="cat-result-title"></h2>
-    <p style="font-family:'Prata',Georgia,serif;font-size:16px;line-height:1.9;color:#5C5040;padding:14px 20px;border-bottom:1px solid #C4B49E;margin:0;">
-      <span id="cat-typed-text"></span><span class="typed-cursor" id="cat-typed-cursor" style="display:inline-block;width:2px;height:1em;background:#7A5C20;margin-left:2px;vertical-align:text-bottom;animation:blink .7s step-end infinite;"></span>
-    </p>
-    <div style="padding:0 20px;border-bottom:1px solid #C4B49E;">
-      <div id="cat-row-maker" style="display:none;gap:16px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(196,180,158,.3);">
-        <div style="width:90px;flex-shrink:0;font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;padding-top:2px;">Maker</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:16px;color:#1C1810;line-height:1.5;flex:1;" id="cat-result-maker"></div>
-      </div>
-      <div id="cat-row-period" style="display:none;gap:16px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(196,180,158,.3);">
-        <div style="width:90px;flex-shrink:0;font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;padding-top:2px;">Period</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:16px;color:#1C1810;line-height:1.5;flex:1;" id="cat-result-period"></div>
-      </div>
-      <div style="display:flex;gap:16px;align-items:flex-start;padding:12px 0;">
-        <div style="width:90px;flex-shrink:0;font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;padding-top:2px;">Condition</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:16px;color:#1C1810;line-height:1.5;flex:1;" id="cat-result-condition"></div>
-      </div>
-    </div>
-    <div id="cat-gate-cta-wrap" style="display:none;padding:20px 20px 0;border-top:1px solid #C4B49E;">
-      <div style="font-family:'Prata',Georgia,serif;font-size:16px;line-height:1.8;color:#5C5040;margin-bottom:14px;min-height:24px;">
-        <span id="cat-gate-typed"></span><span id="cat-gate-cursor" style="display:inline-block;width:2px;height:1em;background:#7A5C20;margin-left:2px;vertical-align:text-bottom;animation:blink .7s step-end infinite;"></span>
-      </div>
-      <a href="/auth/signup" style="display:block;width:100%;padding:15px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;margin-bottom:20px;">Register Free to Unlock</a>
-    </div>
-    <div id="cat-blur-content" style="filter:blur(5px);pointer-events:none;user-select:none;">
-      <div style="background:#E6DCCB;border-bottom:1px solid #C4B49E;padding:28px 20px;text-align:center;">
-        <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8A7A66;margin-bottom:10px;">Estimated Value</div>
-        <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:clamp(32px,7vw,48px);font-weight:400;line-height:1;color:#7A5C20;letter-spacing:-1px;" id="cat-result-value"></div>
-      </div>
-      <div style="padding:24px 20px;background:#EAE1D2;">
-        <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin-bottom:10px;">Appraiser Notes</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:15px;line-height:1.9;color:#5C5040;" id="cat-result-notes"></div>
-      </div>
-    </div>
-    <div id="cat-result-view-report" style="display:none;padding:16px 20px;box-sizing:border-box;width:100%;">
-      <a id="cat-view-report-link" href="#" style="display:block;width:100%;padding:16px;background:#1C1810;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#EFE7D9;text-align:center;text-decoration:none;">View Full Report</a>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid #C4B49E;background:#EFE7D9;">
-      <span style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:13px;font-style:italic;color:#7A5C20;">GAUK Antiques</span>
-      <span style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:2px;color:#8A7A66;" id="cat-result-ref"></span>
-    </div>
-  </div>
-</div>
+<IdentificationResult prefix="cat" />
 
 <!-- ANCHOR NAV -->
 <nav class="cat-anchor-nav">
@@ -554,6 +507,7 @@ const { data: videos } = await supabase
 
 <script>
   import { supabase } from '../../lib/supabase-browser'
+  import { wireIdentificationResult } from '../../lib/identification-handler'
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
@@ -561,94 +515,7 @@ const { data: videos } = await supabase
     window.__gauk_token = session.access_token
   }
 
-  document.addEventListener('widget-reset-result', () => {
-    const ro = document.getElementById('cat-result-outer')
-    if (ro) ro.style.display = 'none'
-  })
-
-  document.addEventListener('identification-complete', (e: any) => {
-    const identifyData = e.detail
-    const r = identifyData.result
-
-    document.getElementById('cat-result-category')!.textContent = r.category
-    document.getElementById('cat-result-confidence')!.textContent = r.confidence
-    document.getElementById('cat-result-title')!.textContent = r.subcategory
-    document.getElementById('cat-result-condition')!.textContent = r.condition
-
-    const notes = [r.condition_notes, r.confidence_notes].filter(Boolean).join(' ')
-    const notesEl = document.getElementById('cat-result-notes')
-    if (notesEl && notes) notesEl.textContent = notes
-
-    const typedText = document.getElementById('cat-typed-text')
-    const typedCursor = document.getElementById('cat-typed-cursor')
-    if (typedText && typedCursor) {
-      const desc = r.description || ''
-      let ti = 0
-      typedText.textContent = ''
-      typedCursor.style.display = 'inline-block'
-      function typeChar() {
-        if (ti < desc.length) { typedText.textContent += desc[ti]; ti++; setTimeout(typeChar, 22) }
-        else {
-          typedCursor.style.display = 'none'
-          if (!session) {
-            const ctaWrap = document.getElementById('cat-gate-cta-wrap')
-            const typedEl = document.getElementById('cat-gate-typed')
-            const cursorEl = document.getElementById('cat-gate-cursor')
-            if (!ctaWrap || !typedEl || !cursorEl) return
-            ctaWrap.style.display = 'block'
-            const ctaText = identifyData.gate_cta_text || 'Your valuation is ready. Register free — it takes thirty seconds and reveals exactly what your piece is worth.'
-            let gi = 0
-            typedEl.textContent = ''
-            cursorEl.style.display = 'inline-block'
-            function typeGate() {
-              if (gi < ctaText.length) { typedEl.textContent += ctaText[gi]; gi++; setTimeout(typeGate, 28) }
-              else { cursorEl.style.display = 'none' }
-            }
-            typeGate()
-          }
-        }
-      }
-      setTimeout(typeChar, 400)
-    }
-
-    document.getElementById('cat-result-value')!.textContent =
-      '£' + (r.value_range_low || 0).toLocaleString() + ' – £' + (r.value_range_high || 0).toLocaleString() + ' / $' + Math.round((r.value_range_low || 0) * 1.27).toLocaleString() + ' – $' + Math.round((r.value_range_high || 0) * 1.27).toLocaleString()
-
-    if (r.maker) {
-      document.getElementById('cat-result-maker')!.textContent = r.maker
-      const row = document.getElementById('cat-row-maker')
-      if (row) row.style.display = 'flex'
-    }
-    if (r.period) {
-      document.getElementById('cat-result-period')!.textContent = r.period + (r.circa ? ' — ' + r.circa : '')
-      const row = document.getElementById('cat-row-period')
-      if (row) row.style.display = 'flex'
-    }
-    if (identifyData.id) {
-      const ref = document.getElementById('cat-result-ref')
-      if (ref) ref.textContent = 'REF ' + identifyData.id.slice(0,8).toUpperCase()
-      if (session) {
-        const viewReport = document.getElementById('cat-result-view-report')
-        const viewLink = document.getElementById('cat-view-report-link') as HTMLAnchorElement
-        if (viewReport) viewReport.style.display = 'block'
-        if (viewLink) viewLink.href = '/valuation/' + identifyData.id
-      }
-    }
-
-    const outer = document.getElementById('cat-result-outer')
-    if (outer) {
-      outer.style.display = 'block'
-      outer.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-
-    if (session) {
-      const bc = document.getElementById('cat-blur-content')
-      if (bc) bc.style.filter = 'none'
-      const ctaWrap = document.getElementById('cat-gate-cta-wrap')
-      if (ctaWrap) ctaWrap.style.display = 'none'
-
-    }
-  })
+  wireIdentificationResult('cat', session)
 </script>
 
 </PublicShell>
