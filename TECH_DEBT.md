@@ -54,11 +54,11 @@ Last updated: 2026-06-05 (Post-audit reconciliation)
 - CLIENT SCOPE FIX: ANTIQUES_SITE_ID + R2_CDN local consts added to library.astro, account.astro, SideNav.astro client scripts; ANTIQUES_SITE_ID added to valuation/[id].astro define:vars; broken template literals fixed in valuation/[id].astro lines 27-28
 
 ## Remaining Medium Priority
-- M4: SideNav.astro creates its own Supabase client — should import from supabase-browser.ts
-- M13: videos.astro fires 22 parallel DB queries — needs GROUP BY aggregation
-- M14: articles.astro fires 22 parallel DB queries — needs GROUP BY aggregation
-- M15: PublicShell.astro has 2 sequential blocking DB queries — parallelise
-- M16: articles.astro has 4 sequential site_settings queries — combine with .in()
+- M4: SideNav.astro uses shared supabase-browser.ts singleton ✅
+- M13: videos.astro single query + JS grouping ✅
+- M14: articles.astro 26 queries → 2 parallel queries ✅
+- M15: PublicShell.astro queries parallelised ✅
+- M16: articles.astro site_settings combined with .in() ✅
 - M17: video/channel counts fetched by pulling all rows — needs COUNT query
 - M20: three CSS variable systems — Layout.astro tokens ignored in most components
 - M22: files over 200-line limit:
@@ -71,8 +71,8 @@ Last updated: 2026-06-05 (Post-audit reconciliation)
     - src/pages/channels/index.astro — 421 lines
     - src/components/AskChat.ts — 239 lines
     - src/components/SideNav.astro — 181 lines (borderline)
-- M26: direct Supabase REST calls in category/articles and collections client scripts
-- M31: /makers/[slug] links are live 404s on category pages
+- M26: category/articles uses /api/articles endpoint; collections deferred (full rebuild required) ✅
+- M31: broken /makers links removed from category pages; route build deferred to future feature ✅
 
 ## Remaining Low Priority
 - L1: Layout.astro CSS tokens unused — components use hardcoded hex values
