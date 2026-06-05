@@ -1,5 +1,6 @@
 ---
 import { ANTIQUES_SITE_ID, R2_CDN } from '../../lib/constants'
+import { decodeTitle } from '../../lib/utils'
 import { formatValueRange } from '../../lib/currency'
 import PublicShell from '../../layouts/PublicShell.astro'
 import { supabase } from '../../lib/supabase'
@@ -81,11 +82,6 @@ const pubDate = video.published_at
   ? new Date(video.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
   : null
 
-function decodeTitle(s: string): string {
-  return s
-    .replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&')
-    .replaceAll('&ndash;', '–').replaceAll('&mdash;', '—').replaceAll('&hellip;', '…')
-}
 ---
 <PublicShell
   title={`${videoTitle} — GAUK Antiques`}

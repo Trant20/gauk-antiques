@@ -15,3 +15,10 @@ export function slugify(s: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 }
+
+/** Decode common HTML entities in RSS/YouTube titles */
+export function decodeTitle(s: string): string {
+  return s
+    .replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&')
+    .replaceAll('&ndash;', '–').replaceAll('&mdash;', '—').replaceAll('&hellip;', '…')
+}

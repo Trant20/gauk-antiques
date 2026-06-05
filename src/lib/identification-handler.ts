@@ -1,3 +1,5 @@
+import { formatValueRange } from './currency'
+
 /** Wire up identification result card event handlers.
  *  Call once per page after DOM is ready.
  *  @param prefix - ID prefix used in IdentificationResult.astro ('' for index, 'cat' for category pages)
@@ -92,12 +94,9 @@ export function wireIdentificationResult(
       setTimeout(typeChar, 400)
     }
 
-    const lo = r.value_range_low || 0
-    const hi = r.value_range_high || 0
     const valueEl = g('result-value')
     if (valueEl) {
-      valueEl.textContent = '£' + lo.toLocaleString('en-GB') + ' – £' + hi.toLocaleString('en-GB') +
-        ' / $' + Math.round(lo * 1.27).toLocaleString('en-US') + ' – $' + Math.round(hi * 1.27).toLocaleString('en-US')
+      valueEl.textContent = formatValueRange(r.value_range_low || 0, r.value_range_high || 0)
     }
 
     if (r.maker) {

@@ -1,5 +1,6 @@
 ---
 import { ANTIQUES_SITE_ID } from '../../lib/constants'
+import { decodeTitle } from '../../lib/utils'
 import PublicShell from '../../layouts/PublicShell.astro'
 import { supabase } from '../../lib/supabase'
 
@@ -49,11 +50,6 @@ const pageDescription = channel.description
   ? channel.description.slice(0, 160)
   : `Watch ${channel.name} videos on GAUK Antiques — curated antiques guides and expert content.`
 
-function decodeTitle(s: string): string {
-  return s
-    .replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&')
-    .replaceAll('&ndash;', '–').replaceAll('&mdash;', '—').replaceAll('&hellip;', '…')
-}
 ---
 <PublicShell title={pageTitle} description={pageDescription} ogImage={channelHeroImage || channel.logo_url || ''}>
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({

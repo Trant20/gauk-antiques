@@ -5,6 +5,42 @@ interface Props {
 const { prefix = '' } = Astro.props
 const p = prefix ? prefix + '-' : ''
 ---
+<style is:global>
+  /* ─── PARCHMENT RESULT CARD ─── */
+  .result-section { background: #EFE7D9; color: #1C1810; max-width: 520px; margin: 0 auto; }
+  .result-badges { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 0; }
+  .result-category { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; }
+  .result-confidence { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border: 1px solid #C4B49E; color: #8A7A66; }
+  .result-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(22px, 5vw, 32px); font-weight: 400; line-height: 1.2; color: #1C1810 !important; padding: 12px 20px 0; margin: 0; }
+  .typed-cursor { display: inline-block; width: 2px; height: 1em; background: #7A5C20; margin-left: 2px; vertical-align: text-bottom; animation: blink .7s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .result-desc { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.9; color: #5C5040; padding: 14px 20px; border-bottom: 1px solid #C4B49E; margin: 0; }
+  #typed-text { font-size: 16px; }
+  .result-id-table { padding: 0 20px; border-bottom: 1px solid #C4B49E; }
+  .result-id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
+  .result-id-row:last-child { border-bottom: none; }
+  .result-id-key { width: 90px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
+  .result-id-val { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; line-height: 1.5; flex: 1; }
+  .result-value-block { background: #E6DCCB; border-bottom: 1px solid #C4B49E; padding: 28px 20px; text-align: center; }
+  .result-value-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #8A7A66; margin-bottom: 10px; }
+  .result-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px, 7vw, 48px); font-weight: 400; line-height: 1; color: #7A5C20; letter-spacing: -1px; }
+  .result-blur-gate { position: relative; }
+  .result-blur-content { filter: blur(5px); pointer-events: none; user-select: none; }
+  .result-notes-preview { padding: 24px 20px; background: #EAE1D2; }
+  .result-notes-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-bottom: 10px; }
+  .result-notes-text { font-family: 'Prata', Georgia, serif; font-size: 15px; line-height: 1.9; color: #5C5040; }
+  .result-gate-cta { padding: 20px 20px 0; border-top: 1px solid #C4B49E; }
+  .result-gate-cta-text { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.8; color: #5C5040; margin-bottom: 14px; min-height: 24px; }
+  .result-gate-cta-cursor { display: inline-block; width: 2px; height: 1em; background: #7A5C20; margin-left: 2px; vertical-align: text-bottom; animation: blink .7s step-end infinite; }
+  .result-gate-register { display: block; width: 100%; padding: 15px; background: #B8860B; border: none; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #fff; text-decoration: none; text-align: center; transition: background .2s; margin-bottom: 20px; }
+  .result-gate-register:hover { background: #9A7009; }
+  .result-footer-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-top: 1px solid #C4B49E; background: #EFE7D9; }
+  .result-footer-brand { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; font-style: italic; color: #7A5C20; }
+  .result-footer-ref { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; color: #8A7A66; }
+  .save-note { display: none; padding: 10px 20px; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; background: #EFE7D9; }
+  .save-note.visible { display: block; }
+  .result-view-report { box-sizing: border-box; width: 100%; }
+</style>
 <div id={`${p}result-outer`} style="display:none; background:#EFE7D9;">
   <div id={`${p}result-section`} class="result-section">
     <div class="result-badges">

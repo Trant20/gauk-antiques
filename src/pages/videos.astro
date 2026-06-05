@@ -1,5 +1,6 @@
 ---
 import { ANTIQUES_SITE_ID } from '../lib/constants'
+import { decodeTitle } from '../lib/utils'
 import PublicShell from '../layouts/PublicShell.astro'
 import { supabase } from '../lib/supabase'
 
@@ -108,11 +109,6 @@ const pageDescription = activeCategoryName
   ? `Video guides, auction coverage and collector advice for ${activeCategoryName.toLowerCase()} antiques.`
   : 'Video guides, auction coverage and collector advice — curated from the best antiques channels on YouTube.'
 
-function decodeTitle(s: string): string {
-  return s
-    .replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&')
-    .replaceAll('&ndash;', '–').replaceAll('&mdash;', '—').replaceAll('&hellip;', '…')
-}
 ---
 <PublicShell title={pageTitle} description={pageDescription}>
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
