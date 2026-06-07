@@ -3,7 +3,6 @@ import { ANTIQUES_SITE_ID, R2_CDN } from '../../lib/constants'
 import AppShell from '../../layouts/AppShell.astro'
 import { supabase } from '../../lib/supabase'
 import { formatValueRange, formatSingleValue } from '../../lib/currency'
-import ValuationStyles from '../../components/ValuationStyles.astro'
 
 const { id } = Astro.params
 
@@ -41,7 +40,180 @@ const confOffset = confCircumference - (confCircumference * confidenceScore / 10
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 ---
 <AppShell title={`${r.subcategory} — GAUK Antiques Valuation`}>
-<ValuationStyles />
+<style>
+  body { background: #EFE7D9; color: #1C1810; }
+  .card-wrap { width: 100%; max-width: 100%; padding-bottom: 100px; background: #EFE7D9; }
+  .cap { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
+  .section-head .cap { font-size: 11px; letter-spacing: 4px; font-weight: 600; color: #5C5040; }
+  .section { padding: 24px 20px; border-bottom: 1px solid #C4B49E; }
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-head-line { flex: 1; height: 1px; background: #C4B49E; }
+
+  /* HEADER */
+  .card-header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
+    border-bottom: 1px solid #C4B49E;
+  }
+  @media (max-width: 767px) { .card-header { padding-left: 56px; } }
+  .card-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
+  .card-logo span { color: #7A5C20; }
+  .card-date { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
+  .hidden { display: none !important; }
+  .card-breadcrumb { display: flex; align-items: center; gap: 6px; }
+  .bc-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
+  .bc-link:hover { color: #1C1810; }
+  .bc-sep { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #C4B49E; }
+  .bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: #8A7A66; text-transform: uppercase; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 400px) { .bc-hide-sm { display: none; } }
+  .delete-btn { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; background: none; border: 1px solid #C4B49E; padding: 6px 12px; cursor: pointer; transition: border-color .2s, color .2s; }
+  .delete-btn:hover { border-color: #C46028; color: #C46028; }
+  .del-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(28,24,16,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .del-modal { background: #EFE7D9; border: 1px solid #C4B49E; padding: 32px 24px; max-width: 320px; width: 100%; text-align: center; }
+  .del-modal-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 10px; }
+  .del-modal-sub { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; line-height: 1.7; margin-bottom: 24px; }
+  .del-modal-btns { display: flex; gap: 8px; }
+  .del-cancel { flex: 1; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: none; border: 1px solid #C4B49E; padding: 12px; cursor: pointer; color: #5C5040; }
+  .del-confirm { flex: 1; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #1C1810; border: 1px solid #1C1810; padding: 12px; cursor: pointer; color: #EFE7D9; }
+
+  /* HERO IMAGE */
+  .card-image-wrap { position: relative; }
+  .card-image-single { width: 100%; max-height: 420px; object-fit: contain; background: #E6DCCB; display: block; }
+  .card-image-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; }
+  .card-image-dual img { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: #E6DCCB; display: block; }
+  .card-image-dual-label { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; text-align: center; padding: 5px 0; background: #E6DCCB; }
+  @media (max-width: 480px) {
+    .card-image-dual { grid-template-columns: 1fr; }
+    .card-image-dual img { aspect-ratio: 4/3; }
+  }
+  .conf-arc { position: absolute; bottom: 14px; right: 14px; }
+  .conf-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Prata', Georgia, serif; font-size: 10px; color: #7A5C20; }
+
+  /* TITLE */
+  .card-badges { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0; }
+  .card-category { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; }
+  .card-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(22px, 5vw, 30px); font-weight: 400; line-height: 1.2; color: #1C1810; padding: 10px 20px 6px; font-style: italic; }
+  .card-subtitle { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; padding: 0 20px 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 16px; }
+  .tag { display: inline-block; padding: 4px 10px; border: 1px solid #C4B49E; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #5C5040; }
+
+  /* VALUE */
+  .value-section { background: #E6DCCB; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; padding: 28px 20px; text-align: center; }
+  .value-number { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px, 7vw, 48px); font-weight: 400; line-height: 1; color: #7A5C20; letter-spacing: -1px; margin-bottom: 6px; }
+  .value-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 20px; }
+  .value-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; margin-top: 16px; }
+  .value-strip-cell { background: #E6DCCB; padding: 14px 8px; }
+  .value-strip-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-bottom: 6px; }
+  .value-strip-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; color: #1C1810; }
+
+  /* ID TABLE */
+  .id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
+  .id-row:last-child { border-bottom: none; }
+  .id-key { width: 120px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
+  .id-val { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; line-height: 1.5; flex: 1; }
+
+  /* GAUGES */
+  .gauges { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 480px) { .gauges { grid-template-columns: 1fr 1fr; gap: 16px; } }
+  .gauge { text-align: center; }
+  .gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
+  .gauge-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
+  .gauge-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; color: #1C1810; margin-bottom: 4px; }
+
+  /* CONDITION CHECKLIST */
+  .condition-grade {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 14px 0; border-bottom: 1px solid #C4B49E; margin-bottom: 16px;
+  }
+  .condition-grade-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
+  .condition-grade-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; color: #1C1810; font-style: italic; }
+  .check-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .check-item { display: flex; gap: 10px; align-items: flex-start; }
+  .check-icon { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.5; flex-shrink: 0; color: #2A7060; width: 16px; }
+  .check-icon.warn { color: #C46028; }
+  .check-text { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.5; }
+
+  /* EXPERT NOTES */
+  .expert-para { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.9; color: #5C5040; margin-bottom: 14px; }
+  .expert-para:last-child { margin-bottom: 0; }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 22px; }
+  .timeline-line { position: absolute; left: 5px; top: 10px; bottom: 10px; width: 1px; background: #C4B49E; }
+  .tl-item { position: relative; padding: 10px 0 10px 14px; border-bottom: 1px solid rgba(196,180,158,.2); }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-dot { position: absolute; left: -17px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: #DDD0BF; border: 1.5px solid #C4B49E; z-index: 1; }
+  .tl-dot.highlight { background: #7A5C20; border-color: #7A5C20; }
+  .tl-inner { display: flex; gap: 10px; align-items: baseline; }
+  .tl-year { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #8A7A66; flex-shrink: 0; width: 48px; }
+  .tl-year.highlight { color: #7A5C20; font-style: italic; }
+  .tl-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; margin-bottom: 2px; }
+  .tl-label.highlight { color: #7A5C20; }
+  .tl-note { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.5; }
+
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
+  .option { padding: 16px; display: flex; align-items: flex-start; gap: 12px; background: #EAE1D2; }
+  .option.rec { background: #DDD0BF; }
+  .option-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: #C4B49E; }
+  .option-dot.rec { background: #7A5C20; }
+  .option-action { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #5C5040; margin-bottom: 4px; }
+  .option-action.rec { color: #1C1810; font-style: italic; }
+  .option-rec-badge { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; color: #7A5C20; margin-left: 10px; }
+  .option-detail { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; line-height: 1.5; }
+
+  /* COMPARABLES */
+  .comp-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); gap: 12px; }
+  .comp-row:last-child { border-bottom: none; }
+  .comp-title { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; margin-bottom: 2px; }
+  .comp-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; }
+  .comp-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #7A5C20; flex-shrink: 0; }
+
+  /* FOOTER */
+  .card-footer { padding: 20px; border-top: 1px solid #C4B49E; display: flex; justify-content: space-between; align-items: center; }
+  .footer-brand { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; font-style: italic; color: #7A5C20; margin-bottom: 3px; }
+  .ai-disclaimer { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1px; color: #8A7A66; line-height: 1.6; max-width: 200px; }
+
+  /* STICKY ACTIONS */
+  .sticky-actions {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    max-width: 100%; margin: 0 auto;
+    background: rgba(239,231,217,.96); backdrop-filter: blur(20px);
+    border-top: 1px solid #C4B49E;
+    padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+    display: flex; gap: 8px;
+  }
+  .action-btn {
+    flex: 1; padding: 13px;
+    background: transparent; border: 1px solid #C4B49E;
+    font-family: 'Prata', Georgia, serif; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: #5C5040; cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: border-color .2s;
+  }
+  .action-btn:hover { border-color: #7A5C20; color: #1C1810; }
+  .action-btn.primary { background: #1C1810; border-color: #1C1810; color: #EFE7D9; }
+
+  /* LOADING STATE */
+  .enrich-loading { padding: 32px 20px 40px; }
+  .enrich-loading-stage { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; text-align: center; margin-bottom: 20px; min-height: 16px; }
+  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .enrich-loading-stage { animation: pulse 2s ease-in-out infinite; }
+  .enrich-progress-wrap { height: 2px; background: #DDD0BF; margin-bottom: 20px; overflow: hidden; }
+  .enrich-progress-bar { height: 100%; background: linear-gradient(90deg, #C8A060, #7A5C20); width: 0%; transition: width .6s ease; }
+  .enrich-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .enrich-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #E6DCCB; opacity: .4; transition: opacity .4s; }
+  .enrich-step.active { opacity: 1; }
+  .enrich-step.done { opacity: .7; }
+  .enrich-step-dot { width: 6px; height: 6px; border-radius: 50%; background: #C4B49E; flex-shrink: 0; transition: background .4s; }
+  .enrich-step.active .enrich-step-dot { background: #7A5C20; }
+  .enrich-step.done .enrich-step-dot { background: #2A7060; }
+  .enrich-step-text { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #5C5040; }
+  .enrich-disclaimer { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; line-height: 1.8; text-align: center; border-top: 1px solid #C4B49E; padding-top: 16px; }
+</style>
 
 <div class="card-wrap">
   <header class="card-header">
