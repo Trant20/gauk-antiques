@@ -62,7 +62,7 @@ Last updated: 2026-06-05 (Post-audit reconciliation)
 - M17: video/channel counts fetched by pulling all rows — needs COUNT query
 - M20: three CSS variable systems — Layout.astro tokens ignored in most components
 - M22: files over 200-line limit:
-    - src/pages/valuation/[id].astro — 814 lines
+    - src/pages/valuation/[id].astro — 814 lines (DO NOT REFACTOR — defer to public sharing feature rebuild session)
     - src/pages/categories/collections.astro — 537 lines
     - src/pages/categories/[category].astro — 521 lines
     - src/components/AIHeroWidget.astro — 522 lines
