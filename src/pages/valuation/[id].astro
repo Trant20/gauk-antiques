@@ -688,7 +688,12 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 </div>
 
 <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!enrichment, itemOwnerId: item.user_id, ANTIQUES_SITE_ID }}>
+  window.__val = { itemId, resultJson, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID }
+</script>
+
+<script>
   import { supabase } from '../../lib/supabase-browser'
+  const { itemId, resultJson: r, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID } = window.__val
 
   
   // Single auth call — used throughout
@@ -732,7 +737,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   const enrichCta = document.getElementById('enrich-cta')
   if (enrichCta && enrichCta.dataset.hasEnrichment !== 'true') {
     enrichCta.dataset.itemId = itemId
-    enrichCta.dataset.resultJson = JSON.stringify(resultJson)
+    enrichCta.dataset.resultJson = JSON.stringify(r)
 
     const enrichLoading = document.getElementById('enrich-loading')
     const enrichBtn = document.getElementById('enrich-btn') as HTMLButtonElement | null
