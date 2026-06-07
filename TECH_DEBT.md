@@ -61,16 +61,15 @@ Last updated: 2026-06-05 (Post-audit reconciliation)
 - M16: articles.astro site_settings combined with .in() ✅
 - M17: video/channel counts fetched by pulling all rows — needs COUNT query
 - M20: three CSS variable systems — Layout.astro tokens ignored in most components
-- M22: files over 200-line limit:
-    - src/pages/valuation/[id].astro — 814 lines (DO NOT REFACTOR — defer to public sharing feature rebuild session)
-    - src/pages/categories/collections.astro — 537 lines
-    - src/pages/categories/[category].astro — 521 lines
-    - src/components/AIHeroWidget.astro — 522 lines
-    - src/pages/videos.astro — 498 lines
-    - src/layouts/PublicShell.astro — 434 lines
-    - src/pages/channels/index.astro — 421 lines
-    - src/components/AskChat.ts — 239 lines
-    - src/components/SideNav.astro — 181 lines (borderline)
+- M22: files over 200-line limit (200-line limit is advisory — only refactor if broken or causing maintainability issues):
+    - src/pages/valuation/[id].astro — 814 lines (defer to public sharing rebuild session)
+    - src/pages/categories/collections.astro — 537 lines (defer to full rebuild session)
+    - src/pages/categories/[category].astro — 521 lines (working, defer)
+    - src/components/AIHeroWidget.astro — 522 lines (critical component, do not touch)
+    - src/pages/videos.astro — 494 lines (working, defer)
+    - src/layouts/PublicShell.astro — 435 lines (working, defer)
+    - src/pages/channels/index.astro — 421 lines (working, defer)
+    - src/components/AskChat.ts — 239 lines (borderline, working, defer)
 - M26: category/articles uses /api/articles endpoint; collections deferred (full rebuild required) ✅
 - M31: broken /makers links removed from category pages; route build deferred to future feature ✅
 
