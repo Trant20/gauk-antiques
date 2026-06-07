@@ -148,6 +148,11 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
   function closeNav() { sidebar.classList.remove('open'); overlay.classList.remove('open'); ham.classList.remove('open') }
 
   ham.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav())
+
+  // Close nav on back navigation (bfcache restore)
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) closeNav()
+  })
   overlay.addEventListener('click', closeNav)
 
   // Active links
