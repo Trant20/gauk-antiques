@@ -11,6 +11,11 @@ export default defineConfig({
   output: 'server',
   adapter,
   vite: {
-    plugins: [tailwindcss()]
-  }
+    plugins: [tailwindcss()],
+    build: {
+      rollupOptions: {
+        external: ['cloudflare:workers'],
+      },
+    },
+  },
 })
