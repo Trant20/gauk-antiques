@@ -216,8 +216,8 @@ import { R2_CDN } from '../lib/constants'
   function renderGrid(items) {
     elGridView.innerHTML = items.map(item => {
       const r = item.result_json || {}
-      const title = escapeHtml(r.subcategory || 'Unidentified Item')
-      const category = escapeHtml(r.category || 'Antique')
+      const title = escapeHtml(r.subcategory || r.title || 'Unidentified Item')
+      const category = escapeHtml(r.category || 'Uncategorised')
       const condition = escapeHtml(r.condition || '')
       return '<a href="/valuation/' + item.id + '" class="lib-card">' +
         thumbEl(item.image_key, r.subcategory || 'Unidentified Item') +
@@ -236,8 +236,8 @@ import { R2_CDN } from '../lib/constants'
   function renderList(items) {
     elListView.innerHTML = items.map(item => {
       const r = item.result_json || {}
-      const title = escapeHtml(r.subcategory || 'Unidentified Item')
-      const category = escapeHtml(r.category || 'Antique')
+      const title = escapeHtml(r.subcategory || r.title || 'Unidentified Item')
+      const category = escapeHtml(r.category || 'Uncategorised')
       const maker = escapeHtml(r.maker || r.manufacturer || '')
       const condition = escapeHtml(r.condition || '')
       const sub = maker ? (maker + (condition ? ' \u00b7 ' + condition : '')) : ''
