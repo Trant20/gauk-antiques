@@ -620,7 +620,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         <div id="enrich-gate-wrap" data-credit-cost={creditCostEnrich}>
           <button id="enrich-btn" style="display:block;width:100%;max-width:320px;margin:0 auto 10px;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;cursor:pointer;transition:opacity .2s;">Generate Full Report — {creditCostEnrich} Credits</button>
           <a href="/pricing" id="enrich-topup" style="display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">Top Up Credits to Unlock</a>
-          <a href="/auth/signup" id="enrich-register" style="display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">Register Free to Unlock</a>
+          <a href="/auth" id="enrich-register" style="display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">Register Free to Unlock</a>
         </div>
       </div>
       <div class="enrich-loading" id="enrich-loading" style="display:none;">
@@ -698,7 +698,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   
   // Single auth call — used throughout
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { window.location.href = '/auth/signin' }
+  if (!session) { window.location.href = '/auth' }
 
   // Ownership check — redirect if this record belongs to someone else
   if (itemOwnerId && session && session.user.id !== itemOwnerId) {
@@ -728,7 +728,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     if (!btn) return
     btn.textContent = 'Deleting...'
     btn.disabled = true
-    if (!session) { window.location.href = '/auth/signin'; return }
+    if (!session) { window.location.href = '/auth'; return }
     await supabase.from('identifications').delete().eq('id', itemId).eq('user_id', session.user.id)
     window.location.href = '/library'
   })

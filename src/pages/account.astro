@@ -37,7 +37,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
 </style>
 <div id="auth-gate" class="auth-gate" style="display:none">
     <div class="auth-gate-title">Sign in to view your account</div>
-    <a href="/auth/signin" class="account-btn">Sign In</a>
+    <a href="/auth" class="account-btn">Sign In</a>
   </div>
 
   <div id="account-content">
@@ -101,7 +101,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
   }
 
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { window.location.href = '/auth/signin'; }
+  if (!session) { window.location.href = '/auth'; }
 
   document.getElementById('signout-btn')?.addEventListener('click', async () => {
     await supabase.auth.signOut()

@@ -314,7 +314,7 @@ const pubDate = video.published_at
           {channel.description && <p class="vid-channel-desc">{channel.description}</p>}
           <a href={`/channels/${channel.slug}`} class="vid-channel-follow" style="margin-bottom:8px;">Visit Channel →</a>
           <button class="vid-channel-follow" id="vid-follow-btn" hidden data-publisher-id={channel.id}>Follow Channel</button>
-          <a href="/auth/signin" class="vid-channel-follow-signin" id="vid-follow-signin" hidden>Sign in to Follow</a>
+          <a href="/auth" class="vid-channel-follow-signin" id="vid-follow-signin" hidden>Sign in to Follow</a>
         </div>
       )}
 
@@ -428,7 +428,7 @@ const pubDate = video.published_at
 
   btn?.addEventListener('click', async () => {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = '/auth/signin'; return }
+    if (!session) { window.location.href = '/auth'; return }
     btn.classList.add('loading')
     const isFollowing = btn.classList.contains('following')
     const res = await fetch('/api/follow', {

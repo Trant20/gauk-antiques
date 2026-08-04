@@ -80,7 +80,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
 
   document.querySelectorAll('.ap-checkout-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!session) { window.location.href = '/auth/signup'; return }
+      if (!session) { window.location.href = '/auth'; return }
       const price_id = (btn as HTMLElement).dataset.price
       const mode = (btn as HTMLElement).dataset.mode
       ;(btn as HTMLButtonElement).textContent = 'Loading...'

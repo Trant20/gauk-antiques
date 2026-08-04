@@ -110,7 +110,7 @@ import { R2_CDN } from '../lib/constants'
       </svg>
       <div class="lib-state-title">Sign in to view your library</div>
       <div class="lib-state-sub">Your identification history is saved to your account.</div>
-      <a href="/auth/signin" class="lib-state-btn">Sign In</a>
+      <a href="/auth" class="lib-state-btn">Sign In</a>
     </div>
   </div>
 
@@ -260,7 +260,7 @@ import { R2_CDN } from '../lib/constants'
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
-    window.location.href = '/auth/signin'
+    window.location.href = '/auth'
   } else {
 
     const BATCH = 24

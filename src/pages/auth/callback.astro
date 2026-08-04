@@ -1,25 +1,18 @@
 ---
 import PublicShell from '../../layouts/PublicShell.astro'
-import { ANTIQUES_SITE_ID } from '../../lib/constants'
 ---
-<PublicShell title="Confirming your account — GAUK Antiques">
+<PublicShell title="Signing you in — GAUK Antiques">
 <style>
-  .callback-wrap {
-    min-height: 100vh; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; padding: 40px 20px;
-  }
-  .callback-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; margin-bottom: 40px; }
-  .callback-logo span { color: #7A5C20; }
+  .callback-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
   .callback-card { width: 100%; max-width: 400px; text-align: center; }
   .callback-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 28px; font-weight: 400; font-style: italic; color: #1C1810; margin-bottom: 12px; }
   .callback-sub { font-family: 'Prata', Georgia, serif; font-size: 15px; color: #8A7A66; line-height: 1.7; }
   .callback-error { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #C46028; background: #F5EDE3; border: 1px solid #E8C8A8; padding: 12px 16px; margin-top: 20px; display: none; }
 </style>
 <div class="callback-wrap">
-  <div class="callback-logo">GAUK <span>Antiques</span></div>
   <div class="callback-card">
-    <div class="callback-title">Confirming your account…</div>
-    <div class="callback-sub">Please wait while we activate your account.</div>
+    <div class="callback-title">Signing you in…</div>
+    <div class="callback-sub">Please wait a moment.</div>
     <div class="callback-error" id="callback-error"></div>
   </div>
 </div>
@@ -27,59 +20,71 @@ import { ANTIQUES_SITE_ID } from '../../lib/constants'
 
 <script>
   import { supabase } from '../../lib/supabase-browser'
-  
-  async function handleCallback() {
-    const errorEl = document.getElementById('callback-error')!
 
-    // Exchange token in URL hash for a session
-    const params = new URLSearchParams(window.location.search)
-    const tokenHash = params.get('token_hash')
-    const type = params.get('type') as 'signup' | 'email' | null
+  async function handleCallback() {
+    var errorEl = document.getElementById('callback-error')
+    var params  = new URLSearchParams(window.location.search)
+    var next    = params.get('next') || '/library'
+
+    // Path 1 — Cross-domain handoff from GI (access_token + refresh_token in URL)
+    var accessToken  = params.get('access_token')
+    var refreshToken = params.get('refresh_token')
+
+    if (accessToken && refreshToken) {
+      var result = await supabase.auth.setSession({
+        access_token:  accessToken,
+        refresh_token: refreshToken
+      })
+
+      if (result.error || !result.data.session) {
+        errorEl.textContent = 'Session handoff failed. Please sign in again.'
+        errorEl.style.display = 'block'
+        setTimeout(function() { window.location.href = '/auth' }, 3000)
+        return
+      }
+
+      // Claim pending GI scan if exists
+      var pendingScan = ''
+      try { pendingScan = localStorage.getItem('gi_pending_scan') || '' } catch(e) {}
+      if (pendingScan) {
+        await fetch('/api/claim-identification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
+          body: JSON.stringify({ identification_id: pendingScan })
+        })
+        try { localStorage.removeItem('gi_pending_scan') } catch(e) {}
+      }
+
+      window.location.href = next
+      return
+    }
+
+    // Path 2 — Supabase email OTP token_hash
+    var tokenHash = params.get('token_hash')
+    var type      = params.get('type')
 
     if (!tokenHash || !type) {
-      errorEl.textContent = 'Invalid confirmation link. Please try signing up again.'
+      errorEl.textContent = 'Invalid confirmation link. Please sign in again.'
       errorEl.style.display = 'block'
-      setTimeout(() => { window.location.href = '/auth/signup' }, 3000)
+      setTimeout(function() { window.location.href = '/auth' }, 3000)
       return
     }
 
-    const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+    var otpResult = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type })
 
-    if (error || !data.session) {
-      errorEl.textContent = 'Confirmation failed. Please try signing up again.'
+    if (otpResult.error || !otpResult.data.session) {
+      errorEl.textContent = 'Confirmation failed. Please sign in again.'
       errorEl.style.display = 'block'
-      setTimeout(() => { window.location.href = '/auth/signup' }, 3000)
+      setTimeout(function() { window.location.href = '/auth' }, 3000)
       return
     }
 
-    const userId = data.session.user.id
-
-    // Grant signup credits
     await fetch('/api/grant-credits', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` }
+      headers: { 'Authorization': 'Bearer ' + otpResult.data.session.access_token }
     })
 
-    // Claim pending identification — check localStorage first, then server-side pending_claims
-    const localPendingId = localStorage.getItem('pending_identification_id')
-    if (localPendingId) {
-      await fetch('/api/claim-identification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` },
-        body: JSON.stringify({ identification_id: localPendingId })
-      })
-      localStorage.removeItem('pending_identification_id')
-    } else {
-      // Cross-browser confirmation — look up pending claim by email
-      const email = data.session.user.email
-      await fetch('/api/claim-identification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` },
-        body: JSON.stringify({ email })
-      })
-    }
-
-    window.location.href = '/welcome'
+    window.location.href = next
   }
 
   handleCallback()

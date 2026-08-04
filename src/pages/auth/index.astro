@@ -1,0 +1,130 @@
+---
+import AuthShell from '../../layouts/AuthShell.astro'
+---
+<AuthShell title="Sign In — GAUK Antiques">
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-eyebrow">Welcome</div>
+    <div class="auth-title">Continue to your collection</div>
+    <div class="auth-sub">Enter your email address. We will send you a one-time code to sign in or create your account.</div>
+
+    <div id="auth-error" class="auth-error"></div>
+
+    <div id="step-email">
+      <div class="auth-field">
+        <label class="auth-label" for="email">Email address</label>
+        <input class="auth-input" type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <button class="auth-btn" id="send-otp-btn">Send Code</button>
+      <div class="auth-footer" style="margin-top: 16px;">We only store your email address. No password required.</div>
+    </div>
+
+    <div id="step-otp" style="display: none;">
+      <div class="auth-field">
+        <label class="auth-label" for="otp">Your six-digit code</label>
+        <input class="auth-input" type="text" id="otp" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="letter-spacing: 0.3em; font-size: 24px; text-align: center;" />
+      </div>
+      <p id="otp-label" style="font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; margin-bottom: 20px; line-height: 1.7;"></p>
+      <button class="auth-btn" id="verify-otp-btn">Verify Code</button>
+      <button class="auth-btn" id="resend-btn" style="background: transparent; border: 1px solid #C4B49E; color: #8A7A66; margin-top: 12px;">Resend Code</button>
+    </div>
+  </div>
+</div>
+</AuthShell>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+
+  var email = ''
+  var stepEmail = document.getElementById('step-email')
+  var stepOtp   = document.getElementById('step-otp')
+  var emailInput  = document.getElementById('email')
+  var otpInput    = document.getElementById('otp')
+  var sendBtn     = document.getElementById('send-otp-btn')
+  var verifyBtn   = document.getElementById('verify-otp-btn')
+  var resendBtn   = document.getElementById('resend-btn')
+  var errorEl     = document.getElementById('auth-error')
+  var otpLabel    = document.getElementById('otp-label')
+
+  function setLoading(btn, loading) {
+    btn.style.opacity = loading ? '0.6' : '1'
+    btn.disabled = loading
+  }
+
+  function showError(msg) {
+    errorEl.textContent = msg
+    errorEl.style.display = 'block'
+  }
+
+  function hideError() {
+    errorEl.style.display = 'none'
+  }
+
+  async function sendOtp() {
+    email = emailInput.value.trim().toLowerCase()
+    if (!email || !email.includes('@')) { showError('Please enter a valid email address.'); return }
+    hideError()
+    setLoading(sendBtn, true)
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true }
+    })
+
+    if (error) { showError(error.message); setLoading(sendBtn, false); return }
+
+    otpLabel.textContent = 'We sent a six-digit code to ' + email + '. Enter it below.'
+    stepEmail.style.display = 'none'
+    stepOtp.style.display = 'block'
+    setTimeout(() => otpInput.focus(), 100)
+    setLoading(sendBtn, false)
+  }
+
+  async function verifyOtp() {
+    var token = otpInput.value.trim()
+    if (token.length !== 6) { showError('Please enter the six-digit code.'); return }
+    hideError()
+    setLoading(verifyBtn, true)
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email'
+    })
+
+    if (error || !data.session) {
+      showError('Invalid or expired code. Please try again.')
+      setLoading(verifyBtn, false)
+      return
+    }
+
+    // Grant signup credits
+    await fetch('/api/grant-credits', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + data.session.access_token }
+    })
+
+    // Claim pending GI scan if exists
+    var pendingScan = ''
+    try { pendingScan = localStorage.getItem('gi_pending_scan') || '' } catch(e) {}
+    if (pendingScan) {
+      await fetch('/api/claim-identification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.session.access_token },
+        body: JSON.stringify({ identification_id: pendingScan })
+      })
+      try { localStorage.removeItem('gi_pending_scan') } catch(e) {}
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    const next = params.get('next') || '/library'
+    window.location.href = next
+  }
+
+  sendBtn.addEventListener('click', sendOtp)
+  resendBtn.addEventListener('click', sendOtp)
+  verifyBtn.addEventListener('click', verifyOtp)
+  emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendOtp() })
+  otpInput.addEventListener('keydown', e => { if (e.key === 'Enter') verifyOtp() })
+  otpInput.addEventListener('input', () => { if (otpInput.value.length === 6) verifyOtp() })
+</script>
