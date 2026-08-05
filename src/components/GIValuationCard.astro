@@ -145,7 +145,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
 </div>
 
-<script define:vars={{ itemId: item.id, currency: currency, valueLow: r.value_range_low || 0, valueHigh: r.value_range_high || 0 }}>
+<script>
   import { supabase } from '../lib/supabase-browser'
 
   // Currency symbols
@@ -225,4 +225,4 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 </script>
 
 <!-- Hidden data store for result_json -->
-<div id="gi-result-json" data-json="{}" style="display:none;"></div>
+<div id="gi-card-data" data-item-id={item.id} data-currency={r.currency || "USD"} data-value-low={r.value_range_low || 0} data-value-high={r.value_range_high || 0} style="display:none;"></div>
