@@ -187,7 +187,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     var { data: { session } } = await supabase.auth.getSession()
     if (!session) { saveBtn.textContent = 'Sign in to save'; return }
 
-    var existing = JSON.parse(document.getElementById('gi-result-json')?.dataset.json || '{}')
+    var existing = JSON.parse(el?.dataset.result || '{}')
     var updated = Object.assign({}, existing, { value_range_low: lo, value_range_high: hi })
 
     var { error } = await supabase
