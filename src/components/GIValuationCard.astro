@@ -148,6 +148,13 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 <script>
   import { supabase } from '../lib/supabase-browser'
 
+  // Read server values from data attributes
+  var el        = document.getElementById('gi-card-data')
+  var itemId    = el?.dataset.itemId || ''
+  var currency  = el?.dataset.currency || 'USD'
+  var valueLow  = parseInt(el?.dataset.valueLow || '0')
+  var valueHigh = parseInt(el?.dataset.valueHigh || '0')
+
   // Currency symbols
   var SYMBOLS = { NZD: 'NZ$', AUD: 'AU$', GBP: '£', USD: '$', CAD: 'CA$', EUR: '€', SGD: 'S$', ZAR: 'R' }
   var sym = SYMBOLS[currency] || '$'
