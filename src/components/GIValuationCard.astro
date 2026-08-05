@@ -67,7 +67,12 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   <!-- Header -->
   <div class="gi-header">
-    <div class="gi-badge">{r.category || 'Item'}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <div class="gi-badge">{r.category || 'Item'}</div>
+      {r.antique_category && r.antique_category !== r.category && (
+        <div class="gi-badge" style="background:rgba(122,92,32,0.12);color:#7A5C20;border-color:#7A5C20;">{r.antique_category}</div>
+      )}
+    </div>
     <div class="gi-title">{r.title || 'Unidentified Item'}</div>
     <div class="gi-date">Scanned {date}</div>
   </div>
