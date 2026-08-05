@@ -232,4 +232,4 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 </script>
 
 <!-- Hidden data store for result_json -->
-<div id="gi-card-data" data-item-id={item.id} data-currency={r.currency || "USD"} data-value-low={r.value_range_low || 0} data-value-high={r.value_range_high || 0} style="display:none;"></div>
+<div id="gi-card-data" data-item-id={item.id} data-currency={r.currency || "USD"} data-value-low={r.value_range_low || 0} data-value-high={r.value_range_high || 0} data-result={JSON.stringify(r)} style="display:none;"></div>
