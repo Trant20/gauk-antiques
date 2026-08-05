@@ -157,7 +157,7 @@ import { R2_CDN, GI_SITE_ID } from '../lib/constants'
 </div>
 
 
-<script>
+<script define:vars={{ GI_SITE_ID }}>
   import { supabase } from '../lib/supabase-browser'
   import { escapeHtml } from '../lib/utils'
   import { formatValueRange, formatGIValueRange } from '../lib/currency'
