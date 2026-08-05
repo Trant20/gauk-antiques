@@ -143,6 +143,23 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   </div>
   )}
 
+  <!-- Delete -->
+  <div style="padding: 24px 20px; border-top: 1px solid #C4B49E;">
+    <button id="gi-delete-btn" style="font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8A7A66; background: none; border: 1px solid #C4B49E; padding: 8px 16px; border-radius: 3px; cursor: pointer; transition: border-color 0.2s, color 0.2s;">Delete this item</button>
+  </div>
+
+</div>
+
+<!-- Delete modal -->
+<div id="gi-del-overlay" style="display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: #EFE7D9; border: 1px solid #C4B49E; padding: 32px 24px; max-width: 320px; width: 100%; text-align: center; border-radius: 4px;">
+    <div style="font-family: 'Cormorant Garamond', serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 10px;">Delete this item?</div>
+    <div style="font-family: 'Inter', sans-serif; font-size: 13px; color: #8A7A66; line-height: 1.7; margin-bottom: 24px;">This will permanently remove the item from your inventory.</div>
+    <div style="display: flex; gap: 8px;">
+      <button id="gi-del-cancel" style="flex: 1; padding: 12px; background: none; border: 1px solid #C4B49E; font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A7A66; cursor: pointer; border-radius: 3px;">Cancel</button>
+      <button id="gi-del-confirm" style="flex: 1; padding: 12px; background: #C46028; border: none; font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: white; cursor: pointer; border-radius: 3px;">Delete</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -229,6 +246,29 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   }
 
   loadTotal()
+
+  // Delete handlers
+  var deleteBtn  = document.getElementById('gi-delete-btn')
+  var delOverlay = document.getElementById('gi-del-overlay')
+  var delCancel  = document.getElementById('gi-del-cancel')
+  var delConfirm = document.getElementById('gi-del-confirm')
+
+  deleteBtn?.addEventListener('click', function() {
+    delOverlay.style.display = 'flex'
+  })
+
+  delCancel?.addEventListener('click', function() {
+    delOverlay.style.display = 'none'
+  })
+
+  delConfirm?.addEventListener('click', async function() {
+    delConfirm.textContent = 'Deleting...'
+    delConfirm.disabled = true
+    var { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = '/auth'; return }
+    await supabase.from('identifications').delete().eq('id', itemId).eq('user_id', session.user.id)
+    window.location.href = '/library'
+  })
 </script>
 
 <!-- Hidden data store for result_json -->
