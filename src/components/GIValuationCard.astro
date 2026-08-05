@@ -1,0 +1,228 @@
+---
+import { R2_CDN } from '../lib/constants'
+import { formatGIValueRange, formatGISingleValue } from '../lib/currency'
+
+interface Props {
+  item: any
+}
+
+const { item } = Astro.props
+const r = item.result_json || {}
+const imageUrl = `${R2_CDN}/${item.image_key}`
+const currency = r.currency || 'USD'
+const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium' ? 72 : 45
+const confCircumference = 2 * Math.PI * 20
+const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
+const valueDisplay = formatGIValueRange(r.value_range_low || 0, r.value_range_high || 0, currency)
+const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+---
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  .gi-card { font-family: 'Inter', sans-serif; max-width: 100%; padding-bottom: 100px; }
+  .gi-image-wrap { width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #f0ede8; }
+  .gi-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gi-header { padding: 20px 20px 0; border-bottom: 1px solid #C4B49E; padding-bottom: 20px; }
+  .gi-badge { display: inline-block; font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #7c9082; border: 1px solid #7c9082; padding: 3px 10px; border-radius: 3px; margin-bottom: 10px; }
+  .gi-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: #1C1810; line-height: 1.2; margin-bottom: 6px; }
+  .gi-date { font-family: 'Inter', sans-serif; font-size: 11px; color: #8A7A66; letter-spacing: 0.05em; }
+  .gi-value-section { background: #1b1b1b; padding: 28px 20px; text-align: center; }
+  .gi-value-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #7c9082; margin-bottom: 8px; }
+  .gi-value-number { font-family: 'Cormorant Garamond', serif; font-size: 36px; color: #ffffff; line-height: 1; margin-bottom: 4px; }
+  .gi-value-note { font-family: 'Inter', sans-serif; font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; }
+  .gi-edit-btn { margin-top: 14px; display: inline-block; font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #7c9082; border: 1px solid #7c9082; background: none; padding: 8px 20px; border-radius: 3px; cursor: pointer; transition: all 0.2s; }
+  .gi-edit-form { display: none; margin-top: 16px; flex-direction: column; gap: 10px; align-items: center; }
+  .gi-edit-row { display: flex; gap: 10px; align-items: center; }
+  .gi-edit-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(124,144,130,0.4); border-radius: 3px; padding: 8px 12px; font-family: 'Inter', sans-serif; font-size: 14px; color: #ffffff; width: 120px; text-align: center; outline: none; }
+  .gi-edit-sep { color: rgba(255,255,255,0.4); font-size: 14px; }
+  .gi-save-btn { font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #1b1b1b; background: #7c9082; border: none; padding: 8px 20px; border-radius: 3px; cursor: pointer; }
+  .gi-section { padding: 24px 20px; border-bottom: 1px solid #C4B49E; }
+  .gi-section-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #5C5040; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .gi-section-label::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
+  .gi-description { font-family: 'Inter', sans-serif; font-size: 14px; color: #3a3028; line-height: 1.8; }
+  .gi-conf-row { display: flex; align-items: center; gap: 16px; }
+  .gi-conf-label { font-family: 'Inter', sans-serif; font-size: 13px; color: #5C5040; }
+  .gi-commentary { font-family: 'Inter', sans-serif; font-size: 14px; color: #3a3028; line-height: 1.8; margin-bottom: 12px; }
+  .gi-hook { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic; color: #7c9082; line-height: 1.5; }
+  .gi-insurance-bar { background: rgba(124,144,130,0.08); border: 1px solid rgba(124,144,130,0.25); border-radius: 4px; padding: 14px 16px; margin: 0 20px 0; }
+  .gi-insurance-label { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #7c9082; margin-bottom: 4px; }
+  .gi-insurance-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: #1C1810; }
+  .gi-antique-banner { background: #1b1b1b; border-left: 3px solid #7c9082; margin: 0; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .gi-antique-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: #ffffff; font-style: italic; }
+  .gi-antique-body { font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.7; }
+  .gi-antique-cta { display: inline-block; font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #1b1b1b; background: #7c9082; padding: 10px 20px; border-radius: 3px; text-decoration: none; margin-top: 4px; }
+  .gi-room-placeholder { padding: 20px; border-bottom: 1px solid #C4B49E; display: flex; align-items: center; justify-content: space-between; }
+  .gi-room-label { font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8A7A66; }
+  .gi-room-value { font-family: 'Inter', sans-serif; font-size: 13px; color: #C4B49E; font-style: italic; }
+</style>
+
+<div class="gi-card">
+
+  <!-- Image -->
+  <div class="gi-image-wrap">
+    <img class="gi-image" src={imageUrl} alt={r.title || 'Item'} loading="eager" />
+  </div>
+
+  <!-- Header -->
+  <div class="gi-header">
+    <div class="gi-badge">{r.category || 'Item'}</div>
+    <div class="gi-title">{r.title || 'Unidentified Item'}</div>
+    <div class="gi-date">Scanned {date}</div>
+  </div>
+
+  <!-- Value section -->
+  <div class="gi-value-section">
+    <div class="gi-value-label">Est. Replacement Cost</div>
+    <div class="gi-value-number" id="gi-value-display">{valueDisplay}</div>
+    <div class="gi-value-note">AI estimate based on current retail pricing</div>
+    <button class="gi-edit-btn" id="gi-edit-toggle">Edit Value</button>
+    <div class="gi-edit-form" id="gi-edit-form">
+      <div class="gi-edit-row">
+        <input class="gi-edit-input" id="gi-low-input" type="number" placeholder="Low" value={r.value_range_low || ''} />
+        <span class="gi-edit-sep">–</span>
+        <input class="gi-edit-input" id="gi-high-input" type="number" placeholder="High" value={r.value_range_high || ''} />
+      </div>
+      <button class="gi-save-btn" id="gi-save-btn">Save</button>
+    </div>
+  </div>
+
+  <!-- Insurance context -->
+  <div style="padding: 16px 20px; border-bottom: 1px solid #C4B49E;">
+    <div class="gi-insurance-bar">
+      <div class="gi-insurance-label">Your inventory total</div>
+      <div class="gi-insurance-value" id="gi-total">Calculating…</div>
+    </div>
+  </div>
+
+  <!-- Room assignment placeholder -->
+  <div class="gi-room-placeholder">
+    <span class="gi-room-label">Room</span>
+    <span class="gi-room-value">Assign to a room — coming soon</span>
+  </div>
+
+  <!-- Description -->
+  <div class="gi-section">
+    <div class="gi-section-label">Description</div>
+    <div class="gi-description">{r.description}</div>
+  </div>
+
+  <!-- Confidence -->
+  <div class="gi-section">
+    <div class="gi-section-label">AI Confidence</div>
+    <div class="gi-conf-row">
+      <svg width="48" height="48" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="20" fill="none" stroke="#C4B49E" stroke-width="3"/>
+        <circle cx="24" cy="24" r="20" fill="none" stroke="#7c9082" stroke-width="3"
+          stroke-dasharray={confCircumference}
+          stroke-dashoffset={confOffset}
+          stroke-linecap="round"
+          transform="rotate(-90 24 24)"/>
+        <text x="24" y="28" text-anchor="middle" font-family="Inter" font-size="11" fill="#1C1810">{confidenceScore}%</text>
+      </svg>
+      <div class="gi-conf-label">{r.confidence} confidence — {confidenceScore >= 90 ? 'Highly reliable estimate' : confidenceScore >= 70 ? 'Good estimate, consider verifying' : 'Low confidence — manual edit recommended'}</div>
+    </div>
+  </div>
+
+  <!-- Commentary -->
+  {r.commentary && (
+  <div class="gi-section">
+    <div class="gi-section-label">Expert Note</div>
+    <div class="gi-commentary">{r.commentary}</div>
+    {r.commentary_hook && <div class="gi-hook">{r.commentary_hook}</div>}
+  </div>
+  )}
+
+  <!-- Antique CTA -->
+  {r.is_antique && (
+  <div class="gi-antique-banner">
+    <div class="gi-antique-title">This could be an antique or collectible</div>
+    <div class="gi-antique-body">Our AI has flagged this item as potentially having collector value beyond its replacement cost. A specialist assessment could reveal significantly more.</div>
+    <a class="gi-antique-cta" href={`/valuation/${item.id}?specialist=true`}>Get a specialist assessment</a>
+  </div>
+  )}
+
+</div>
+
+<script define:vars={{ itemId: item.id, currency: currency, valueLow: r.value_range_low || 0, valueHigh: r.value_range_high || 0 }}>
+  import { supabase } from '../lib/supabase-browser'
+
+  // Currency symbols
+  var SYMBOLS = { NZD: 'NZ$', AUD: 'AU$', GBP: '£', USD: '$', CAD: 'CA$', EUR: '€', SGD: 'S$', ZAR: 'R' }
+  var sym = SYMBOLS[currency] || '$'
+
+  function fmtRange(lo, hi) {
+    if (!lo && !hi) return '—'
+    return sym + lo.toLocaleString() + ' – ' + sym + hi.toLocaleString()
+  }
+
+  // Edit toggle
+  var editToggle = document.getElementById('gi-edit-toggle')
+  var editForm   = document.getElementById('gi-edit-form')
+  var saveBtn    = document.getElementById('gi-save-btn')
+  var lowInput   = document.getElementById('gi-low-input')
+  var highInput  = document.getElementById('gi-high-input')
+  var valueDisplay = document.getElementById('gi-value-display')
+
+  editToggle.addEventListener('click', function() {
+    editForm.style.display = editForm.style.display === 'flex' ? 'none' : 'flex'
+    editToggle.textContent = editForm.style.display === 'flex' ? 'Cancel' : 'Edit Value'
+  })
+
+  saveBtn.addEventListener('click', async function() {
+    var lo = parseInt(lowInput.value) || 0
+    var hi = parseInt(highInput.value) || 0
+    if (!lo || !hi) return
+    saveBtn.textContent = 'Saving…'
+    saveBtn.disabled = true
+
+    var { data: { session } } = await supabase.auth.getSession()
+    if (!session) { saveBtn.textContent = 'Sign in to save'; return }
+
+    var existing = JSON.parse(document.getElementById('gi-result-json')?.dataset.json || '{}')
+    var updated = Object.assign({}, existing, { value_range_low: lo, value_range_high: hi })
+
+    var { error } = await supabase
+      .from('identifications')
+      .update({ value_range_low: lo, value_range_high: hi, result_json: updated })
+      .eq('id', itemId)
+
+    if (error) {
+      saveBtn.textContent = 'Error — try again'
+      saveBtn.disabled = false
+      return
+    }
+
+    valueDisplay.textContent = fmtRange(lo, hi)
+    editForm.style.display = 'none'
+    editToggle.textContent = 'Edit Value'
+    saveBtn.textContent = 'Save'
+    saveBtn.disabled = false
+  })
+
+  // Insurance total — sum of user's GI items
+  async function loadTotal() {
+    var { data: { session } } = await supabase.auth.getSession()
+    if (!session) { document.getElementById('gi-total').textContent = 'Sign in to see total'; return }
+
+    var { data } = await supabase
+      .from('identifications')
+      .select('value_range_low, value_range_high')
+      .eq('user_id', session.user.id)
+      .eq('site_id', 'd065c030-58b4-4f48-a2df-f14d666d6cfa')
+
+    if (!data || !data.length) { document.getElementById('gi-total').textContent = '—'; return }
+
+    var total = data.reduce(function(sum, row) {
+      return sum + ((row.value_range_low + row.value_range_high) / 2)
+    }, 0)
+
+    document.getElementById('gi-total').textContent = sym + Math.round(total).toLocaleString() + ' estimated'
+  }
+
+  loadTotal()
+</script>
+
+<!-- Hidden data store for result_json -->
+<div id="gi-result-json" data-json="{}" style="display:none;"></div>
