@@ -157,9 +157,14 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <!-- Antique CTA -->
   {r.is_antique && (
   <div class="gi-antique-banner">
-    <div class="gi-antique-title">This could be an antique or collectible</div>
-    <div class="gi-antique-body">Our AI has flagged this item as potentially having collector value beyond its replacement cost. A specialist deep dive can reveal provenance, maker research and auction comparables.</div>
-    <a class="gi-antique-cta" href={`/valuation/${item.id}?specialist=true`}>Get a specialist assessment</a>
+    <div class="gi-antique-title">
+      {r.maker ? `Our AI has identified a possible ${r.style || r.period || ''} piece — this could be worth significantly more than its replacement cost.` : 'This item may have collector value well beyond its replacement cost.'}
+    </div>
+    <div class="gi-antique-body">
+      Our replacement cost estimate is a general AI assessment. For items like this, collector and auction values can be dramatically different.
+      A specialist deep dive checks our antiques knowledge graph, recent auction results and maker databases to give you a definitive picture — so you know exactly what you have and what it is worth to insure correctly.
+    </div>
+    <a class="gi-antique-cta" href={`/valuation/${item.id}?specialist=true`}>Get your specialist report</a>
   </div>
   )}
 
