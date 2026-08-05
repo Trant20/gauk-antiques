@@ -248,16 +248,19 @@ import { R2_CDN, GI_SITE_ID } from '../lib/constants'
       const maker = escapeHtml(r.maker || r.manufacturer || '')
       const condition = escapeHtml(r.condition || '')
       const sub = maker ? (maker + (condition ? ' \u00b7 ' + condition : '')) : ''
-      return '<a href="/valuation/' + item.id + '" class="lib-list-item">' +
-        listThumbEl(item.image_key, r.subcategory || 'Unidentified Item') +
+      const isGIList = item.site_id === GI_SITE_ID
+      const giListStyle = isGIList ? 'border-left: 3px solid #7c9082;' : ''
+      const giListBadge = isGIList ? '<span style="display:inline-block;background:#7c9082;color:white;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-left:6px;">Insurance</span>' : ''
+      return '<a href="/valuation/' + item.id + '" class="lib-list-item" style="' + giListStyle + '">' +
+        listThumbEl(item.image_key, r.subcategory || r.title || 'Unidentified Item') +
         '<div class="lib-list-body">' +
           '<div class="lib-list-left">' +
-            '<div class="lib-list-cat">' + category + '</div>' +
+            '<div class="lib-list-cat">' + category + giListBadge + '</div>' +
             '<div class="lib-list-title">' + title + '</div>' +
             (sub ? '<div class="lib-list-sub">' + sub + '</div>' : '') +
           '</div>' +
           '<div class="lib-list-right">' +
-            '<div class="lib-list-value">' + formatValue(r) + '</div>' +
+            '<div class="lib-list-value">' + formatValue(r, item.site_id) + '</div>' +
             '<div class="lib-list-date">' + formatDate(item.created_at) + '</div>' +
           '</div>' +
         '</div></a>'
