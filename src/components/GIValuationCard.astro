@@ -134,11 +134,31 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   </div>
   )}
 
+  <!-- Antiques detail section -->
+  {r.is_antique && (r.maker || r.period || r.condition) && (
+  <div class="gi-section">
+    <div class="gi-section-label">Antiques Detail</div>
+    {r.maker && <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e0d5;"><span style="font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Maker</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1C1810;">{r.maker}</span></div>}
+    {r.period && <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e0d5;"><span style="font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Period</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1C1810;">{r.period}</span></div>}
+    {r.style && <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e0d5;"><span style="font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Style</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1C1810;">{r.style}</span></div>}
+    {r.condition && <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e0d5;"><span style="font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Condition</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1C1810;">{r.condition}</span></div>}
+    {r.rarity && <div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Rarity</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1C1810;">{r.rarity}</span></div>}
+    {r.condition_notes && <p style="font-family:'Inter',sans-serif;font-size:13px;color:#5C5040;line-height:1.7;margin-top:12px;">{r.condition_notes}</p>}
+    {r.antique_value_range_low && r.antique_value_range_high && (
+    <div style="margin-top:16px;padding:16px;background:#f5f0e8;border-radius:3px;">
+      <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#7A5C20;margin-bottom:6px;">Estimated Collector Value</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:#1C1810;">{formatGIValueRange(r.antique_value_range_low, r.antique_value_range_high, currency)}</div>
+      <div style="font-family:'Inter',sans-serif;font-size:11px;color:#8A7A66;margin-top:4px;">This may differ significantly from replacement cost</div>
+    </div>
+    )}
+  </div>
+  )}
+
   <!-- Antique CTA -->
   {r.is_antique && (
   <div class="gi-antique-banner">
     <div class="gi-antique-title">This could be an antique or collectible</div>
-    <div class="gi-antique-body">Our AI has flagged this item as potentially having collector value beyond its replacement cost. A specialist assessment could reveal significantly more.</div>
+    <div class="gi-antique-body">Our AI has flagged this item as potentially having collector value beyond its replacement cost. A specialist deep dive can reveal provenance, maker research and auction comparables.</div>
     <a class="gi-antique-cta" href={`/valuation/${item.id}?specialist=true`}>Get a specialist assessment</a>
   </div>
   )}
