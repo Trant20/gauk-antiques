@@ -42,6 +42,10 @@ heroSettings?.forEach(s => {
 ---
 <Layout title={title}>
 <style is:global>
+  /* Public shell owns the cream background */
+  html, body { background: var(--pub-bg); color: var(--pub-text); font-family: var(--font-pub); }
+</style>
+<style is:global>
   /* PUBLIC NAV */
   .pub-nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;

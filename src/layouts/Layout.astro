@@ -7,57 +7,29 @@ const { title } = Astro.props
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+
+    <!-- Fonts — loaded once here for the entire app -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Prata&display=swap" rel="stylesheet" />
-    <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Prata&display=swap" rel="stylesheet" />
 
-      :root {
-        --bg:       #0D0B09;
-        --surface:  #131109;
-        --card:     #17150F;
-        --lift:     #1E1C14;
-        --border:   #28251A;
-        --borderHi: #38342A;
-        --text:     #D8CEBC;
-        --textDim:  #8A8070;
-        --textMute: #4A4438;
-        --gold:     #A8895A;
-        --goldHi:   #C4A870;
-        --goldLo:   #6A5530;
-        --display:  'Playfair Display', Didot, Georgia, serif;
-        --mono:     'IBM Plex Mono', monospace;
-        --body:     'Prata', Georgia, serif;
-        --radius:   2px;
-      }
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1b1b1b" />
 
-      html { background: #EFE7D9; }
-      body {
-        background: #EFE7D9; color: #1C1810;
-        font-family: 'Prata', Georgia, serif;
-        font-size: 16px;
-        -webkit-font-smoothing: antialiased;
-        min-height: 100vh;
-      }
-
-      .grain {
-        position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .035;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        background-size: 180px;
-      }
-
-      @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
-      .a0 { animation: fadeUp .75s cubic-bezier(.22,1,.36,1) both; }
-      .a1 { animation: fadeUp .75s .1s cubic-bezier(.22,1,.36,1) both; }
-      .a2 { animation: fadeUp .75s .2s cubic-bezier(.22,1,.36,1) both; }
-      .a3 { animation: fadeUp .75s .3s cubic-bezier(.22,1,.36,1) both; }
-    </style>
     <slot name="head" />
-
   </head>
   <body>
     <div class="grain"></div>
     <slot />
   </body>
 </html>
+
+<style is:global>
+  /* Grain overlay — sits above everything, no pointer events */
+  .grain {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px;
+  }
+</style>
