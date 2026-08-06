@@ -571,11 +571,11 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
     elCards.classList.remove('vault-grid'); elCards.classList.add('vault-list')
   })
 
-  // Search — fetch all remaining if not done, then filter
-  elSearch.addEventListener('input', async () => {
+  // Search — filter immediately against loaded items, fetch remaining in background
+  elSearch.addEventListener('input', () => {
     searchQuery = elSearch.value.trim()
-    if (searchQuery && !allFetched) await fetchAllRemaining()
     applyFilters()
+    if (searchQuery && !allFetched) fetchAllRemaining()
   })
 
   // Sort
