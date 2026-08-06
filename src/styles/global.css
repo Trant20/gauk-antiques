@@ -1,1 +1,121 @@
 @import "tailwindcss";
+
+/*
+ * GAUK Network — Design Tokens
+ * Single source of truth for all visual values.
+ * Nothing is hardcoded in components — consume these variables everywhere.
+ *
+ * Structure:
+ *   1. Dark shell tokens      — AppShell / authenticated admin area
+ *   2. Public shell tokens    — PublicShell / editorial / cream
+ *   3. Property accents       — GA gold, GI sage
+ *   4. Typography             — font family variables
+ *   5. Spacing                — recurring layout values
+ *   6. Radius
+ *   7. Base reset             — neutral, no background set here
+ *   8. Scrollbar
+ *   9. Animations
+ */
+
+:root {
+
+  /* ── DARK SHELL ── */
+  --shell:        #1b1b1b;
+  --surface:      #121212;
+  --surface-lo:   #0e0e0e;
+  --surface-hi:   #181818;
+  --border:       #1e1e1e;
+  --border-hi:    #252525;
+
+  /* ── DARK TEXT ── */
+  --text:         #e8e8e8;
+  --text-dim:     #909090;
+  --text-mute:    #606060;
+  --text-faint:   #404040;
+
+  /* ── PUBLIC SHELL (cream) ── */
+  --pub-bg:         #EFE7D9;
+  --pub-surface:    #E6DCCB;
+  --pub-border:     #C4B49E;
+  --pub-text:       #1C1810;
+  --pub-text-dim:   #8A7A66;
+  --pub-text-mute:  #5C5040;
+  --pub-gold:       #7A5C20;
+
+  /* ── GA — ANTIQUES GOLD ── */
+  --ga-gold:      #7A5C20;
+  --ga-gold-hi:   #c8952e;
+
+  /* ── GI — INSURANCE SAGE ── */
+  --gi-sage:      #7c9082;
+
+  /* ── TYPOGRAPHY ── */
+  --font-display:     'Cormorant Garamond', serif;
+  --font-ui:          'Inter', sans-serif;
+  --font-pub:         'Prata', Georgia, serif;
+  --font-pub-display: 'Playfair Display', Didot, Georgia, serif;
+  --font-mono:        'IBM Plex Mono', monospace;
+
+  /* ── SPACING ── */
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+
+  /* ── RADIUS ── */
+  --radius:    2px;
+
+}
+
+/* ── BASE RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* No background or color set here.
+   Each shell (AppShell, PublicShell) owns its own background. */
+html {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100%;
+  font-size: 16px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar        { width: 3px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--border-hi); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+.a0 { animation: fadeUp 0.75s cubic-bezier(.22,1,.36,1) both; }
+.a1 { animation: fadeUp 0.75s 0.1s cubic-bezier(.22,1,.36,1) both; }
+.a2 { animation: fadeUp 0.75s 0.2s cubic-bezier(.22,1,.36,1) both; }
+.a3 { animation: fadeUp 0.75s 0.3s cubic-bezier(.22,1,.36,1) both; }
+
+/* ── UTILITY ── */
+.hidden { display: none !important; }
