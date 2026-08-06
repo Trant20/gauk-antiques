@@ -343,10 +343,8 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
       <!-- Cards -->
       <div id="vault-cards" class="vault-grid hidden"></div>
 
-      <!-- Load more -->
-      <div style="padding:24px;text-align:center;">
-        <button id="vault-load-more" style="display:none;padding:10px 28px;background:transparent;border:1px solid var(--border-hi);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);">Load more</button>
-      </div>
+      <!-- Infinite scroll sentinel -->
+      <div id="vault-sentinel" style="height:1px;"></div>
 
     </div>
   </div>
@@ -378,28 +376,31 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
   import { formatValueRange, formatGIValueRange } from '../lib/currency'
   import { GI_SITE_ID, ANTIQUES_SITE_ID, R2_CDN } from '../lib/constants'
 
-  const BATCH = 24
+  const BATCH = 48
   let offset = 0
-  let totalCount = 0
+  let allFetched = false
+  let fetching = false
   let allItems: any[] = []
   let filteredItems: any[] = []
   let activeProperty = 'all'
   let activeSort = 'newest'
   let searchQuery = ''
   let pendingDeleteId: string | null = null
+  let userSession: any = null
+  let observer: IntersectionObserver | null = null
 
-  const elLoading   = document.getElementById('vault-loading')!
-  const elAuthGate  = document.getElementById('vault-auth-gate')!
-  const elEmpty     = document.getElementById('vault-empty')!
-  const elCards     = document.getElementById('vault-cards')!
-  const btnGrid     = document.getElementById('btn-grid')!
-  const btnList     = document.getElementById('btn-list')!
-  const elSearch    = document.getElementById('vault-search') as HTMLInputElement
-  const elSort      = document.getElementById('vault-sort') as HTMLSelectElement
-  const loadMoreBtn = document.getElementById('vault-load-more')!
-  const delOverlay  = document.getElementById('del-overlay')!
-  const delConfirm  = document.getElementById('del-confirm')!
-  const delCancel   = document.getElementById('del-cancel')!
+  const elLoading  = document.getElementById('vault-loading')!
+  const elAuthGate = document.getElementById('vault-auth-gate')!
+  const elEmpty    = document.getElementById('vault-empty')!
+  const elCards    = document.getElementById('vault-cards')!
+  const btnGrid    = document.getElementById('btn-grid')!
+  const btnList    = document.getElementById('btn-list')!
+  const elSearch   = document.getElementById('vault-search') as HTMLInputElement
+  const elSort     = document.getElementById('vault-sort') as HTMLSelectElement
+  const sentinel   = document.getElementById('vault-sentinel')!
+  const delOverlay = document.getElementById('del-overlay')!
+  const delConfirm = document.getElementById('del-confirm')!
+  const delCancel  = document.getElementById('del-cancel')!
 
   // Shimmer
   elLoading.innerHTML = Array(6).fill(0).map(() => `
@@ -523,6 +524,43 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
     })
   }
 
+  // Fetch next batch — appends to allItems, re-applies filters
+  async function fetchNextBatch() {
+    if (fetching || allFetched || !userSession) return
+    fetching = true
+    const { data: more } = await supabase
+      .from('identifications')
+      .select('id, site_id, image_key, result_json, created_at, value_range_low, value_range_high')
+      .eq('user_id', userSession.user.id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + BATCH - 1)
+    if (more && more.length > 0) {
+      allItems = [...allItems, ...more]
+      offset += more.length
+      if (more.length < BATCH) { allFetched = true; observer?.disconnect() }
+      applyFilters()
+    } else {
+      allFetched = true
+      observer?.disconnect()
+    }
+    fetching = false
+  }
+
+  // Fetch all remaining — used when search fires before all items are loaded
+  async function fetchAllRemaining() {
+    while (!allFetched) {
+      await fetchNextBatch()
+    }
+  }
+
+  // IntersectionObserver — triggers next batch when sentinel enters view
+  function initObserver() {
+    observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) fetchNextBatch()
+    }, { rootMargin: '200px' })
+    observer.observe(sentinel)
+  }
+
   // View toggle
   btnGrid.addEventListener('click', () => {
     btnGrid.classList.add('active'); btnList.classList.remove('active')
@@ -533,8 +571,12 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
     elCards.classList.remove('vault-grid'); elCards.classList.add('vault-list')
   })
 
-  // Search
-  elSearch.addEventListener('input', () => { searchQuery = elSearch.value.trim(); applyFilters() })
+  // Search — fetch all remaining if not done, then filter
+  elSearch.addEventListener('input', async () => {
+    searchQuery = elSearch.value.trim()
+    if (searchQuery && !allFetched) await fetchAllRemaining()
+    applyFilters()
+  })
 
   // Sort
   elSort.addEventListener('change', () => { activeSort = elSort.value; applyFilters() })
@@ -566,39 +608,13 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
     applyFilters()
   })
 
-  // Load more
-  loadMoreBtn.addEventListener('click', async () => {
-    loadMoreBtn.textContent = 'Loading…';
-    (loadMoreBtn as HTMLButtonElement).disabled = true
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
-    const { data: more } = await supabase
-      .from('identifications')
-      .select('id, site_id, image_key, result_json, created_at, value_range_low, value_range_high')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + BATCH - 1)
-    if (more && more.length > 0) {
-      allItems = [...allItems, ...more]
-      offset += more.length
-      applyFilters()
-      updateLoadMore()
-    }
-  })
-
-  function updateLoadMore() {
-    if (offset >= totalCount) { loadMoreBtn.style.display = 'none'; return }
-    loadMoreBtn.textContent = 'Load more';
-    (loadMoreBtn as HTMLButtonElement).disabled = false
-    loadMoreBtn.style.display = 'inline-block'
-  }
-
-  // Auth + sidebar
+  // Auth + initial load
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
     elLoading.classList.add('hidden')
     elAuthGate.classList.remove('hidden')
   } else {
+    userSession = session
     document.getElementById('sb-signout')!.style.display = 'block'
     document.getElementById('sb-signin')!.style.display  = 'none'
     document.getElementById('sb-credits')!.classList.add('visible')
@@ -612,12 +628,7 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
       await supabase.auth.signOut(); window.location.href = '/'
     })
 
-    const { count } = await supabase
-      .from('identifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', session.user.id)
-    totalCount = count || 0
-
+    // Initial fetch
     const { data, error } = await supabase
       .from('identifications')
       .select('id, site_id, image_key, result_json, created_at, value_range_low, value_range_high')
@@ -629,11 +640,13 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
 
     if (error || !data || data.length === 0) {
       elEmpty.classList.remove('hidden')
+      allFetched = true
     } else {
       allItems = data
       offset = data.length
+      if (data.length < BATCH) { allFetched = true }
       applyFilters()
-      updateLoadMore()
+      if (!allFetched) initObserver()
     }
   }
 </script>
