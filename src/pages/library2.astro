@@ -528,22 +528,30 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
   async function fetchNextBatch() {
     if (fetching || allFetched || !userSession) return
     fetching = true
-    const { data: more } = await supabase
-      .from('identifications')
-      .select('id, site_id, image_key, result_json, created_at, value_range_low, value_range_high')
-      .eq('user_id', userSession.user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + BATCH - 1)
-    if (more && more.length > 0) {
-      allItems = [...allItems, ...more]
-      offset += more.length
-      if (more.length < BATCH) { allFetched = true; observer?.disconnect() }
-      applyFilters()
-    } else {
+    try {
+      const { data: more, error } = await supabase
+        .from('identifications')
+        .select('id, site_id, image_key, result_json, created_at, value_range_low, value_range_high')
+        .eq('user_id', userSession.user.id)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + BATCH - 1)
+      if (error) { allFetched = true; observer?.disconnect(); return }
+      if (more && more.length > 0) {
+        allItems = [...allItems, ...more]
+        offset += more.length
+        if (more.length < BATCH) { allFetched = true; observer?.disconnect() }
+        applyFilters()
+      } else {
+        allFetched = true
+        observer?.disconnect()
+      }
+    } catch (e) {
+      // Network error — stop fetching silently, show what we have
       allFetched = true
       observer?.disconnect()
+    } finally {
+      fetching = false
     }
-    fetching = false
   }
 
   // Fetch all remaining — used when search fires before all items are loaded
