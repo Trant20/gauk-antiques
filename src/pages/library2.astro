@@ -525,7 +525,8 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
   }
 
   // Fetch next batch — appends to allItems, re-applies filters
-  async function fetchNextBatch() {
+  // If drainAll is true, keeps fetching until all items are loaded
+  async function fetchNextBatch(drainAll = false) {
     if (fetching || allFetched || !userSession) return
     fetching = true
     try {
@@ -552,13 +553,13 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
     } finally {
       fetching = false
     }
+    // Chain next batch if draining and more remain
+    if (drainAll && !allFetched) fetchNextBatch(true)
   }
 
   // Fetch all remaining — used when search fires before all items are loaded
-  async function fetchAllRemaining() {
-    while (!allFetched) {
-      await fetchNextBatch()
-    }
+  function fetchAllRemaining() {
+    fetchNextBatch(true)
   }
 
   // IntersectionObserver — triggers next batch when sentinel enters view
