@@ -1,6 +1,8 @@
 ---
 import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
 import AppLayout from '../layouts/AppLayout.astro'
+import AppSidebar from '../components/AppSidebar.astro'
+import AppBottomNav from '../components/AppBottomNav.astro'
 ---
 <AppLayout title="The Vault — GAUK">
 <style is:global>
@@ -8,24 +10,14 @@ import AppLayout from '../layouts/AppLayout.astro'
     /* ── LAYOUT ── */
     .app-shell { display: flex; height: 100vh; overflow: hidden; }
 
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: 220px; min-width: 220px; height: 100vh;
-      background: var(--surface); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      position: fixed; left: 0; top: 0; z-index: 50;
+    /* ── VAULT PROPERTY FILTERS — positioned inside sidebar ── */
+    .sb-vault-filters {
+      position: fixed; left: 0; top: 220px; width: 220px;
+      z-index: 51; background: var(--surface);
     }
-    .sb-logo-wrap { padding: 24px 22px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .sb-gauk { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 5px; }
-    .sb-title { font-family: var(--font-display); font-size: 22px; color: var(--text); line-height: 1; }
-    .sb-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
-    .sb-link {
-      padding: 9px 22px; display: flex; align-items: center; gap: 11px;
-      color: var(--text-dim); font-size: 13px; font-weight: 500;
-      border-left: 2px solid transparent; transition: color 0.12s;
-    }
-    .sb-link:hover { color: var(--text); }
-    .sb-link.active { color: var(--text); background: rgba(255,255,255,0.025); border-left-color: var(--text); }
+    @media (max-width: 768px) { .sb-vault-filters { display: none; } }
+
+    /* sidebar styles → AppSidebar.astro */
     .sb-section-label {
       font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
       color: var(--text-mute); font-weight: 600;
@@ -45,16 +37,6 @@ import AppLayout from '../layouts/AppLayout.astro'
     .sb-prop-dot-gi { background: var(--gi-sage); }
     .sb-prop-dot-ga { background: var(--ga-gold); }
     .sb-prop-count { font-size: 12px; color: var(--text-mute); font-weight: 500; font-variant-numeric: tabular-nums; }
-    .sb-divider { height: 1px; background: var(--border); margin: 12px 14px; }
-    .sb-credits { margin: 0 14px 14px; background: var(--surface-hi); border: 1px solid var(--border-hi); padding: 12px 14px; display: none; }
-    .sb-credits.visible { display: block; }
-    .sb-credits-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mute); margin-bottom: 4px; }
-    .sb-credits-value { font-family: var(--font-display); font-size: 28px; color: var(--ga-gold-hi); line-height: 1; margin-bottom: 10px; }
-    .sb-credits-topup { display: block; width: 100%; padding: 8px; background: #3a8197; font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #fff; text-align: center; font-weight: 500; }
-    .sb-foot { padding: 14px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
-    .sb-signout { width: 100%; padding: 10px; background: none; border: 1px solid var(--border-hi); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); transition: border-color 0.2s, color 0.2s; display: none; }
-    .sb-signout:hover { border-color: #c46028; color: #c46028; }
-    .sb-signin { display: none; width: 100%; padding: 10px; background: var(--gi-sage); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; text-align: center; font-weight: 500; }
 
     /* ── MAIN ── */
     .app-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
@@ -156,17 +138,11 @@ import AppLayout from '../layouts/AppLayout.astro'
     .del-cancel { flex: 1; padding: 12px; background: none; border: 1px solid var(--border-hi); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); }
     .del-confirm { flex: 1; padding: 12px; background: #c46028; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
 
-    /* ── BOTTOM NAV (mobile) ── */
-    .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: var(--surface-lo); border-top: 1px solid var(--border); align-items: center; justify-content: space-around; z-index: 100; padding: 0 4px; }
-    .bn-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 18px; color: var(--text-mute); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; transition: color 0.15s; }
-    .bn-tab:hover { color: var(--text-dim); }
-    .bn-tab.active { color: var(--gi-sage); }
+    /* bottom nav styles → AppBottomNav.astro */
 
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-      .sidebar { display: none; }
       .app-main { margin-left: 0; padding-bottom: 64px; }
-      .bottom-nav { display: flex; }
       .vault-topbar { padding: 0 16px; gap: 10px; }
       .vault-sort-label { display: none; }
       .vault-stats { display: none; }
@@ -174,7 +150,6 @@ import AppLayout from '../layouts/AppLayout.astro'
       .vault-grid { grid-template-columns: 1fr; }
       .card-actions { opacity: 1; }
     }
-    @media (min-width: 769px) { .bottom-nav { display: none !important; } }
 
     /* ── DRAWER OVERLAY ── */
     .vault-overlay { position: fixed; inset: 0; background: transparent; z-index: 150; pointer-events: none; transition: background 0.25s; }
@@ -219,48 +194,24 @@ import AppLayout from '../layouts/AppLayout.astro'
 <div class="app-shell">
 
   <!-- ── SIDEBAR ── -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sb-logo-wrap">
-      <img src="/gauk-logo.png" alt="GAUK" style="width:160px; display:block;" />
-    </div>
-    <nav class="sb-nav">
-      <a href="/library2" class="sb-link active">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" fill="currentColor"/><rect x="8" y="1" width="5" height="5" fill="currentColor"/><rect x="1" y="8" width="5" height="5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" fill="currentColor" opacity="0.28"/></svg>
-        <span>The Vault</span>
-      </a>
-      <a href="/identify" class="sb-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <span>Identify</span>
-      </a>
-      <a href="/account" class="sb-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>Account</span>
-      </a>
-      <div class="sb-section-label">Properties</div>
-      <button class="sb-prop-btn active" id="prop-all" data-prop="all">
-        <span class="sb-prop-label">All items</span>
-        <span class="sb-prop-count" id="prop-count-all">—</span>
-      </button>
-      <button class="sb-prop-btn" id="prop-insurance" data-prop="insurance">
-        <span class="sb-prop-label sb-prop-gi"><span class="sb-prop-dot sb-prop-dot-gi"></span>Insurance</span>
-        <span class="sb-prop-count" id="prop-count-insurance">—</span>
-      </button>
-      <button class="sb-prop-btn" id="prop-antiques" data-prop="antiques">
-        <span class="sb-prop-label sb-prop-ga"><span class="sb-prop-dot sb-prop-dot-ga"></span>Antiques</span>
-        <span class="sb-prop-count" id="prop-count-antiques">—</span>
-      </button>
-      <div class="sb-divider"></div>
-      <div class="sb-credits" id="sb-credits">
-        <div class="sb-credits-label">Credits</div>
-        <div class="sb-credits-value" id="sb-credits-val">—</div>
-        <a href="/account" class="sb-credits-topup">Top Up</a>
-      </div>
-    </nav>
-    <div class="sb-foot">
-      <button class="sb-signout" id="sb-signout">Sign Out</button>
-      <a href="/auth" class="sb-signin" id="sb-signin">Sign In</a>
-    </div>
-  </aside>
+  <AppSidebar activePage="vault" />
+
+  <!-- ── VAULT PROPERTY FILTERS (vault-specific sidebar extension) ── -->
+  <div class="sb-vault-filters" id="sb-vault-filters">
+    <div class="sb-section-label">Properties</div>
+    <button class="sb-prop-btn active" id="prop-all" data-prop="all">
+      <span class="sb-prop-label">All items</span>
+      <span class="sb-prop-count" id="prop-count-all">—</span>
+    </button>
+    <button class="sb-prop-btn" id="prop-insurance" data-prop="insurance">
+      <span class="sb-prop-label sb-prop-gi"><span class="sb-prop-dot sb-prop-dot-gi"></span>Insurance</span>
+      <span class="sb-prop-count" id="prop-count-insurance">—</span>
+    </button>
+    <button class="sb-prop-btn" id="prop-antiques" data-prop="antiques">
+      <span class="sb-prop-label sb-prop-ga"><span class="sb-prop-dot sb-prop-dot-ga"></span>Antiques</span>
+      <span class="sb-prop-count" id="prop-count-antiques">—</span>
+    </button>
+  </div>
 
   <!-- ── MAIN ── -->
   <div class="app-main">
@@ -379,12 +330,7 @@ import AppLayout from '../layouts/AppLayout.astro'
 </div>
 
 <!-- Bottom nav -->
-<nav class="bottom-nav">
-  <a href="/library2" class="bn-tab active"><svg width="18" height="18" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" fill="currentColor"/><rect x="8" y="1" width="5" height="5" fill="currentColor"/><rect x="1" y="8" width="5" height="5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" fill="currentColor" opacity="0.28"/></svg><span>Vault</span></a>
-  <a href="/identify" class="bn-tab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Identify</span></a>
-  <a href="/account" class="bn-tab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Account</span></a>
-  <a href="/account" class="bn-tab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a3 3 0 0 1 5 1c0 2-3 3-3 3M12 17h.01"/></svg><span>Credits</span></a>
-</nav>
+<AppBottomNav activePage="vault" />
 
 <script>
   import { supabase } from '../lib/supabase-browser'
@@ -748,19 +694,6 @@ import AppLayout from '../layouts/AppLayout.astro'
     elAuthGate.classList.remove('hidden')
   } else {
     userSession = session
-    document.getElementById('sb-signout')!.style.display = 'block'
-    document.getElementById('sb-signin')!.style.display  = 'none'
-    document.getElementById('sb-credits')!.classList.add('visible')
-
-    const { data: creditsData } = await supabase
-      .from('credits').select('balance')
-      .eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).single()
-    document.getElementById('sb-credits-val')!.textContent = String(creditsData?.balance ?? 0)
-
-    document.getElementById('sb-signout')!.addEventListener('click', async () => {
-      await supabase.auth.signOut(); window.location.href = '/'
-    })
-
     // Initial fetch
     const { data, error } = await supabase
       .from('identifications')

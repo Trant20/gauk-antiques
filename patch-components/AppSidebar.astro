@@ -1,0 +1,98 @@
+---
+interface Props {
+  activePage?: 'vault' | 'identify' | 'account'
+}
+const { activePage = 'vault' } = Astro.props
+import { ANTIQUES_SITE_ID } from '../lib/constants'
+---
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo-wrap">
+    <img src="/gauk-logo.png" alt="GAUK" style="width:160px; display:block;" />
+  </div>
+  <nav class="sb-nav">
+    <a href="/library" class={`sb-link${activePage === 'vault' ? ' active' : ''}`}>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" fill="currentColor"/><rect x="8" y="1" width="5" height="5" fill="currentColor"/><rect x="1" y="8" width="5" height="5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" fill="currentColor" opacity="0.28"/></svg>
+      <span>The Vault</span>
+    </a>
+    <a href="/identify" class={`sb-link${activePage === 'identify' ? ' active' : ''}`}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Identify</span>
+    </a>
+    <a href="/account" class={`sb-link${activePage === 'account' ? ' active' : ''}`}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Account</span>
+    </a>
+    <div class="sb-divider"></div>
+    <div class="sb-credits" id="sb-credits">
+      <div class="sb-credits-label">Credits</div>
+      <div class="sb-credits-value" id="sb-credits-val">—</div>
+      <a href="/account" class="sb-credits-topup">Top Up</a>
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <button class="sb-signout" id="sb-signout">Sign Out</button>
+    <a href="/auth" class="sb-signin" id="sb-signin">Sign In</a>
+  </div>
+</aside>
+
+<style is:global>
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; min-width: 220px; height: 100vh;
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; z-index: 50;
+  }
+  .sb-logo-wrap { padding: 24px 22px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .sb-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+  .sb-link {
+    padding: 9px 22px; display: flex; align-items: center; gap: 11px;
+    color: var(--text-dim); font-size: 13px; font-weight: 500;
+    border-left: 2px solid transparent; transition: color 0.12s;
+  }
+  .sb-link:hover { color: var(--text); }
+  .sb-link.active { color: var(--text); background: rgba(255,255,255,0.025); border-left-color: var(--text); }
+  .sb-divider { height: 1px; background: var(--border); margin: 12px 14px; }
+  .sb-credits { margin: 0 14px 14px; background: var(--surface-hi); border: 1px solid var(--border-hi); padding: 12px 14px; display: none; }
+  .sb-credits.visible { display: block; }
+  .sb-credits-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mute); margin-bottom: 4px; }
+  .sb-credits-value { font-family: var(--font-display); font-size: 28px; color: var(--ga-gold-hi); line-height: 1; margin-bottom: 10px; }
+  .sb-credits-topup { display: block; width: 100%; padding: 8px; background: #3a8197; font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #fff; text-align: center; font-weight: 500; }
+  .sb-foot { padding: 14px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .sb-signout { width: 100%; padding: 10px; background: none; border: 1px solid var(--border-hi); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); transition: border-color 0.2s, color 0.2s; display: none; }
+  .sb-signout:hover { border-color: #c46028; color: #c46028; }
+  .sb-signin { display: none; width: 100%; padding: 10px; background: var(--gi-sage); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; text-align: center; font-weight: 500; }
+
+  @media (max-width: 768px) { .sidebar { display: none; } }
+</style>
+
+<script>
+  import { supabase } from '../lib/supabase-browser'
+  import { ANTIQUES_SITE_ID } from '../lib/constants'
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (session) {
+    const sbSignout = document.getElementById('sb-signout')!
+    const sbSignin  = document.getElementById('sb-signin')!
+    const sbCredits = document.getElementById('sb-credits')!
+    const sbCreditsVal = document.getElementById('sb-credits-val')!
+
+    sbSignout.style.display = 'block'
+    sbSignin.style.display  = 'none'
+    sbCredits.classList.add('visible')
+
+    const { data: creditsData } = await supabase
+      .from('credits').select('balance')
+      .eq('user_id', session.user.id)
+      .eq('site_id', ANTIQUES_SITE_ID)
+      .single()
+    sbCreditsVal.textContent = String(creditsData?.balance ?? 0)
+
+    sbSignout.addEventListener('click', async () => {
+      await supabase.auth.signOut()
+      window.location.href = '/'
+    })
+  }
+</script>
