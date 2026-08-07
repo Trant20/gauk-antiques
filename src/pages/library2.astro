@@ -243,7 +243,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
 
     <!-- Stats bar -->
     <div class="vault-stats">
-      <span class="vault-stats-left"><strong id="stats-count">—</strong> items <span style="margin:0 8px;color:var(--border-hi);">·</span> est. total <strong id="stats-total">—</strong></span>
+      <span class="vault-stats-left"><strong id="stats-count">—</strong> <span id="stats-matching-label">items</span> <span style="margin:0 8px;color:var(--border-hi);">·</span> est. total <strong id="stats-total">—</strong></span>
       <div class="vault-stats-right">
         <span class="vault-stats-gi"><strong id="stats-gi">—</strong> insured</span>
         <span class="vault-stats-ga"><strong id="stats-ga">—</strong> catalogued</span>
@@ -344,6 +344,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
   let fetching = false
   let allItems: any[] = []
   let filteredItems: any[] = []
+  let dbCounts = { all: 0, gi: 0, ga: 0 }
   let activeProperty = 'all'
   let activeSort = 'newest'
   let searchQuery = ''
@@ -420,7 +421,6 @@ import AppBottomNav from '../components/AppBottomNav.astro'
       </div>
       <div class="card-actions">
         <a href="/valuation/${item.id}" class="card-action-btn">View</a>
-        <button class="card-action-btn" data-quickview="${item.id}">Quick View</button>
         <button class="card-action-btn danger" data-delete="${item.id}">Delete</button>
       </div>
     </div>`
@@ -461,19 +461,23 @@ import AppBottomNav from '../components/AppBottomNav.astro'
   }
 
   function updateStats() {
-    const giItems = allItems.filter(i => isGI(i))
-    const gaItems = allItems.filter(i => !isGI(i))
     const total = filteredItems.reduce((s, i) => {
       const r = i.result_json || {}
       return s + ((r.value_range_low || 0) + (r.value_range_high || 0)) / 2
     }, 0)
+    const isFiltered = searchQuery || activeProperty !== 'all'
     document.getElementById('stats-count')!.textContent = String(filteredItems.length)
+    document.getElementById('stats-matching-label')!.textContent = isFiltered ? 'items matching' : 'items'
     document.getElementById('stats-total')!.textContent = fmt(total)
-    document.getElementById('stats-gi')!.textContent    = String(giItems.length)
-    document.getElementById('stats-ga')!.textContent    = String(gaItems.length)
-    document.getElementById('prop-count-all')!.textContent       = String(allItems.length)
-    document.getElementById('prop-count-insurance')!.textContent = String(giItems.length)
-    document.getElementById('prop-count-antiques')!.textContent  = String(gaItems.length)
+    // Stats bar right — show filtered GI/GA counts
+    const filteredGI = filteredItems.filter(i => isGI(i))
+    const filteredGA = filteredItems.filter(i => !isGI(i))
+    document.getElementById('stats-gi')!.textContent = String(filteredGI.length)
+    document.getElementById('stats-ga')!.textContent = String(filteredGA.length)
+    // Sidebar counts — always show DB totals
+    document.getElementById('prop-count-all')!.textContent       = String(dbCounts.all)
+    document.getElementById('prop-count-insurance')!.textContent = String(dbCounts.gi)
+    document.getElementById('prop-count-antiques')!.textContent  = String(dbCounts.ga)
   }
 
   // ── DRAWER ──────────────────────────────────────────────────────────────────
@@ -694,6 +698,18 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     elAuthGate.classList.remove('hidden')
   } else {
     userSession = session
+
+    // Fetch DB counts for sidebar — parallel, lightweight
+    const [{ count: countAll }, { count: countGI }, { count: countGA }] = await Promise.all([
+      supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id),
+      supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('site_id', GI_SITE_ID),
+      supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).neq('site_id', GI_SITE_ID),
+    ])
+    dbCounts = { all: countAll || 0, gi: countGI || 0, ga: countGA || 0 }
+    document.getElementById('prop-count-all')!.textContent       = String(dbCounts.all)
+    document.getElementById('prop-count-insurance')!.textContent = String(dbCounts.gi)
+    document.getElementById('prop-count-antiques')!.textContent  = String(dbCounts.ga)
+
     // Initial fetch
     const { data, error } = await supabase
       .from('identifications')
