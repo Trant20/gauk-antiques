@@ -1,0 +1,111 @@
+---
+import { supabase } from '../lib/supabase'
+import { ANTIQUES_SITE_ID } from '../lib/constants'
+
+const { data: plans } = await supabase.from('plans').select('*').eq('site_id', ANTIQUES_SITE_ID).eq('active', true).order('sort_order')
+const subs = plans?.filter(p => p.plan_type === 'subscription') || []
+const topups = plans?.filter(p => p.plan_type === 'topup') || []
+---
+
+<style is:global>
+  /* ── PLANS ── */
+  .ap2-section-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 14px; margin-top: 32px; display: flex; align-items: center; gap: 12px; }
+  .ap2-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-hi); }
+
+  .ap2-plan-card { background: var(--surface); border: 1px solid var(--border-hi); padding: 20px 22px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 20px; transition: border-color 0.15s; }
+  .ap2-plan-card:hover { border-color: #363636; }
+  .ap2-plan-card.featured { background: var(--surface-hi); border-color: var(--ga-gold); }
+  @media (max-width: 480px) { .ap2-plan-card { flex-direction: column; align-items: flex-start; gap: 14px; } .ap2-plan-right { text-align: left !important; } }
+
+  .ap2-plan-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .ap2-plan-card.featured .ap2-plan-name { color: var(--ga-gold-hi); }
+  .ap2-plan-detail { font-size: 12px; color: var(--text-mute); line-height: 1.6; }
+  .ap2-plan-credits { font-size: 11px; color: var(--text-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; }
+  .ap2-plan-card.featured .ap2-plan-credits { color: var(--ga-gold-hi); }
+
+  .ap2-plan-right { text-align: right; flex-shrink: 0; }
+  .ap2-plan-price { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; }
+  .ap2-plan-card.featured .ap2-plan-price { color: var(--ga-gold-hi); }
+  .ap2-plan-period { font-size: 11px; color: var(--text-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+  .ap2-plan-btn { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 20px; border: 1px solid var(--border-hi); background: transparent; color: var(--text-mute); cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
+  .ap2-plan-btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .ap2-plan-card.featured .ap2-plan-btn { background: var(--ga-gold); border-color: var(--ga-gold); color: #fff; font-weight: 600; }
+  .ap2-plan-card.featured .ap2-plan-btn:hover { background: var(--ga-gold-hi); border-color: var(--ga-gold-hi); }
+
+  /* ── TOPUPS ── */
+  .ap2-topup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 480px) { .ap2-topup-grid { grid-template-columns: 1fr; } }
+  .ap2-topup-card { background: var(--surface); border: 1px solid var(--border-hi); padding: 20px 16px; text-align: center; transition: border-color 0.15s; }
+  .ap2-topup-card:hover { border-color: #363636; }
+  .ap2-topup-credits { font-size: 36px; font-weight: 600; color: var(--ga-gold-hi); line-height: 1; font-variant-numeric: tabular-nums; }
+  .ap2-topup-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); margin: 4px 0 12px; }
+  .ap2-topup-price { font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+  .ap2-topup-btn { width: 100%; font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px; border: 1px solid var(--border-hi); background: transparent; color: var(--text-mute); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .ap2-topup-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  /* ── EXPLAINER ── */
+  .ap2-explainer { background: var(--surface-hi); border-left: 2px solid var(--ga-gold); padding: 16px 20px; margin-top: 24px; }
+  .ap2-explainer-title { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ga-gold-hi); margin-bottom: 8px; font-weight: 600; }
+  .ap2-explainer-body { font-size: 13px; color: var(--text-mute); line-height: 1.8; }
+</style>
+
+<div class="ap2-section-label">Upgrade</div>
+
+{subs.map(plan => (
+  <div class={`ap2-plan-card${plan.name === 'Pro' ? ' featured' : ''}`}>
+    <div>
+      <div class="ap2-plan-name">{plan.name}</div>
+      <div class="ap2-plan-detail">{plan.credits} credits per month · never expire · use across all GAUK properties</div>
+      <div class="ap2-plan-credits">{plan.credits} credits / {plan.name.includes('Annual') ? 'year' : 'month'}</div>
+    </div>
+    <div class="ap2-plan-right">
+      <div class="ap2-plan-price">${(plan.price_pence / 100).toFixed(2)}</div>
+      <div class="ap2-plan-period">{plan.name.includes('Annual') ? 'per year' : 'per month'}</div>
+      <button class="ap2-plan-btn ap2-checkout-btn" data-price={plan.stripe_price_id} data-mode="subscription">Subscribe</button>
+    </div>
+  </div>
+))}
+
+<div class="ap2-section-label" style="margin-top:28px;">Top Up</div>
+<div class="ap2-topup-grid">
+  {topups.map(plan => (
+    <div class="ap2-topup-card">
+      <div class="ap2-topup-credits">{plan.credits}</div>
+      <div class="ap2-topup-label">Credits</div>
+      <div class="ap2-topup-price">${(plan.price_pence / 100).toFixed(2)}</div>
+      <button class="ap2-topup-btn ap2-checkout-btn" data-price={plan.stripe_price_id} data-mode="payment">{plan.name}</button>
+    </div>
+  ))}
+</div>
+
+<div class="ap2-explainer">
+  <div class="ap2-explainer-title">How credits work</div>
+  <div class="ap2-explainer-body">Credits power every AI feature across GAUK. An identification costs 2 credits — category, maker, period, condition and estimated value, saved to your library. A full valuation report costs 5 credits — expert notes, market history, comparable sales and your options. Credits never expire and work across all GAUK properties.</div>
+</div>
+
+<script>
+  import { supabase } from '../lib/supabase-browser'
+  const { data: { session } } = await supabase.auth.getSession()
+
+  document.querySelectorAll('.ap2-checkout-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!session) { window.location.href = '/auth'; return }
+      const price_id = (btn as HTMLElement).dataset.price
+      const mode = (btn as HTMLElement).dataset.mode
+      ;(btn as HTMLButtonElement).textContent = 'Loading...'
+      ;(btn as HTMLButtonElement).setAttribute('disabled', 'true')
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price_id, mode, user_id: session.user.id, email: session.user.email })
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else {
+        alert('Checkout error — please try again')
+        ;(btn as HTMLButtonElement).removeAttribute('disabled')
+        ;(btn as HTMLButtonElement).textContent = mode === 'subscription' ? 'Subscribe' : 'Buy'
+      }
+    })
+  })
+</script>
