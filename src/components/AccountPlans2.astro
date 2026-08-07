@@ -17,7 +17,9 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
   .ap2-plan-card.featured { background: var(--surface-hi); border-color: var(--ga-gold); }
   @media (max-width: 480px) { .ap2-plan-card { flex-direction: column; align-items: flex-start; gap: 14px; } .ap2-plan-right { text-align: left !important; } }
 
-  .ap2-plan-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .ap2-plan-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .ap2-best-value { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--ga-gold); border: 1px solid var(--ga-gold); padding: 2px 7px; white-space: nowrap; }
+  .ap2-plan-card.featured .ap2-best-value { color: var(--ga-gold-hi); border-color: var(--ga-gold-hi); }
   .ap2-plan-card.featured .ap2-plan-name { color: var(--ga-gold-hi); }
   .ap2-plan-detail { font-size: 12px; color: var(--text-mute); line-height: 1.6; }
   .ap2-plan-credits { font-size: 11px; color: var(--text-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; }
@@ -52,9 +54,12 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
 <div class="ap2-section-label">Upgrade</div>
 
 {subs.map(plan => (
-  <div class={`ap2-plan-card${plan.name === 'Pro' ? ' featured' : ''}`}>
+  <div class={`ap2-plan-card${plan.featured ? ' featured' : ''}`}>
     <div>
-      <div class="ap2-plan-name">{plan.name}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <div class="ap2-plan-name">{plan.name}</div>
+        {plan.featured && <span class="ap2-best-value">Best value</span>}
+      </div>
       <div class="ap2-plan-detail">{plan.credits} credits per month · never expire · use across all GAUK properties</div>
       <div class="ap2-plan-credits">{plan.credits} credits / {plan.name.includes('Annual') ? 'year' : 'month'}</div>
     </div>
