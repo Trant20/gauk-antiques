@@ -1,0 +1,16 @@
+{
+  "name": "GAUK Vault",
+  "short_name": "Vault",
+  "description": "Your personal asset register — GAUK Antiques and Insurance",
+  "start_url": "/library",
+  "display": "standalone",
+  "background_color": "#1b1b1b",
+  "theme_color": "#1b1b1b",
+  "icons": [
+    {
+      "src": "/gauk-logo.png",
+      "sizes": "300x300",
+      "type": "image/png"
+    }
+  ]
+}
