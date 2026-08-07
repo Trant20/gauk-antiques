@@ -12,27 +12,28 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
   .ap2-section-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 14px; margin-top: 32px; display: flex; align-items: center; gap: 12px; }
   .ap2-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-hi); }
 
-  .ap2-plan-card { background: var(--surface); border: 1px solid var(--border-hi); padding: 20px 22px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 20px; transition: border-color 0.15s; }
+  .ap2-plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 600px) { .ap2-plan-grid { grid-template-columns: 1fr; } }
+  .ap2-plan-card { background: var(--surface); border: 1px solid var(--border-hi); padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.15s; }
   .ap2-plan-card:hover { border-color: #363636; }
-  .ap2-plan-card.featured { background: var(--surface-hi); border-color: var(--ga-gold); }
-  @media (max-width: 480px) { .ap2-plan-card { flex-direction: column; align-items: flex-start; gap: 14px; } .ap2-plan-right { text-align: left !important; } }
+  .ap2-plan-card.featured { background: var(--surface-hi); border-color: var(--network); }
 
   .ap2-plan-name { font-size: 15px; font-weight: 600; color: var(--text); }
-  .ap2-best-value { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--ga-gold); border: 1px solid var(--ga-gold); padding: 2px 7px; white-space: nowrap; }
-  .ap2-plan-card.featured .ap2-best-value { color: var(--ga-gold-hi); border-color: var(--ga-gold-hi); }
-  .ap2-plan-card.featured .ap2-plan-name { color: var(--ga-gold-hi); }
+  .ap2-best-value { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--network); border: 1px solid var(--network); padding: 2px 7px; white-space: nowrap; }
+  .ap2-plan-card.featured .ap2-best-value { color: var(--network); border-color: var(--network); }
+  .ap2-plan-card.featured .ap2-plan-name { color: #fff; }
   .ap2-plan-detail { font-size: 12px; color: var(--text-mute); line-height: 1.6; }
   .ap2-plan-credits { font-size: 11px; color: var(--text-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; }
-  .ap2-plan-card.featured .ap2-plan-credits { color: var(--ga-gold-hi); }
+  .ap2-plan-card.featured .ap2-plan-credits { color: var(--network); }
 
   .ap2-plan-right { text-align: right; flex-shrink: 0; }
   .ap2-plan-price { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; }
-  .ap2-plan-card.featured .ap2-plan-price { color: var(--ga-gold-hi); }
+  .ap2-plan-card.featured .ap2-plan-price { color: #fff; }
   .ap2-plan-period { font-size: 11px; color: var(--text-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
   .ap2-plan-btn { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 20px; border: 1px solid var(--border-hi); background: transparent; color: var(--text-mute); cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
   .ap2-plan-btn:hover { border-color: var(--text-dim); color: var(--text); }
-  .ap2-plan-card.featured .ap2-plan-btn { background: var(--ga-gold); border-color: var(--ga-gold); color: #fff; font-weight: 600; }
-  .ap2-plan-card.featured .ap2-plan-btn:hover { background: var(--ga-gold-hi); border-color: var(--ga-gold-hi); }
+  .ap2-plan-card.featured .ap2-plan-btn { background: var(--network); border-color: var(--network); color: #fff; font-weight: 600; }
+  .ap2-plan-card.featured .ap2-plan-btn:hover { background: var(--network-hi); border-color: var(--network-hi); }
 
   /* ── TOPUPS ── */
   .ap2-topup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -52,7 +53,7 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
 </style>
 
 <div class="ap2-section-label">Upgrade</div>
-
+<div class="ap2-plan-grid">
 {subs.map(plan => (
   <div class={`ap2-plan-card${plan.featured ? ' featured' : ''}`}>
     <div>
@@ -66,10 +67,11 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
     <div class="ap2-plan-right">
       <div class="ap2-plan-price">${(plan.price_pence / 100).toFixed(2)}</div>
       <div class="ap2-plan-period">{plan.name.includes('Annual') ? 'per year' : 'per month'}</div>
-      <button class="ap2-plan-btn ap2-checkout-btn" data-price={plan.stripe_price_id} data-mode="subscription">Subscribe</button>
+      <button class="ap2-plan-btn ap2-checkout-btn" style="width:100%;margin-top:auto;" data-price={plan.stripe_price_id} data-mode="subscription">{plan.name.includes('Annual') ? 'Subscribe Annual' : 'Subscribe Monthly'}</button>
     </div>
   </div>
 ))}
+</div>
 
 <div class="ap2-section-label" style="margin-top:28px;">Top Up</div>
 <div class="ap2-topup-grid">
