@@ -1,116 +1,145 @@
 ---
-import AppShell from '../layouts/AppShell.astro'
-import AccountPlans from '../components/AccountPlans.astro'
+import AppLayout from '../layouts/AppLayout.astro'
+import AppSidebar from '../components/AppSidebar.astro'
+import AppBottomNav from '../components/AppBottomNav.astro'
+import AccountPlans2 from '../components/AccountPlans2.astro'
 import { ANTIQUES_SITE_ID } from '../lib/constants'
 ---
-<AppShell title="My Account — GAUK Antiques" pageCap="Account" pageTitle="My Account">
-<style>
-  body { background: #EFE7D9; color: #1C1810; }
-  .section-cap { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #5C5040; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
-  .section-cap::after { content: ''; flex: 1; height: 1px; background: #C4B49E; }
-  .account-card { background: #E6DCCB; border: 1px solid #C4B49E; padding: 24px; margin-bottom: 12px; }
-  .credit-big { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 64px; color: #7A5C20; line-height: 1; }
-  .credit-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-top: 6px; }
-  .account-email { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; margin-bottom: 4px; }
-  .account-btn { display: inline-block; padding: 12px 28px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; cursor: pointer; text-decoration: none; text-align: center; margin-bottom: 8px; margin-right: 8px; transition: opacity .2s; }
-  .account-btn:hover { opacity: .85; }
-  .account-btn.ghost { background: transparent; border: 1px solid #C4B49E; color: #5C5040; }
-  .account-btn.ghost:hover { border-color: #7A5C20; color: #1C1810; }
-  .tx-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(196,180,158,.3); gap: 16px; }
-  .tx-row:last-child { border-bottom: none; }
-  .tx-reason { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #5C5040; }
-  .tx-date { font-family: 'Prata', Georgia, serif; font-size: 12px; color: #8A7A66; }
-  .tx-delta { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; }
-  .tx-delta.pos { color: #2A7060; }
-  .tx-delta.neg { color: #C46028; }
-  .auth-gate { text-align: center; padding: 80px 24px; }
-  .auth-gate-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 24px; font-style: italic; color: #5C5040; margin-bottom: 16px; }
-  .notice { font-family: 'Prata', Georgia, serif; font-size: 14px; padding: 12px 16px; margin-bottom: 24px; }
-  .notice.success { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; }
-  .sub-section { background: #E6DCCB; border: 1px solid #C4B49E; padding: 24px; margin-bottom: 12px; }
-  .sub-plan-name { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 4px; }
-  .sub-status { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 16px; }
-  .sub-status.cancelling { color: #C46028; }
-  .sub-cancel-note { font-family: 'Prata', Georgia, serif; font-size: 13px; color: #8A7A66; line-height: 1.8; margin-top: 16px; padding-top: 16px; border-top: 1px solid #C4B49E; }
-  .account-btn.danger { background: transparent; border: 1px solid #C46028; color: #C46028; }
-  .account-btn.danger:hover { background: #C46028; color: #EFE7D9; }
+<AppLayout title="Account — GAUK">
+<style is:global>
+  /* ── ACCOUNT PAGE ── */
+  .account-scroll { margin-left: 220px; flex: 1; overflow-y: auto; padding: 32px; }
+  @media (max-width: 768px) { .account-scroll { margin-left: 0; padding: 20px 16px 80px; } }
+
+  .account-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 32px; flex-shrink: 0; margin-left: 220px; }
+  .account-topbar-title { font-size: 13px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; }
+  @media (max-width: 768px) { .account-topbar { margin-left: 0; padding: 0 16px; } }
+
+  .account-section-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 14px; margin-top: 32px; display: flex; align-items: center; gap: 12px; }
+  .account-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-hi); }
+  .account-section-label:first-child { margin-top: 0; }
+
+  /* ── CREDITS BLOCK ── */
+  .account-credits-block { background: var(--surface); border: 1px solid var(--border-hi); padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .account-credits-balance { font-size: 64px; font-weight: 700; color: var(--network); line-height: 1; font-variant-numeric: tabular-nums; }
+  .account-credits-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); margin-top: 6px; }
+  .account-email { font-size: 13px; color: var(--text-mute); text-align: right; }
+
+  /* ── SUBSCRIPTION ── */
+  .account-sub-block { background: var(--surface); border: 1px solid var(--border-hi); padding: 20px 22px; }
+  .account-sub-name { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .account-sub-status { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gi-sage); margin-bottom: 16px; }
+  .account-sub-status.cancelling { color: #c46028; }
+  .account-sub-note { font-size: 13px; color: var(--text-mute); line-height: 1.8; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+  /* ── BUTTONS ── */
+  .account-btn { display: inline-block; padding: 10px 22px; background: transparent; border: 1px solid var(--border-hi); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); cursor: pointer; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+  .account-btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .account-btn.danger { border-color: rgba(196,96,40,0.4); color: #c46028; }
+  .account-btn.danger:hover { border-color: #c46028; background: rgba(196,96,40,0.08); }
+
+  /* ── NOTICE ── */
+  .account-notice { font-size: 13px; padding: 12px 16px; margin-bottom: 24px; border: 1px solid; }
+  .account-notice.success { background: rgba(42,112,96,0.1); border-color: rgba(42,112,96,0.3); color: var(--gi-sage); }
+
+  /* ── TRANSACTIONS ── */
+  .account-tx-list { background: var(--surface); border: 1px solid var(--border-hi); }
+  .account-tx-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border); gap: 16px; }
+  .account-tx-row:last-child { border-bottom: none; }
+  .account-tx-reason { font-size: 13px; color: var(--text-dim); }
+  .account-tx-date { font-size: 12px; color: var(--text-mute); margin-top: 3px; }
+  .account-tx-delta { font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .account-tx-delta.pos { color: var(--gi-sage); }
+  .account-tx-delta.neg { color: #c46028; }
+
+  /* ── AUTH GATE ── */
+  .account-auth-gate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 420px; gap: 20px; text-align: center; }
+  .account-auth-gate-title { font-size: 18px; font-weight: 600; color: var(--text-mute); }
 </style>
-<div id="auth-gate" class="auth-gate" style="display:none">
-    <div class="auth-gate-title">Sign in to view your account</div>
-    <a href="/auth" class="account-btn">Sign In</a>
-  </div>
 
-  <div id="account-content">
-    <div id="payment-notice"></div>
+<div class="app-shell">
+  <AppSidebar activePage="account" />
 
-    <div class="section-cap">Credits</div>
-    <div class="account-card" style="display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div class="credit-big" id="credit-balance">—</div>
-        <div class="credit-label">Credits remaining</div>
-      </div>
-      <div style="text-align:right">
-        <div class="account-email" id="account-email"></div>
-      </div>
+  <div class="app-main" style="overflow:hidden; display:flex; flex-direction:column;">
+    <div class="account-topbar">
+      <span class="account-topbar-title">Account</span>
     </div>
 
-    <div id="subscription-section" style="display:none">
-      <div style="height:32px"></div>
-      <div class="section-cap">Subscription</div>
-      <div class="sub-section">
-        <div class="sub-plan-name" id="sub-plan-name"></div>
-        <div class="sub-status" id="sub-status"></div>
-        <div id="sub-cancel-wrap">
-          <button class="account-btn danger" id="cancel-sub-btn">Cancel Subscription</button>
-          <div class="sub-cancel-note">Cancelling simply stops future payments. Your account is downgraded to a free user but you keep your credits indefinitely and can use them across the GAUK Network.</div>
+    <div class="account-scroll" id="account-scroll">
+
+      <!-- Auth gate -->
+      <div class="account-auth-gate hidden" id="auth-gate">
+        <div class="account-auth-gate-title">Sign in to view your account</div>
+        <a href="/auth" class="account-btn">Sign In</a>
+      </div>
+
+      <!-- Account content -->
+      <div id="account-content">
+        <div id="payment-notice"></div>
+
+        <div class="account-section-label">Credits</div>
+        <div class="account-credits-block">
+          <div>
+            <div class="account-credits-balance" id="credit-balance">—</div>
+            <div class="account-credits-label">GAUK Network Credits</div>
+          </div>
+          <div>
+            <div class="account-email" id="account-email"></div>
+          </div>
         </div>
-        <div id="sub-cancelling-msg" style="display:none">
-          <div class="sub-cancel-note">Your subscription will remain active until <strong id="sub-period-end"></strong>, after which your account returns to free. Your credits never expire.</div>
+
+        <!-- Subscription — hidden until loaded -->
+        <div id="subscription-section" class="hidden">
+          <div class="account-section-label">Subscription</div>
+          <div class="account-sub-block">
+            <div class="account-sub-name" id="sub-plan-name"></div>
+            <div class="account-sub-status" id="sub-status"></div>
+            <div id="sub-cancel-wrap">
+              <button class="account-btn danger" id="cancel-sub-btn">Cancel Subscription</button>
+              <div class="account-sub-note">Cancelling stops future payments. Your account returns to free but you keep your credits — they never expire and work across the GAUK Network.</div>
+            </div>
+            <div id="sub-cancelling-msg" class="hidden">
+              <div class="account-sub-note">Your subscription remains active until <strong id="sub-period-end"></strong>, after which your account returns to free. Your credits never expire.</div>
+            </div>
+          </div>
         </div>
+
+        <!-- Plans -->
+        <AccountPlans2 />
+
+        <!-- Activity -->
+        <div class="account-section-label" style="margin-top:32px;">Recent Activity</div>
+        <div class="account-tx-list" id="tx-list">
+          <div class="account-tx-row"><div class="account-tx-reason" style="color:var(--text-mute);">Loading…</div></div>
+        </div>
+
       </div>
     </div>
-
-    <AccountPlans />
-
-    <div style="height:32px"></div>
-    <div class="section-cap">Recent Activity</div>
-    <div class="account-card" id="tx-list">
-      <div style="font-family:'Prata',Georgia,serif;font-size:14px;color:#8A7A66;">Loading…</div>
-    </div>
-
-    <div style="height:32px"></div>
-    <div class="section-cap">The Vault</div>
-    <a href="/library" class="account-btn ghost">View The Vault</a>
   </div>
+</div>
 
-</AppShell>
+<AppBottomNav activePage="account" />
 
 <script>
   import { supabase } from '../lib/supabase-browser'
 
   const ANTIQUES_SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
-  
+
   const REASON_LABELS: Record<string, string> = {
-    signup_bonus: 'Signup bonus',
-    subscription_grant: 'Subscription grant',
-    topup_purchase: 'Top-up purchase',
-    identification_used: 'Identification',
-    ask_session_opened: 'Ask session',
-    admin_adjustment: 'Admin adjustment',
-    rollover: 'Rollover'
+    signup_bonus:         'Signup bonus',
+    subscription_grant:   'Subscription grant',
+    topup_purchase:       'Top-up purchase',
+    identification_used:  'Identification',
+    ask_session_opened:   'Ask session',
+    admin_adjustment:     'Admin adjustment',
+    rollover:             'Rollover'
   }
 
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { window.location.href = '/auth'; }
-
-  document.getElementById('signout-btn')?.addEventListener('click', async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
-  })
 
   if (!session) {
-    document.getElementById('account-content')!.style.display = 'none'
-    document.getElementById('auth-gate')!.style.display = 'block'
+    document.getElementById('account-content')!.classList.add('hidden')
+    document.getElementById('auth-gate')!.classList.remove('hidden')
   } else {
     document.getElementById('account-email')!.textContent = session.user.email || ''
 
@@ -118,14 +147,17 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     const params = new URLSearchParams(window.location.search)
     if (params.get('payment') === 'success') {
       const n = document.getElementById('payment-notice')!
-      n.innerHTML = '<div class="notice success">Payment successful — credits added to your account.</div>'
+      n.innerHTML = '<div class="account-notice success">Payment successful — credits added to your account.</div>'
     }
 
     // Credits
-    const { data: credits } = await supabase.from('credits').select('balance').eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).single()
+    const { data: credits } = await supabase
+      .from('credits').select('balance')
+      .eq('user_id', session.user.id)
+      .eq('site_id', ANTIQUES_SITE_ID).single()
     document.getElementById('credit-balance')!.textContent = String(credits?.balance ?? 0)
 
-    // Plan
+    // Subscription
     const { data: userPlan } = await supabase
       .from('user_plans')
       .select('status, current_period_end, plans(name)')
@@ -136,7 +168,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
 
     if (userPlan) {
       const subSection = document.getElementById('subscription-section')!
-      subSection.style.display = 'block'
+      subSection.classList.remove('hidden')
       const planName = (userPlan.plans as any)?.name || 'Subscription'
       document.getElementById('sub-plan-name')!.textContent = planName
 
@@ -144,8 +176,8 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
         const statusEl = document.getElementById('sub-status')!
         statusEl.textContent = 'Cancels at period end'
         statusEl.classList.add('cancelling')
-        document.getElementById('sub-cancel-wrap')!.style.display = 'none'
-        document.getElementById('sub-cancelling-msg')!.style.display = 'block'
+        document.getElementById('sub-cancel-wrap')!.classList.add('hidden')
+        document.getElementById('sub-cancelling-msg')!.classList.remove('hidden')
         if (userPlan.current_period_end) {
           document.getElementById('sub-period-end')!.textContent = new Date(userPlan.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
         }
@@ -154,10 +186,10 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
       }
 
       document.getElementById('cancel-sub-btn')?.addEventListener('click', async () => {
-        if (!confirm('Are you sure you want to cancel your subscription? You will keep your credits and access until the end of your billing period.')) return
+        if (!confirm('Are you sure you want to cancel? You keep your credits until the end of your billing period.')) return
         const btn = document.getElementById('cancel-sub-btn') as HTMLButtonElement
         btn.setAttribute('disabled', 'true')
-        btn.textContent = 'Cancelling...'
+        btn.textContent = 'Cancelling…'
         const res = await fetch('/api/stripe/cancel', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -175,19 +207,27 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     }
 
     // Transactions
-    const { data: txs } = await supabase.from('credit_transactions').select('*').eq('user_id', session.user.id).eq('site_id', ANTIQUES_SITE_ID).order('created_at', { ascending: false }).limit(25)
+    const { data: txs } = await supabase
+      .from('credit_transactions').select('*')
+      .eq('user_id', session.user.id)
+      .eq('site_id', ANTIQUES_SITE_ID)
+      .order('created_at', { ascending: false })
+      .limit(25)
+
     const txList = document.getElementById('tx-list')!
     if (!txs || txs.length === 0) {
-      txList.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:14px;color:#8A7A66;">No activity yet.</div>'
+      txList.innerHTML = '<div class="account-tx-row"><div class="account-tx-reason" style="color:var(--text-mute);">No activity yet.</div></div>'
     } else {
       txList.innerHTML = txs.map(tx => `
-        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;padding:14px 0;border-bottom:1px solid rgba(196,180,158,.3);gap:16px;">
+        <div class="account-tx-row">
           <div>
-            <div style="font-family:'Prata',Georgia,serif;font-size:14px;color:#5C5040;">${REASON_LABELS[tx.reason] || tx.reason}</div>
-            <div style="font-family:'Prata',Georgia,serif;font-size:12px;color:#8A7A66;margin-top:3px;">${new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            <div class="account-tx-reason">${REASON_LABELS[tx.reason] || tx.reason}</div>
+            <div class="account-tx-date">${new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
           </div>
-          <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:20px;color:${tx.delta > 0 ? '#2A7060' : '#C46028'};text-align:right;">${tx.delta > 0 ? '+' : ''}${tx.delta}</div>
+          <div class="account-tx-delta ${tx.delta > 0 ? 'pos' : 'neg'}">${tx.delta > 0 ? '+' : ''}${tx.delta}</div>
         </div>`).join('')
     }
   }
 </script>
+
+</AppLayout>

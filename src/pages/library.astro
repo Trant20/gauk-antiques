@@ -1,183 +1,375 @@
 ---
-import AppShell from '../layouts/AppShell.astro'
-import { R2_CDN, GI_SITE_ID } from '../lib/constants'
+import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
+import AppLayout from '../layouts/AppLayout.astro'
+import AppSidebar from '../components/AppSidebar.astro'
+import AppBottomNav from '../components/AppBottomNav.astro'
 ---
-<AppShell title="The Vault — GAUK Antiques" pageCap="The Vault" pageTitle="The Vault" pageSubtitle="Your identification history.">
+<AppLayout title="The Vault — GAUK">
 <style is:global>
-  body { background: #EFE7D9; color: #1C1810; }
 
-  /* HEADER */
+    /* ── LAYOUT ── */
+    .app-shell { display: flex; height: 100vh; overflow: hidden; }
 
-  /* PAGE TITLE */
+    /* ── VAULT PROPERTY FILTERS — positioned inside sidebar ── */
+    @media (max-width: 768px) { .sb-vault-filters { display: none; } }
 
-  /* TOOLBAR */
-  .lib-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
-  .lib-count { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
-  .view-toggle { display: flex; gap: 1px; background: #C4B49E; }
-  .view-btn { background: #E6DCCB; border: none; padding: 7px 11px; cursor: pointer; color: #8A7A66; transition: background .15s, color .15s; }
-  .view-btn.active { background: #1C1810; color: #EFE7D9; }
-  .view-btn svg { display: block; }
+    /* sidebar styles → AppSidebar.astro */
+    .sb-section-label {
+      font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-mute); font-weight: 600;
+      padding: 16px 14px 6px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .sb-prop-btn {
+      width: 100%; padding: 7px 14px; display: flex; align-items: center;
+      justify-content: space-between; background: transparent;
+      border: 1px solid transparent; margin-bottom: 2px; transition: background 0.1s; text-align: left;
+    }
+    .sb-prop-btn:hover { background: rgba(255,255,255,0.025); }
+    .sb-prop-btn.active { background: rgba(255,255,255,0.04); border-color: var(--border-hi); }
+    .sb-prop-label { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 7px; }
+    .sb-prop-gi { color: var(--gi-sage); }
+    .sb-prop-ga { color: var(--ga-gold-hi); }
+    .sb-prop-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+    .sb-prop-dot-gi { background: var(--gi-sage); }
+    .sb-prop-dot-ga { background: var(--ga-gold); }
+    .sb-prop-count { font-size: 13px; color: var(--text-mute); font-weight: 500; font-variant-numeric: tabular-nums; }
+    .sb-vault-total { padding: 8px 14px 12px; border-bottom: 1px solid var(--border); }
+    .sb-vault-total-label { display: block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 4px; }
+    .sb-vault-total-value { font-family: var(--font-ui); font-size: 13px; font-weight: 500; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
-  /* GRID */
-  .lib-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #C4B49E; padding: 0 0 120px; }
-  @media (min-width: 600px) { .lib-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 900px) { .lib-grid { grid-template-columns: repeat(4, 1fr); } }
+    /* ── MAIN ── */
+    .app-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
-  .lib-card {
-    background: #EFE7D9;
-    text-decoration: none;
-    color: #1C1810;
-    display: flex; flex-direction: column;
-    transition: background .15s;
-    cursor: pointer;
-  }
-  .lib-card:hover { background: #E6DCCB; }
-  .lib-card-thumb {
-    width: 100%; aspect-ratio: 1/1; object-fit: cover;
-    background: #E6DCCB; display: block; flex-shrink: 0;
-  }
-  .lib-card-thumb-placeholder {
-    width: 100%; aspect-ratio: 1/1; background: #E6DCCB;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .lib-card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #C4B49E; }
-  .lib-card-cat { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; }
-  .lib-card-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 14px; font-style: italic; color: #1C1810; line-height: 1.3; }
-  .lib-card-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; color: #7A5C20; margin-top: auto; }
-  .lib-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-  .lib-card-condition { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; }
-  .lib-card-date { font-family: 'Prata', Georgia, serif; font-size: 8px; color: #8A7A66; }
+    /* ── TOPBAR ── */
+    .vault-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .vault-search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 320px; background: var(--surface-hi); border: 1px solid var(--border-hi); padding: 0 11px; height: 32px; }
+    .vault-search-wrap svg { flex-shrink: 0; opacity: 0.28; }
+    .vault-search { font-size: 13px; width: 100%; }
+    .vault-spacer { flex: 1; }
+    .vault-sort-label { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; white-space: nowrap; }
+    .vault-sort { height: 32px; padding: 0 10px; border: 1px solid var(--border-hi); background: var(--surface-hi); color: var(--text-mute); font-size: 12px; appearance: none; -webkit-appearance: none; }
+    .vault-sort option { background: var(--surface); color: var(--text-dim); }
+    .vault-view-toggle { display: flex; border: 1px solid var(--border-hi); overflow: hidden; flex-shrink: 0; }
+    .vault-view-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-faint); transition: background 0.1s, color 0.1s; }
+    .vault-view-btn:first-child { border-right: 1px solid var(--border-hi); }
+    .vault-view-btn.active { background: rgba(255,255,255,0.06); color: var(--text-dim); }
 
-  /* LIST VIEW */
-  .lib-list { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; padding-bottom: 120px; }
-  .lib-list-item {
-    background: #EFE7D9;
-    display: flex; align-items: center; gap: 0;
-    text-decoration: none; color: #1C1810;
-    transition: background .15s;
-  }
-  .lib-list-item:hover { background: #E6DCCB; }
-  .lib-list-thumb { width: 80px; height: 80px; object-fit: cover; display: block; flex-shrink: 0; background: #E6DCCB; }
-  .lib-list-body { padding: 14px 16px; flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .lib-list-left { flex: 1; min-width: 0; }
-  .lib-list-cat { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; margin-bottom: 4px; }
-  .lib-list-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; font-style: italic; color: #1C1810; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .lib-list-sub { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #8A7A66; margin-top: 3px; letter-spacing: 1px; }
-  .lib-list-right { text-align: right; flex-shrink: 0; }
-  .lib-list-value { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #7A5C20; }
-  .lib-list-date { font-family: 'Prata', Georgia, serif; font-size: 9px; color: #8A7A66; margin-top: 4px; }
+    /* ── STATS BAR ── */
+    .vault-stats { padding: 10px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--surface-lo); }
+    .vault-stats-left { font-size: 12px; color: var(--text-mute); }
+    .vault-stats-left strong { color: var(--text-dim); font-weight: 500; }
+    .vault-stats-right { display: flex; gap: 20px; }
+    .vault-stats-gi { font-size: 12px; color: var(--text-mute); }
+    .vault-stats-gi strong { color: var(--gi-sage); font-weight: 500; }
+    .vault-stats-ga { font-size: 12px; color: var(--text-mute); }
+    .vault-stats-ga strong { color: var(--ga-gold-hi); font-weight: 500; }
 
-  /* STATES */
-  .lib-state { min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 60px 24px; text-align: center; }
-  .lib-state-icon { color: #C4B49E; margin-bottom: 8px; }
-  .lib-state-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 22px; font-style: italic; color: #5C5040; }
-  .lib-state-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; max-width: 260px; line-height: 1.7; }
-  .lib-state-btn { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; background: #1C1810; border: none; padding: 14px 28px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 8px; }
+    /* ── SCROLL ── */
+    .vault-scroll { flex: 1; overflow-y: auto; padding: 24px; }
 
+    /* ── GRID / LIST ── */
+    .vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 20px; }
+    .vault-list { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
 
-  /* LOADING SHIMMER */
-  @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
-  .shimmer {
-    background: linear-gradient(90deg, #E6DCCB 25%, #EFE7D9 50%, #E6DCCB 75%);
-    background-size: 400px 100%;
-    animation: shimmer 1.4s ease-in-out infinite;
-  }
-  .shimmer-card { background: #EFE7D9; }
-  .shimmer-thumb { width: 100%; aspect-ratio: 1/1; }
-  .shimmer-line { height: 10px; border-radius: 2px; margin: 8px 12px 4px; }
-  .shimmer-line-short { height: 10px; border-radius: 2px; margin: 4px 12px 12px; width: 60%; }
+    /* ── CARD ── */
+    .vault-card {
+      display: flex; flex-direction: column;
+      background: var(--surface); border: 1px solid var(--border-hi);
+      cursor: pointer; transition: border-color 0.15s;
+      animation: fadeUp 0.22s ease forwards; overflow: hidden;
+      position: relative; text-decoration: none; color: inherit;
+    }
+    .vault-card:hover { border-color: #363636; }
+    .vault-card:hover .card-actions { opacity: 1; }
 
-  .hidden { display: none !important; }
-</style>
+    .card-thumb { height: 164px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; position: relative; }
+    .card-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 12px; display: block; }
+    .card-thumb-ltr { font-family: var(--font-display); font-size: 72px; font-weight: 400; opacity: 0.22; line-height: 1; user-select: none; }
 
-<div id="page-wrap">
+    .card-body { padding: 14px 16px 44px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .card-badge { display: inline-flex; align-items: center; padding: 2px 7px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.11em; border: 1px solid; align-self: flex-start; margin-bottom: 10px; }
+    .card-badge-gi { color: var(--gi-sage); background: rgba(124,144,130,0.07); border-color: rgba(124,144,130,0.18); }
+    .card-badge-ga { color: var(--ga-gold-hi); background: rgba(200,149,46,0.07); border-color: rgba(200,149,46,0.18); }
+    .card-title { font-family: var(--font-display); font-size: 17px; font-weight: 500; color: var(--text); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; flex: 1; }
+    .card-value-row { margin-top: 14px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+    .card-value-label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; margin-bottom: 3px; white-space: nowrap; }
+    .card-value { font-family: var(--font-display); font-size: 18px; font-weight: 500; color: var(--text-dim); }
+    .card-date { font-size: 12px; color: var(--text-mute); flex-shrink: 0; text-align: right; }
 
-  <!-- LOADING STATE -->
-  <div id="lib-loading">
+    .card-actions { position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 1px; background: var(--border); opacity: 0; transition: opacity 0.15s; }
+    .card-action-btn { flex: 1; padding: 9px 6px; background: var(--surface-lo); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); transition: background 0.1s, color 0.1s; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+    .card-action-btn:hover { background: var(--surface-hi); color: var(--text); }
+    .card-action-btn.danger:hover { color: #c46028; }
 
-    <div class="lib-toolbar">
-      <div style="background:#E6DCCB;width:80px;height:10px;border-radius:2px"></div>
+    /* List overrides */
+    .vault-list .vault-card { flex-direction: row; height: 100px; border: none; border-bottom: 1px solid var(--border); animation: none; border-left-width: 3px; border-left-style: solid; }
+    .vault-list .vault-card:hover { background: rgba(255,255,255,0.018); }
+    .vault-list .card-thumb { width: 100px !important; min-width: 100px !important; height: 100px !important; }
+    .vault-list .card-body { flex-direction: row; align-items: center; padding: 0 20px; gap: 20px; }
+    .vault-list .card-badge { display: none; }
+    .vault-list .card-title { font-size: 15px; -webkit-line-clamp: 1; }
+    .vault-list .card-value-row { margin-top: 0; }
+    .vault-list .card-actions { display: none; }
+    .list-cat { display: none; font-size: 12px; color: var(--text-mute); white-space: nowrap; flex-shrink: 0; min-width: 120px; }
+    .vault-list .list-cat { display: block; }
+    .list-title-wrap { flex: 1; min-width: 0; }
+
+    /* ── STATES ── */
+    .vault-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 420px; gap: 20px; text-align: center; }
+    .vault-state-icon { width: 44px; height: 44px; border: 1px solid var(--border-hi); display: flex; align-items: center; justify-content: center; }
+    .vault-state-title { font-family: var(--font-display); font-size: 24px; color: var(--text-mute); margin-bottom: 8px; }
+    .vault-state-sub { font-size: 13px; color: var(--text-mute); line-height: 1.5; }
+    .vault-state-btn { padding: 10px 22px; background: var(--gi-sage); color: #fff; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; text-decoration: none; display: inline-block; margin-top: 8px; }
+
+    /* ── SHIMMER ── */
+    .shimmer { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hi) 50%, var(--surface) 75%); background-size: 400px 100%; animation: shimmer 1.4s ease-in-out infinite; }
+    .shimmer-card { background: var(--surface); border: 1px solid var(--border-hi); }
+    .shimmer-thumb { height: 164px; }
+    .shimmer-line { height: 10px; border-radius: 2px; margin: 12px 14px 4px; }
+    .shimmer-line-short { height: 10px; border-radius: 2px; margin: 4px 14px 14px; width: 55%; }
+
+    /* ── DELETE MODAL ── */
+    .del-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .del-modal { background: var(--surface); border: 1px solid var(--border-hi); padding: 32px 24px; max-width: 320px; width: 100%; text-align: center; }
+    .del-modal-title { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 10px; }
+    .del-modal-sub { font-size: 13px; color: var(--text-mute); line-height: 1.7; margin-bottom: 24px; }
+    .del-modal-btns { display: flex; gap: 8px; }
+    .del-cancel { flex: 1; padding: 12px; background: none; border: 1px solid var(--border-hi); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); }
+    .del-confirm { flex: 1; padding: 12px; background: #c46028; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
+
+    /* bottom nav styles → AppBottomNav.astro */
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .app-main { margin-left: 0; padding-bottom: 64px; }
+      .vault-topbar { padding: 0 16px; gap: 10px; }
+      .vault-sort-label { display: none; }
+      .vault-stats { display: none; }
+      .vault-scroll { padding: 16px; }
+      .vault-grid { grid-template-columns: 1fr; }
+      .card-actions { opacity: 1; }
+    }
+
+    /* ── DRAWER OVERLAY ── */
+    .vault-overlay { position: fixed; inset: 0; background: transparent; z-index: 150; pointer-events: none; transition: background 0.25s; }
+    .vault-overlay.open { background: rgba(0,0,0,0.65); pointer-events: all; }
+
+    /* ── DRAWER ── */
+    .vault-drawer { position: fixed; top: 0; right: 0; width: 400px; max-width: 94vw; height: 100vh; background: #0c0c0c; border-left: 1px solid var(--border-hi); z-index: 200; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; }
+    .vault-drawer.open { transform: translateX(0); }
+    .drawer-header { height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+    .drawer-header-label { font-size: 12px; color: var(--text-mute); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; }
+    .drawer-close { width: 28px; height: 28px; background: transparent; border: 1px solid var(--border-hi); display: flex; align-items: center; justify-content: center; color: var(--text-faint); transition: color 0.1s, border-color 0.1s; }
+    .drawer-close:hover { color: var(--text-dim); border-color: var(--text-faint); }
+    .drawer-accent { height: 3px; flex-shrink: 0; }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 24px 22px; }
+    .drawer-badge { display: inline-flex; align-items: center; padding: 3px 9px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.13em; border: 1px solid; margin-bottom: 16px; }
+    .drawer-title { font-family: var(--font-display); font-size: 26px; font-weight: 400; color: var(--text); line-height: 1.25; margin-bottom: 24px; }
+    .drawer-value-block { padding: 16px 18px; background: var(--surface-hi); border: 1px solid var(--border-hi); margin-bottom: 22px; }
+    .drawer-value-label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.13em; font-weight: 600; margin-bottom: 6px; }
+    .drawer-value-amount { font-family: var(--font-display); font-size: 36px; font-weight: 500; line-height: 1.1; }
+    .drawer-value-date { font-size: 12px; color: var(--text-mute); margin-top: 6px; }
+    .drawer-meta { border: 1px solid var(--border); margin-bottom: 24px; }
+    .drawer-meta-row { display: flex; padding: 10px 15px; border-bottom: 1px solid var(--border); }
+    .drawer-meta-row:last-child { border-bottom: none; }
+    .drawer-meta-key { font-size: 11px; color: var(--text-mute); width: 90px; flex-shrink: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; padding-top: 1px; }
+    .drawer-meta-val { font-size: 13px; color: var(--text-dim); }
+    .drawer-notes-label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600; margin-bottom: 10px; }
+    .drawer-notes { width: 100%; min-height: 80px; background: var(--surface-hi); border: 1px solid var(--border-hi); border-left: 2px solid var(--border-hi); padding: 12px 14px; font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); line-height: 1.65; resize: vertical; transition: border-color 0.15s; }
+    .drawer-notes:focus { outline: none; border-color: var(--text-faint); }
+    .drawer-notes::placeholder { color: var(--text-faint); font-style: italic; }
+    .drawer-notes-hint { font-size: 11px; color: var(--text-faint); margin-top: 6px; font-style: italic; }
+    .drawer-footer { padding: 16px 22px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .drawer-view-btn { display: block; width: 100%; padding: 13px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; text-align: center; text-decoration: none; transition: opacity 0.15s; }
+    .drawer-view-btn:hover { opacity: 0.85; }
+    .drawer-delete-btn { width: 100%; padding: 11px; background: none; border: 1px solid var(--border-hi); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); transition: border-color 0.2s, color 0.2s; }
+    .drawer-delete-btn:hover { border-color: #c46028; color: #c46028; }
+
+    @media (max-width: 768px) { .vault-drawer { width: 100vw; max-width: 100vw; } }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── SIDEBAR ── -->
+  <AppSidebar activePage="vault">
+    <!-- ── VAULT PROPERTY FILTERS — passed via slot ── -->
+    <div class="sb-vault-filters" id="sb-vault-filters">
+      <div class="sb-section-label">Properties</div>
+      <button class="sb-prop-btn active" id="prop-all" data-prop="all">
+        <span class="sb-prop-label">All items</span>
+        <span class="sb-prop-count" id="prop-count-all">—</span>
+      </button>
+      <div class="sb-vault-total" id="sb-vault-total">
+        <span class="sb-vault-total-label">Est. vault value</span>
+        <span class="sb-vault-total-value" id="sb-vault-total-val">—</span>
+      </div>
+      <button class="sb-prop-btn" id="prop-insurance" data-prop="insurance">
+        <span class="sb-prop-label sb-prop-gi"><span class="sb-prop-dot sb-prop-dot-gi"></span>Insurance</span>
+        <span class="sb-prop-count" id="prop-count-insurance">—</span>
+      </button>
+      <button class="sb-prop-btn" id="prop-antiques" data-prop="antiques">
+        <span class="sb-prop-label sb-prop-ga"><span class="sb-prop-dot sb-prop-dot-ga"></span>Antiques</span>
+        <span class="sb-prop-count" id="prop-count-antiques">—</span>
+      </button>
     </div>
-    <div class="lib-grid" id="shimmer-grid"></div>
-  </div>
+  </AppSidebar>
 
-  <!-- AUTH GATE -->
-  <div id="lib-auth-gate" class="hidden">
-    <div class="lib-state">
-      <svg class="lib-state-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      </svg>
-      <div class="lib-state-title">Sign in to view your library</div>
-      <div class="lib-state-sub">Your identification history is saved to your account.</div>
-      <a href="/auth" class="lib-state-btn">Sign In</a>
-    </div>
-  </div>
+  <!-- ── MAIN ── -->
+  <div class="app-main">
 
-  <!-- EMPTY STATE -->
-  <div id="lib-empty" class="hidden">
-
-    <div class="lib-state">
-      <svg class="lib-state-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-        <line x1="4" y1="22" x2="4" y2="15"/>
-      </svg>
-      <div class="lib-state-title">Your collection awaits</div>
-      <div class="lib-state-sub">Photograph an antique or curio and let us identify and value it for you.</div>
-      <a href="/" class="lib-state-btn">Identify Your First Piece</a>
-    </div>
-  </div>
-
-  <!-- CONTENT -->
-  <div id="lib-content" class="hidden">
-
-    <div class="lib-toolbar">
-      <div class="lib-count" id="lib-count"></div>
-      <div class="view-toggle">
-        <button class="view-btn active" id="btn-grid" aria-label="Grid view">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-            <rect x="0" y="0" width="6" height="6"/><rect x="8" y="0" width="6" height="6"/>
-            <rect x="0" y="8" width="6" height="6"/><rect x="8" y="8" width="6" height="6"/>
-          </svg>
+    <!-- Topbar -->
+    <div class="vault-topbar">
+      <div class="vault-search-wrap">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M8.2 8.2L11 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input class="vault-search" id="vault-search" placeholder="Search items…" />
+      </div>
+      <div class="vault-spacer"></div>
+      <span class="vault-sort-label">Sort by</span>
+      <select class="vault-sort" id="vault-sort">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="value-high">Value: high → low</option>
+        <option value="value-low">Value: low → high</option>
+        <option value="az">Name A–Z</option>
+      </select>
+      <div class="vault-view-toggle">
+        <button class="vault-view-btn active" id="btn-grid" title="Grid view">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="0.5" y="0.5" width="4.5" height="4.5" stroke="currentColor" stroke-width="1.3"/><rect x="7" y="0.5" width="4.5" height="4.5" stroke="currentColor" stroke-width="1.3"/><rect x="0.5" y="7" width="4.5" height="4.5" stroke="currentColor" stroke-width="1.3"/><rect x="7" y="7" width="4.5" height="4.5" stroke="currentColor" stroke-width="1.3"/></svg>
         </button>
-        <button class="view-btn" id="btn-list" aria-label="List view">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-            <rect x="0" y="0" width="14" height="2.5"/><rect x="0" y="5.5" width="14" height="2.5"/><rect x="0" y="11" width="14" height="2.5"/>
-          </svg>
+        <button class="vault-view-btn" id="btn-list" title="List view">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="0" y1="2" x2="12" y2="2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="10" x2="12" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         </button>
       </div>
     </div>
-    <div id="lib-grid-view" class="lib-grid"></div>
-    <div id="lib-list-view" class="lib-list hidden"></div>
-    <div style="padding:24px;text-align:center;">
-      <button id="lib-load-more" style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#EFE7D9;background:#1C1810;border:none;padding:14px 28px;cursor:pointer;display:none;">Load more</button>
+
+    <!-- Stats bar -->
+    <div class="vault-stats">
+      <span class="vault-stats-left"><strong id="stats-count">—</strong> <span id="stats-matching-label">items</span> <span style="margin:0 8px;color:var(--border-hi);">·</span> est. total <strong id="stats-total">—</strong></span>
+      <div class="vault-stats-right">
+        <span class="vault-stats-gi"><strong id="stats-gi">—</strong> insured</span>
+        <span class="vault-stats-ga"><strong id="stats-ga">—</strong> catalogued</span>
+      </div>
+    </div>
+
+    <!-- Scroll area -->
+    <div class="vault-scroll">
+
+      <!-- Loading shimmer -->
+      <div id="vault-loading" class="vault-grid"></div>
+
+      <!-- Auth gate -->
+      <div id="vault-auth-gate" class="vault-state hidden">
+        <div class="vault-state-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div><div class="vault-state-title">Sign in to view your Vault</div><div class="vault-state-sub">Your identification history is saved to your account.</div></div>
+        <a href="/auth" class="vault-state-btn">Sign In</a>
+      </div>
+
+      <!-- Empty state -->
+      <div id="vault-empty" class="vault-state hidden">
+        <div class="vault-state-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="6" height="6" stroke="currentColor" stroke-width="1.5"/><rect x="10.5" y="1.5" width="6" height="6" stroke="currentColor" stroke-width="1.5"/><rect x="1.5" y="10.5" width="6" height="6" stroke="currentColor" stroke-width="1.5"/><rect x="10.5" y="10.5" width="6" height="6" stroke="currentColor" stroke-width="1.5"/></svg></div>
+        <div><div class="vault-state-title">Your inventory is empty</div><div class="vault-state-sub">Start by scanning your first item.</div></div>
+        <a href="/identify" class="vault-state-btn">Scan an item</a>
+      </div>
+
+      <!-- Cards -->
+      <div id="vault-cards" class="vault-grid hidden"></div>
+
+      <!-- Infinite scroll sentinel -->
+      <div id="vault-sentinel" style="height:1px;"></div>
+
     </div>
   </div>
-
 </div>
 
+<!-- Delete modal -->
+<div class="del-overlay hidden" id="del-overlay">
+  <div class="del-modal">
+    <div class="del-modal-title">Delete this item?</div>
+    <div class="del-modal-sub">This will permanently remove it from your Vault.</div>
+    <div class="del-modal-btns">
+      <button class="del-cancel" id="del-cancel">Cancel</button>
+      <button class="del-confirm" id="del-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer overlay -->
+<div class="vault-overlay" id="vault-overlay"></div>
+
+<!-- Quick view drawer -->
+<div class="vault-drawer" id="vault-drawer">
+  <div class="drawer-header">
+    <span class="drawer-header-label">Item detail</span>
+    <button class="drawer-close" id="drawer-close">
+      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+        <path d="M0.5 0.5l8 8M8.5 0.5l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+  <div class="drawer-accent" id="drawer-accent"></div>
+  <div class="drawer-body">
+    <div class="drawer-badge card-badge-gi" id="drawer-badge"></div>
+    <div class="drawer-title" id="drawer-title"></div>
+    <div class="drawer-value-block">
+      <div class="drawer-value-label" id="drawer-value-label"></div>
+      <div class="drawer-value-amount" id="drawer-value-amount"></div>
+      <div class="drawer-value-date" id="drawer-value-date"></div>
+    </div>
+    <div class="drawer-meta">
+      <div class="drawer-meta-row"><span class="drawer-meta-key">Category</span><span class="drawer-meta-val" id="drawer-cat"></span></div>
+      <div class="drawer-meta-row"><span class="drawer-meta-key">Scanned</span><span class="drawer-meta-val" id="drawer-date"></span></div>
+      <div class="drawer-meta-row"><span class="drawer-meta-key">Property</span><span class="drawer-meta-val" id="drawer-property"></span></div>
+    </div>
+    <div class="drawer-notes-label">Notes</div>
+    <textarea class="drawer-notes" id="drawer-notes" placeholder="No notes added. Click to add a note to this item."></textarea>
+    <div class="drawer-notes-hint" id="drawer-notes-hint"></div>
+  </div>
+  <div class="drawer-footer" style="display:flex; flex-direction:column; gap:8px;">
+    <a href="#" class="drawer-view-btn" id="drawer-view-btn">View full report</a>
+    <button class="drawer-delete-btn" id="drawer-delete-btn">Delete item</button>
+  </div>
+</div>
+
+<!-- Bottom nav -->
+<AppBottomNav activePage="vault" />
 
 <script>
-  var GI_SITE_ID = 'd065c030-58b4-4f48-a2df-f14d666d6cfa'
   import { supabase } from '../lib/supabase-browser'
   import { escapeHtml } from '../lib/utils'
   import { formatValueRange, formatGIValueRange } from '../lib/currency'
+  import { GI_SITE_ID, ANTIQUES_SITE_ID, R2_CDN } from '../lib/constants'
 
-  const R2_CDN = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
+  const BATCH = 48
+  let offset = 0
+  let allFetched = false
+  let fetching = false
+  let allItems: any[] = []
+  let filteredItems: any[] = []
+  let dbCounts = { all: 0, gi: 0, ga: 0 }
+  let activeProperty = 'all'
+  let activeSort = 'newest'
+  let searchQuery = ''
+  let pendingDeleteId: string | null = null
+  let userSession: any = null
+  let observer: IntersectionObserver | null = null
 
-  
-  const elLoading   = document.getElementById('lib-loading')
-  const elAuthGate  = document.getElementById('lib-auth-gate')
-  const elEmpty     = document.getElementById('lib-empty')
-  const elContent   = document.getElementById('lib-content')
-  const elCount     = document.getElementById('lib-count')
-  const elGridView  = document.getElementById('lib-grid-view')
-  const elListView  = document.getElementById('lib-list-view')
-  const btnGrid     = document.getElementById('btn-grid')
-  const btnList     = document.getElementById('btn-list')
-  const shimmerGrid = document.getElementById('shimmer-grid')
+  const elLoading  = document.getElementById('vault-loading')!
+  const elAuthGate = document.getElementById('vault-auth-gate')!
+  const elEmpty    = document.getElementById('vault-empty')!
+  const elCards    = document.getElementById('vault-cards')!
+  const btnGrid    = document.getElementById('btn-grid')!
+  const btnList    = document.getElementById('btn-list')!
+  const elSearch   = document.getElementById('vault-search') as HTMLInputElement
+  const elSort     = document.getElementById('vault-sort') as HTMLSelectElement
+  const sentinel   = document.getElementById('vault-sentinel')!
+  const delOverlay = document.getElementById('del-overlay')!
+  const delConfirm = document.getElementById('del-confirm')!
+  const delCancel  = document.getElementById('del-cancel')!
 
-  shimmerGrid.innerHTML = Array(6).fill(0).map(() => `
+  // Shimmer
+  elLoading.innerHTML = Array(6).fill(0).map(() => `
     <div class="shimmer-card">
       <div class="shimmer-thumb shimmer"></div>
       <div class="shimmer-line shimmer"></div>
@@ -185,108 +377,354 @@ import { R2_CDN, GI_SITE_ID } from '../lib/constants'
     </div>
   `).join('')
 
-  btnGrid.addEventListener('click', () => {
-    btnGrid.classList.add('active'); btnList.classList.remove('active')
-    elGridView.classList.remove('hidden'); elListView.classList.add('hidden')
-  })
-  btnList.addEventListener('click', () => {
-    btnList.classList.add('active'); btnGrid.classList.remove('active')
-    elListView.classList.remove('hidden'); elGridView.classList.add('hidden')
-  })
+  function fmt(v: number) { return '£' + Math.round(v).toLocaleString('en-GB') }
 
-  function formatDate(iso) {
-    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-  }
-
-  function formatValue(r, siteId) {
-    if (siteId === GI_SITE_ID) {
-      return formatGIValueRange(r.value_range_low || 0, r.value_range_high || 0, r.currency || 'USD')
-    }
+  function formatValue(r: any, siteId: string) {
+    if (siteId === GI_SITE_ID) return formatGIValueRange(r.value_range_low || 0, r.value_range_high || 0, r.currency || 'USD')
     return formatValueRange(r.value_range_low || 0, r.value_range_high || 0)
   }
 
-  function thumbEl(imageKey, alt) {
-    const safeAlt = escapeHtml(alt)
-    if (imageKey) return '<div style="width:100%;aspect-ratio:1/1;overflow:hidden;position:relative;background:#E6DCCB;"><img style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#E6DCCB;" src="' + R2_CDN + '/' + imageKey + '" alt="' + safeAlt + '" loading="lazy" /></div>'
-    return '<div class="lib-card-thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4B49E" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
+  function fmtDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   }
 
-  function listThumbEl(imageKey, alt) {
-    const safeAlt = escapeHtml(alt)
-    if (imageKey) return '<img class="lib-list-thumb" src="' + R2_CDN + '/' + imageKey + '" alt="' + safeAlt + '" loading="lazy" />'
-    return '<div class="lib-list-thumb" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C4B49E" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
+  function isGI(item: any) { return item.site_id === GI_SITE_ID }
+
+  function thumbHtml(imageKey: string, alt: string, gi: boolean) {
+    const bg = gi ? 'rgba(124,144,130,0.07)' : 'rgba(122,92,32,0.07)'
+    const color = gi ? 'var(--gi-sage)' : 'var(--ga-gold)'
+    const letter = escapeHtml((alt || 'I')[0])
+    if (imageKey) {
+      return `<div class="card-thumb" style="background:${bg};"><img src="${R2_CDN}/${imageKey}" alt="${escapeHtml(alt)}" loading="lazy" /></div>`
+    }
+    return `<div class="card-thumb" style="background:${bg};"><span class="card-thumb-ltr" style="color:${color};">${letter}</span></div>`
   }
 
-  function renderGrid(items) {
-    elGridView.innerHTML = items.map(item => {
-      const r = item.result_json || {}
-      const title = escapeHtml(r.subcategory || r.title || 'Unidentified Item')
-      const category = escapeHtml(r.category || 'Uncategorised')
-      const condition = escapeHtml(r.condition || '')
-      const isGI = item.site_id === GI_SITE_ID
-      const giBadge = isGI ? '<div style="position:absolute;top:8px;left:8px;background:#7c9082;color:white;font-family:Inter,sans-serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:3px 8px;border-radius:2px;">Insurance</div>' : ''
-      const giStyle = isGI ? 'border-left: 3px solid #7c9082;' : ''
-      return '<a href="/valuation/' + item.id + '" class="lib-card" style="' + giStyle + '">' +
-        '<div style="position:relative;">' + thumbEl(item.image_key, r.subcategory || r.title || 'Unidentified Item') + giBadge + '</div>' +
-        '<div class="lib-card-body">' +
-          '<div class="lib-card-cat">' + category + '</div>' +
-          '<div class="lib-card-title">' + title + '</div>' +
-          '<div class="lib-card-value">' + formatValue(r, item.site_id) + '</div>' +
-          '<div class="lib-card-meta">' +
-            '<span class="lib-card-condition">' + condition + '</span>' +
-            '<span class="lib-card-date">' + formatDate(item.created_at) + '</span>' +
-          '</div>' +
-        '</div></a>'
-    }).join('')
+  function cardHtml(item: any) {
+    const r = item.result_json || {}
+    const title = escapeHtml(r.subcategory || r.title || 'Unidentified Item')
+    const category = escapeHtml(r.category || 'Uncategorised')
+    const gi = isGI(item)
+    const borderColor = gi ? 'var(--gi-sage)' : 'var(--ga-gold)'
+    const badgeClass = gi ? 'card-badge-gi' : 'card-badge-ga'
+    const valueLabel = gi ? 'Est. Replacement Cost' : 'Valuation'
+    return `<div class="vault-card" style="border-left:3px solid ${borderColor};" data-id="${item.id}">
+      ${thumbHtml(item.image_key, r.subcategory || r.title || 'Item', gi)}
+      <div class="card-body">
+        <div class="card-badge ${badgeClass}">${category}</div>
+        <div class="list-cat">${category}</div>
+        <div class="list-title-wrap"><div class="card-title">${title}</div></div>
+        <div class="card-value-row">
+          <div>
+            <div class="card-value-label">${valueLabel}</div>
+            <div class="card-value">${formatValue(r, item.site_id)}</div>
+          </div>
+          <div class="card-date">${fmtDate(item.created_at)}</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <a href="/valuation/${item.id}" class="card-action-btn">View</a>
+        <button class="card-action-btn danger" data-delete="${item.id}">Delete</button>
+      </div>
+    </div>`
   }
 
-  function renderList(items) {
-    elListView.innerHTML = items.map(item => {
-      const r = item.result_json || {}
-      const title = escapeHtml(r.subcategory || r.title || 'Unidentified Item')
-      const category = escapeHtml(r.category || 'Uncategorised')
-      const maker = escapeHtml(r.maker || r.manufacturer || '')
-      const condition = escapeHtml(r.condition || '')
-      const sub = maker ? (maker + (condition ? ' \u00b7 ' + condition : '')) : ''
-      const isGIList = item.site_id === GI_SITE_ID
-      const giListStyle = isGIList ? 'border-left: 3px solid #7c9082;' : ''
-      const giListBadge = isGIList ? '<span style="display:inline-block;background:#7c9082;color:white;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-left:6px;">Insurance</span>' : ''
-      return '<a href="/valuation/' + item.id + '" class="lib-list-item" style="' + giListStyle + '">' +
-        listThumbEl(item.image_key, r.subcategory || r.title || 'Unidentified Item') +
-        '<div class="lib-list-body">' +
-          '<div class="lib-list-left">' +
-            '<div class="lib-list-cat">' + category + giListBadge + '</div>' +
-            '<div class="lib-list-title">' + title + '</div>' +
-            (sub ? '<div class="lib-list-sub">' + sub + '</div>' : '') +
-          '</div>' +
-          '<div class="lib-list-right">' +
-            '<div class="lib-list-value">' + formatValue(r, item.site_id) + '</div>' +
-            '<div class="lib-list-date">' + formatDate(item.created_at) + '</div>' +
-          '</div>' +
-        '</div></a>'
-    }).join('')
+  function applyFilters() {
+    let result = [...allItems]
+    if (activeProperty === 'insurance') result = result.filter(i => isGI(i))
+    if (activeProperty === 'antiques')  result = result.filter(i => !isGI(i))
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(i => {
+        const r = i.result_json || {}
+        return (r.subcategory || r.title || '').toLowerCase().includes(q) || (r.category || '').toLowerCase().includes(q)
+      })
+    }
+    result = result.sort((a, b) => {
+      const ra = a.result_json || {}, rb = b.result_json || {}
+      if (activeSort === 'newest')     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      if (activeSort === 'oldest')     return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      if (activeSort === 'value-high') return (rb.value_range_high || 0) - (ra.value_range_high || 0)
+      if (activeSort === 'value-low')  return (ra.value_range_low || 0) - (rb.value_range_low || 0)
+      if (activeSort === 'az')         return (ra.subcategory || ra.title || '').localeCompare(rb.subcategory || rb.title || '')
+      return 0
+    })
+    filteredItems = result
+    render()
+    updateStats()
   }
 
-  const { data: { session } } = await supabase.auth.getSession()
+  function render() {
+    if (filteredItems.length === 0) {
+      elCards.classList.add('hidden'); elEmpty.classList.remove('hidden'); return
+    }
+    elEmpty.classList.add('hidden'); elCards.classList.remove('hidden')
+    elCards.innerHTML = filteredItems.map(cardHtml).join('')
+    bindCardActions()
+  }
 
-  if (!session) {
-    window.location.href = '/auth'
-  } else {
+  function updateStats() {
+    const total = filteredItems.reduce((s, i) => {
+      const r = i.result_json || {}
+      return s + ((r.value_range_low || 0) + (r.value_range_high || 0)) / 2
+    }, 0)
+    const isFiltered = searchQuery || activeProperty !== 'all'
+    document.getElementById('stats-count')!.textContent = String(filteredItems.length)
+    document.getElementById('stats-matching-label')!.textContent = isFiltered ? 'items matching' : 'items'
+    document.getElementById('stats-total')!.textContent = fmt(total)
+    // Stats bar right — show filtered GI/GA counts
+    const filteredGI = filteredItems.filter(i => isGI(i))
+    const filteredGA = filteredItems.filter(i => !isGI(i))
+    document.getElementById('stats-gi')!.textContent = String(filteredGI.length)
+    document.getElementById('stats-ga')!.textContent = String(filteredGA.length)
+    // Sidebar counts — always show DB totals
+    document.getElementById('prop-count-all')!.textContent       = String(dbCounts.all)
+    document.getElementById('prop-count-insurance')!.textContent = String(dbCounts.gi)
+    document.getElementById('prop-count-antiques')!.textContent  = String(dbCounts.ga)
+  }
 
-    const BATCH = 24
-    let offset = 0
-    let totalCount = 0
-    let allItems: any[] = []
+  // ── DRAWER ──────────────────────────────────────────────────────────────────
+  const drawerOverlay  = document.getElementById('vault-overlay')!
+  const drawerEl       = document.getElementById('vault-drawer')!
+  const drawerClose    = document.getElementById('drawer-close')!
+  const drawerAccent   = document.getElementById('drawer-accent')!
+  const drawerBadge    = document.getElementById('drawer-badge')!
+  const drawerTitle    = document.getElementById('drawer-title')!
+  const drawerValLabel = document.getElementById('drawer-value-label')!
+  const drawerValAmt   = document.getElementById('drawer-value-amount')!
+  const drawerValDate  = document.getElementById('drawer-value-date')!
+  const drawerCat      = document.getElementById('drawer-cat')!
+  const drawerDate     = document.getElementById('drawer-date')!
+  const drawerProperty = document.getElementById('drawer-property')!
+  const drawerNotes    = document.getElementById('drawer-notes') as HTMLTextAreaElement
+  const drawerNotesHint= document.getElementById('drawer-notes-hint')!
+  const drawerViewBtn  = document.getElementById('drawer-view-btn') as HTMLAnchorElement
 
-    const { count } = await supabase
+  let drawerItemId: string | null = null
+
+  function openDrawer(item: any) {
+    const r = item.result_json || {}
+    const gi = isGI(item)
+    const accentColor  = gi ? 'var(--gi-sage)' : 'var(--ga-gold)'
+    const badgeClass   = gi ? 'card-badge-gi' : 'card-badge-ga'
+    const valueLabel   = gi ? 'Est. Replacement Cost' : 'Valuation'
+    const propertyName = gi ? 'GAUK Insurance' : 'GAUK Antiques'
+
+    drawerItemId = item.id
+    drawerAccent.style.background = accentColor
+    drawerBadge.className = `drawer-badge ${badgeClass}`
+    drawerBadge.textContent = propertyName
+    drawerTitle.textContent = r.subcategory || r.title || 'Unidentified Item'
+    drawerValLabel.textContent = valueLabel
+    drawerValAmt.textContent = formatValue(r, item.site_id)
+    drawerValAmt.style.color = accentColor
+    drawerValDate.textContent = `as of scan date · ${fmtDate(item.created_at)}`
+    drawerCat.textContent = r.category || 'Uncategorised'
+    drawerDate.textContent = fmtDate(item.created_at)
+    drawerProperty.textContent = propertyName
+    drawerNotes.value = item.notes || ''
+    drawerNotesHint.textContent = ''
+    drawerViewBtn.href = `/valuation/${item.id}`
+    drawerViewBtn.style.background = gi ? 'var(--gi-sage)' : 'var(--ga-gold)'
+    drawerViewBtn.style.color = '#fff'
+
+    drawerOverlay.classList.add('open')
+    drawerEl.classList.add('open')
+    document.body.style.overflow = 'hidden'
+  }
+
+  function closeDrawer() {
+    drawerOverlay.classList.remove('open')
+    drawerEl.classList.remove('open')
+    document.body.style.overflow = ''
+    drawerItemId = null
+  }
+
+  const drawerDeleteBtn = document.getElementById('drawer-delete-btn')!
+
+  drawerClose.addEventListener('click', closeDrawer)
+  drawerOverlay.addEventListener('click', closeDrawer)
+
+  drawerDeleteBtn.addEventListener('click', () => {
+    if (!drawerItemId) return
+    pendingDeleteId = drawerItemId
+    closeDrawer()
+    delOverlay.classList.remove('hidden')
+  })
+
+  // Notes — save on blur
+  drawerNotes.addEventListener('blur', async () => {
+    if (!drawerItemId || !userSession) return
+    const notes = drawerNotes.value.trim()
+    drawerNotesHint.textContent = 'Saving…'
+    const { error } = await supabase
       .from('identifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', session.user.id)
-    totalCount = count || 0
+      .update({ notes })
+      .eq('id', drawerItemId)
+      .eq('user_id', userSession.user.id)
+    if (error) {
+      drawerNotesHint.textContent = 'Failed to save — please try again.'
+    } else {
+      // Update local cache so notes persist without refetch
+      const idx = allItems.findIndex(i => i.id === drawerItemId)
+      if (idx > -1) allItems[idx].notes = notes
+      drawerNotesHint.textContent = 'Saved.'
+      setTimeout(() => { drawerNotesHint.textContent = '' }, 2000)
+    }
+  })
 
+  // ── BIND CARD ACTIONS ────────────────────────────────────────────────────────
+  function bindCardActions() {
+    elCards.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation()
+        pendingDeleteId = (btn as HTMLElement).dataset.delete!
+        delOverlay.classList.remove('hidden')
+      })
+    })
+    elCards.querySelectorAll('[data-quickview]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation()
+        const id = (btn as HTMLElement).dataset.quickview!
+        const item = allItems.find(i => i.id === id)
+        if (item) openDrawer(item)
+      })
+    })
+    elCards.querySelectorAll('.vault-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement
+        if (target.closest('.card-actions')) return
+        const id = (card as HTMLElement).dataset.id!
+        const item = allItems.find(i => i.id === id)
+        if (item) openDrawer(item)
+      })
+    })
+  }
+
+  // Fetch next batch — appends to allItems, re-applies filters
+  // If drainAll is true, keeps fetching until all items are loaded
+  async function fetchNextBatch(drainAll = false) {
+    if (fetching || allFetched || !userSession) return
+    fetching = true
+    try {
+      const { data: more, error } = await supabase
+        .from('identifications')
+        .select('id, site_id, image_key, result_json, created_at, value_range_low, value_range_high')
+        .eq('user_id', userSession.user.id)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + BATCH - 1)
+      if (error) { allFetched = true; observer?.disconnect(); return }
+      if (more && more.length > 0) {
+        allItems = [...allItems, ...more]
+        offset += more.length
+        if (more.length < BATCH) { allFetched = true; observer?.disconnect() }
+        applyFilters()
+      } else {
+        allFetched = true
+        observer?.disconnect()
+      }
+    } catch (e) {
+      // Network error — stop fetching silently, show what we have
+      allFetched = true
+      observer?.disconnect()
+    } finally {
+      fetching = false
+    }
+    // Chain next batch if draining and more remain
+    if (drainAll && !allFetched) fetchNextBatch(true)
+  }
+
+  // Fetch all remaining — used when search fires before all items are loaded
+  function fetchAllRemaining() {
+    fetchNextBatch(true)
+  }
+
+  // IntersectionObserver — triggers next batch when sentinel enters view
+  function initObserver() {
+    observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) fetchNextBatch()
+    }, { rootMargin: '200px' })
+    observer.observe(sentinel)
+  }
+
+  // View toggle
+  btnGrid.addEventListener('click', () => {
+    btnGrid.classList.add('active'); btnList.classList.remove('active')
+    elCards.classList.remove('vault-list'); elCards.classList.add('vault-grid')
+  })
+  btnList.addEventListener('click', () => {
+    btnList.classList.add('active'); btnGrid.classList.remove('active')
+    elCards.classList.remove('vault-grid'); elCards.classList.add('vault-list')
+  })
+
+  // Search — filter immediately against loaded items, fetch remaining in background
+  elSearch.addEventListener('input', () => {
+    searchQuery = elSearch.value.trim()
+    applyFilters()
+    if (searchQuery && !allFetched) fetchAllRemaining()
+  })
+
+  // Sort
+  elSort.addEventListener('change', () => { activeSort = elSort.value; applyFilters() })
+
+  // Property filter
+  document.querySelectorAll('.sb-prop-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sb-prop-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      activeProperty = (btn as HTMLElement).dataset.prop!
+      applyFilters()
+    })
+  })
+
+  // Delete modal
+  delCancel.addEventListener('click', () => { delOverlay.classList.add('hidden'); pendingDeleteId = null })
+  delConfirm.addEventListener('click', async () => {
+    if (!pendingDeleteId) return
+    delConfirm.textContent = 'Deleting…';
+    (delConfirm as HTMLButtonElement).disabled = true
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = '/auth'; return }
+    await supabase.from('identifications').delete().eq('id', pendingDeleteId).eq('user_id', session.user.id)
+    allItems = allItems.filter(i => i.id !== pendingDeleteId)
+    pendingDeleteId = null
+    delOverlay.classList.add('hidden')
+    delConfirm.textContent = 'Delete';
+    (delConfirm as HTMLButtonElement).disabled = false
+    applyFilters()
+  })
+
+  // Auth + initial load
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    elLoading.classList.add('hidden')
+    elAuthGate.classList.remove('hidden')
+  } else {
+    userSession = session
+
+    // Fetch DB counts for sidebar — parallel, lightweight
+    const [{ count: countAll }, { count: countGI }, { count: countGA }, { data: vaultValueData }] = await Promise.all([
+      supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id),
+      supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('site_id', GI_SITE_ID),
+      supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).neq('site_id', GI_SITE_ID),
+      supabase.from('identifications').select('value_range_low, value_range_high').eq('user_id', session.user.id),
+    ])
+    dbCounts = { all: countAll || 0, gi: countGI || 0, ga: countGA || 0 }
+    document.getElementById('prop-count-all')!.textContent       = String(dbCounts.all)
+    document.getElementById('prop-count-insurance')!.textContent = String(dbCounts.gi)
+    document.getElementById('prop-count-antiques')!.textContent  = String(dbCounts.ga)
+    // Static vault total — sum of all item midpoint values
+    if (vaultValueData && vaultValueData.length > 0) {
+      const vaultTotal = vaultValueData.reduce((s: number, i: any) => {
+        return s + ((i.value_range_low || 0) + (i.value_range_high || 0)) / 2
+      }, 0)
+      document.getElementById('sb-vault-total-val')!.textContent = fmt(vaultTotal)
+    }
+
+    // Initial fetch
     const { data, error } = await supabase
       .from('identifications')
-      .select('id, site_id, image_key, result_json, created_at')
+      .select('id, site_id, image_key, result_json, created_at, value_range_low, value_range_high')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
       .range(0, BATCH - 1)
@@ -295,46 +733,15 @@ import { R2_CDN, GI_SITE_ID } from '../lib/constants'
 
     if (error || !data || data.length === 0) {
       elEmpty.classList.remove('hidden')
+      allFetched = true
     } else {
       allItems = data
       offset = data.length
-      elCount.textContent = totalCount + ' identification' + (totalCount === 1 ? '' : 's')
-      renderGrid(allItems)
-      renderList(allItems)
-      elContent.classList.remove('hidden')
-      updateLoadMore()
-    }
-
-    const loadMoreBtn = document.getElementById('lib-load-more')
-    loadMoreBtn?.addEventListener('click', async () => {
-      loadMoreBtn.textContent = 'Loading...'
-      loadMoreBtn.setAttribute('disabled', 'true')
-      const { data: more } = await supabase
-        .from('identifications')
-        .select('id, site_id, image_key, result_json, created_at')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + BATCH - 1)
-      if (more && more.length > 0) {
-        allItems = [...allItems, ...more]
-        offset += more.length
-        renderGrid(allItems)
-        renderList(allItems)
-        updateLoadMore()
-      }
-    })
-
-    function updateLoadMore() {
-      const btn = document.getElementById('lib-load-more')
-      if (!btn) return
-      if (offset >= totalCount) {
-        btn.style.display = 'none'
-      } else {
-        btn.textContent = 'Load more'
-        btn.removeAttribute('disabled')
-        btn.style.display = 'block'
-      }
+      if (data.length < BATCH) { allFetched = true }
+      applyFilters()
+      if (!allFetched) initObserver()
     }
   }
 </script>
-</AppShell>
+
+</AppLayout>
