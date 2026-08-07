@@ -37,6 +37,9 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     .sb-prop-dot-gi { background: var(--gi-sage); }
     .sb-prop-dot-ga { background: var(--ga-gold); }
     .sb-prop-count { font-size: 12px; color: var(--text-mute); font-weight: 500; font-variant-numeric: tabular-nums; }
+    .sb-vault-total { padding: 8px 14px 12px; border-bottom: 1px solid var(--border); }
+    .sb-vault-total-label { display: block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 3px; }
+    .sb-vault-total-value { font-family: var(--font-display); font-size: 16px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
     /* ── MAIN ── */
     .app-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
@@ -203,6 +206,10 @@ import AppBottomNav from '../components/AppBottomNav.astro'
       <span class="sb-prop-label">All items</span>
       <span class="sb-prop-count" id="prop-count-all">—</span>
     </button>
+    <div class="sb-vault-total" id="sb-vault-total">
+      <span class="sb-vault-total-label">Est. vault value</span>
+      <span class="sb-vault-total-value" id="sb-vault-total-val">—</span>
+    </div>
     <button class="sb-prop-btn" id="prop-insurance" data-prop="insurance">
       <span class="sb-prop-label sb-prop-gi"><span class="sb-prop-dot sb-prop-dot-gi"></span>Insurance</span>
       <span class="sb-prop-count" id="prop-count-insurance">—</span>
@@ -700,15 +707,23 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     userSession = session
 
     // Fetch DB counts for sidebar — parallel, lightweight
-    const [{ count: countAll }, { count: countGI }, { count: countGA }] = await Promise.all([
+    const [{ count: countAll }, { count: countGI }, { count: countGA }, { data: vaultValueData }] = await Promise.all([
       supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id),
       supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('site_id', GI_SITE_ID),
       supabase.from('identifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).neq('site_id', GI_SITE_ID),
+      supabase.from('identifications').select('value_range_low, value_range_high').eq('user_id', session.user.id),
     ])
     dbCounts = { all: countAll || 0, gi: countGI || 0, ga: countGA || 0 }
     document.getElementById('prop-count-all')!.textContent       = String(dbCounts.all)
     document.getElementById('prop-count-insurance')!.textContent = String(dbCounts.gi)
     document.getElementById('prop-count-antiques')!.textContent  = String(dbCounts.ga)
+    // Static vault total — sum of all item midpoint values
+    if (vaultValueData && vaultValueData.length > 0) {
+      const vaultTotal = vaultValueData.reduce((s: number, i: any) => {
+        return s + ((i.value_range_low || 0) + (i.value_range_high || 0)) / 2
+      }, 0)
+      document.getElementById('sb-vault-total-val')!.textContent = fmt(vaultTotal)
+    }
 
     // Initial fetch
     const { data, error } = await supabase
