@@ -11,10 +11,6 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     .app-shell { display: flex; height: 100vh; overflow: hidden; }
 
     /* ── VAULT PROPERTY FILTERS — positioned inside sidebar ── */
-    .sb-vault-filters {
-      position: fixed; left: 0; top: 220px; width: 220px;
-      z-index: 51; background: var(--surface);
-    }
     @media (max-width: 768px) { .sb-vault-filters { display: none; } }
 
     /* sidebar styles → AppSidebar.astro */
@@ -197,28 +193,28 @@ import AppBottomNav from '../components/AppBottomNav.astro'
 <div class="app-shell">
 
   <!-- ── SIDEBAR ── -->
-  <AppSidebar activePage="vault" />
-
-  <!-- ── VAULT PROPERTY FILTERS (vault-specific sidebar extension) ── -->
-  <div class="sb-vault-filters" id="sb-vault-filters">
-    <div class="sb-section-label">Properties</div>
-    <button class="sb-prop-btn active" id="prop-all" data-prop="all">
-      <span class="sb-prop-label">All items</span>
-      <span class="sb-prop-count" id="prop-count-all">—</span>
-    </button>
-    <div class="sb-vault-total" id="sb-vault-total">
-      <span class="sb-vault-total-label">Est. vault value</span>
-      <span class="sb-vault-total-value" id="sb-vault-total-val">—</span>
+  <AppSidebar activePage="vault">
+    <!-- ── VAULT PROPERTY FILTERS — passed via slot ── -->
+    <div class="sb-vault-filters" id="sb-vault-filters">
+      <div class="sb-section-label">Properties</div>
+      <button class="sb-prop-btn active" id="prop-all" data-prop="all">
+        <span class="sb-prop-label">All items</span>
+        <span class="sb-prop-count" id="prop-count-all">—</span>
+      </button>
+      <div class="sb-vault-total" id="sb-vault-total">
+        <span class="sb-vault-total-label">Est. vault value</span>
+        <span class="sb-vault-total-value" id="sb-vault-total-val">—</span>
+      </div>
+      <button class="sb-prop-btn" id="prop-insurance" data-prop="insurance">
+        <span class="sb-prop-label sb-prop-gi"><span class="sb-prop-dot sb-prop-dot-gi"></span>Insurance</span>
+        <span class="sb-prop-count" id="prop-count-insurance">—</span>
+      </button>
+      <button class="sb-prop-btn" id="prop-antiques" data-prop="antiques">
+        <span class="sb-prop-label sb-prop-ga"><span class="sb-prop-dot sb-prop-dot-ga"></span>Antiques</span>
+        <span class="sb-prop-count" id="prop-count-antiques">—</span>
+      </button>
     </div>
-    <button class="sb-prop-btn" id="prop-insurance" data-prop="insurance">
-      <span class="sb-prop-label sb-prop-gi"><span class="sb-prop-dot sb-prop-dot-gi"></span>Insurance</span>
-      <span class="sb-prop-count" id="prop-count-insurance">—</span>
-    </button>
-    <button class="sb-prop-btn" id="prop-antiques" data-prop="antiques">
-      <span class="sb-prop-label sb-prop-ga"><span class="sb-prop-dot sb-prop-dot-ga"></span>Antiques</span>
-      <span class="sb-prop-count" id="prop-count-antiques">—</span>
-    </button>
-  </div>
+  </AppSidebar>
 
   <!-- ── MAIN ── -->
   <div class="app-main">
