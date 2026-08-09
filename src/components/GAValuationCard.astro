@@ -31,10 +31,10 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   /* ── CAP / SECTION ── */
   .cap { font-family: var(--font-serif); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); }
-  .section-head .cap { font-size: 11px; letter-spacing: 4px; font-weight: 600; color: var(--c-text-dim); }
-  .section { padding: 24px 20px; border-bottom: 1px solid var(--c-border); }
-  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .section-head-line { flex: 1; height: 1px; background: var(--c-border); }
+  .section { padding: 28px 20px; border-bottom: 1px solid var(--c-border); }
+  .section-head { margin-bottom: 20px; padding-left: 12px; border-left: 2px solid var(--c-gold); }
+  .section-head .cap { font-size: 10px; letter-spacing: 4px; font-weight: 600; color: var(--c-gold); }
+  .section-head-line { display: none; }
 
   /* ── HEADER ── */
   .ga-header {
