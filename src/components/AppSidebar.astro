@@ -82,14 +82,15 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
 
     sbSignout.style.display = 'block'
     sbSignin.style.display  = 'none'
-    sbCredits.classList.add('visible')
 
     const { data: creditsData } = await supabase
       .from('credits').select('balance')
       .eq('user_id', session.user.id)
       .eq('site_id', ANTIQUES_SITE_ID)
       .single()
-    sbCreditsVal.textContent = String(creditsData?.balance ?? 0)
+    const balance = creditsData?.balance ?? 0
+    sbCreditsVal.textContent = String(balance)
+    if (balance <= 5) { sbCredits.classList.add('visible') }
 
     sbSignout.addEventListener('click', async () => {
       await supabase.auth.signOut()
