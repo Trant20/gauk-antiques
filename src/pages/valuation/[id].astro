@@ -1,9 +1,9 @@
 ---
 import { ANTIQUES_SITE_ID, GI_SITE_ID, R2_CDN } from '../../lib/constants'
-import AppShell from '../../layouts/AppShell.astro'
+import ValuationLayout from '../../layouts/ValuationLayout.astro'
+import GAValuationCard from '../../components/GAValuationCard.astro'
 import GIValuationCard from '../../components/GIValuationCard.astro'
 import { supabase } from '../../lib/supabase'
-import { formatValueRange, formatSingleValue } from '../../lib/currency'
 
 const { id } = Astro.params
 
@@ -16,9 +16,6 @@ const { data: item } = await supabase
 if (!item) return Astro.redirect('/')
 
 const isGIItem = item.site_id === GI_SITE_ID
-if (isGIItem) {
-  // GI item — render GI card
-}
 
 const { data: enrichCreditSetting } = await supabase
   .from('site_settings')
@@ -29,800 +26,131 @@ const { data: enrichCreditSetting } = await supabase
 const creditCostEnrich = Number(enrichCreditSetting?.value ?? 5)
 
 const r = item.result_json
-const enrichment = item.enrichment_json || null
-const imageUrl = `${R2_CDN}/${item.image_key}`
-const secondaryImageUrl = item.secondary_image_key ? `${R2_CDN}/${item.secondary_image_key}` : null
-const conditionScore = enrichment?.condition_score || (r.condition === 'Mint' ? 98 : r.condition === 'Excellent' ? 88 : r.condition === 'Good' ? 72 : r.condition === 'Fair' ? 50 : 30)
-const desirabilityScore = enrichment?.desirability_score || 70
-const rarityScore = r.rarity_score || 65
-const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium' ? 72 : 45
-const circumference = 2 * Math.PI * 34
-const conditionOffset = circumference - (circumference * conditionScore / 100)
-const desirabilityOffset = circumference - (circumference * desirabilityScore / 100)
-const rarityOffset = circumference - (circumference * rarityScore / 100)
-const confidenceOffset = circumference - (circumference * confidenceScore / 100)
-const confCircumference = 2 * Math.PI * 20
-const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
-const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+const title = isGIItem
+  ? `${r.title || 'Item'} — GAUK Insurance`
+  : `${r.subcategory} — GAUK Antiques Valuation`
 ---
-<AppShell title={isGIItem ? `${r.title || 'Item'} — GAUK Insurance` : `${r.subcategory} — GAUK Antiques Valuation`}>
-<style>
-  body { background: #EFE7D9; color: #1C1810; }
-  .card-wrap { width: 100%; max-width: 100%; padding-bottom: 100px; background: #EFE7D9; }
-  .cap { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
-  .section-head .cap { font-size: 11px; letter-spacing: 4px; font-weight: 600; color: #5C5040; }
-  .section { padding: 24px 20px; border-bottom: 1px solid #C4B49E; }
-  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .section-head-line { flex: 1; height: 1px; background: #C4B49E; }
-
-  /* HEADER */
-  .card-header {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px;
-    background: rgba(239,231,217,.96); backdrop-filter: blur(16px);
-    border-bottom: 1px solid #C4B49E;
-  }
-  @media (max-width: 767px) { .card-header { padding-left: 56px; } }
-  .card-logo { font-family: 'Prata', Georgia, serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #1C1810; }
-  .card-logo span { color: #7A5C20; }
-  .card-date { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
-  .hidden { display: none !important; }
-  .card-breadcrumb { display: flex; align-items: center; gap: 6px; }
-  .bc-link { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #7A5C20; text-decoration: none; }
-  .bc-link:hover { color: #1C1810; }
-  .bc-sep { font-family: 'Prata', Georgia, serif; font-size: 10px; color: #C4B49E; }
-  .bc-cur { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 1px; color: #8A7A66; text-transform: uppercase; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  @media (max-width: 400px) { .bc-hide-sm { display: none; } }
-  .delete-btn { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; background: none; border: 1px solid #C4B49E; padding: 6px 12px; cursor: pointer; transition: border-color .2s, color .2s; }
-  .delete-btn:hover { border-color: #C46028; color: #C46028; }
-  .del-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(28,24,16,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .del-modal { background: #EFE7D9; border: 1px solid #C4B49E; padding: 32px 24px; max-width: 320px; width: 100%; text-align: center; }
-  .del-modal-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; font-style: italic; color: #1C1810; margin-bottom: 10px; }
-  .del-modal-sub { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; line-height: 1.7; margin-bottom: 24px; }
-  .del-modal-btns { display: flex; gap: 8px; }
-  .del-cancel { flex: 1; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: none; border: 1px solid #C4B49E; padding: 12px; cursor: pointer; color: #5C5040; }
-  .del-confirm { flex: 1; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #1C1810; border: 1px solid #1C1810; padding: 12px; cursor: pointer; color: #EFE7D9; }
-
-  /* HERO IMAGE */
-  .card-image-wrap { position: relative; }
-  .card-image-single { width: 100%; max-height: 420px; object-fit: contain; background: #E6DCCB; display: block; }
-  .card-image-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; }
-  .card-image-dual img { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: #E6DCCB; display: block; }
-  .card-image-dual-label { font-family: 'Prata', Georgia, serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; text-align: center; padding: 5px 0; background: #E6DCCB; }
-  @media (max-width: 480px) {
-    .card-image-dual { grid-template-columns: 1fr; }
-    .card-image-dual img { aspect-ratio: 4/3; }
-  }
-  .conf-arc { position: absolute; bottom: 14px; right: 14px; }
-  .conf-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Prata', Georgia, serif; font-size: 10px; color: #7A5C20; }
-
-  /* TITLE */
-  .card-badges { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0; }
-  .card-category { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; }
-  .card-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(22px, 5vw, 30px); font-weight: 400; line-height: 1.2; color: #1C1810; padding: 10px 20px 6px; font-style: italic; }
-  .card-subtitle { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; padding: 0 20px 12px; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 16px; }
-  .tag { display: inline-block; padding: 4px 10px; border: 1px solid #C4B49E; font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #5C5040; }
-
-  /* VALUE */
-  .value-section { background: #E6DCCB; border-top: 1px solid #C4B49E; border-bottom: 1px solid #C4B49E; padding: 28px 20px; text-align: center; }
-  .value-number { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(32px, 7vw, 48px); font-weight: 400; line-height: 1; color: #7A5C20; letter-spacing: -1px; margin-bottom: 6px; }
-  .value-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; margin-bottom: 20px; }
-  .value-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #C4B49E; margin-top: 16px; }
-  .value-strip-cell { background: #E6DCCB; padding: 14px 8px; }
-  .value-strip-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-bottom: 6px; }
-  .value-strip-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; color: #1C1810; }
-
-  /* ID TABLE */
-  .id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); }
-  .id-row:last-child { border-bottom: none; }
-  .id-key { width: 120px; flex-shrink: 0; font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; padding-top: 2px; }
-  .id-val { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; line-height: 1.5; flex: 1; }
-
-  /* GAUGES */
-  .gauges { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-  @media (max-width: 480px) { .gauges { grid-template-columns: 1fr 1fr; gap: 16px; } }
-  .gauge { text-align: center; }
-  .gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
-  .gauge-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #8A7A66; }
-  .gauge-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 18px; color: #1C1810; margin-bottom: 4px; }
-
-  /* CONDITION CHECKLIST */
-  .condition-grade {
-    display: flex; justify-content: space-between; align-items: baseline;
-    padding: 14px 0; border-bottom: 1px solid #C4B49E; margin-bottom: 16px;
-  }
-  .condition-grade-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; }
-  .condition-grade-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 20px; color: #1C1810; font-style: italic; }
-  .check-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-  .check-item { display: flex; gap: 10px; align-items: flex-start; }
-  .check-icon { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.5; flex-shrink: 0; color: #2A7060; width: 16px; }
-  .check-icon.warn { color: #C46028; }
-  .check-text { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.5; }
-
-  /* EXPERT NOTES */
-  .expert-para { font-family: 'Prata', Georgia, serif; font-size: 16px; line-height: 1.9; color: #5C5040; margin-bottom: 14px; }
-  .expert-para:last-child { margin-bottom: 0; }
-
-  /* TIMELINE */
-  .timeline { position: relative; padding-left: 22px; }
-  .timeline-line { position: absolute; left: 5px; top: 10px; bottom: 10px; width: 1px; background: #C4B49E; }
-  .tl-item { position: relative; padding: 10px 0 10px 14px; border-bottom: 1px solid rgba(196,180,158,.2); }
-  .tl-item:last-child { border-bottom: none; }
-  .tl-dot { position: absolute; left: -17px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: #DDD0BF; border: 1.5px solid #C4B49E; z-index: 1; }
-  .tl-dot.highlight { background: #7A5C20; border-color: #7A5C20; }
-  .tl-inner { display: flex; gap: 10px; align-items: baseline; }
-  .tl-year { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #8A7A66; flex-shrink: 0; width: 48px; }
-  .tl-year.highlight { color: #7A5C20; font-style: italic; }
-  .tl-label { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #8A7A66; margin-bottom: 2px; }
-  .tl-label.highlight { color: #7A5C20; }
-  .tl-note { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.5; }
-
-  /* OPTIONS */
-  .options { display: flex; flex-direction: column; gap: 1px; background: #C4B49E; }
-  .option { padding: 16px; display: flex; align-items: flex-start; gap: 12px; background: #EAE1D2; }
-  .option.rec { background: #DDD0BF; }
-  .option-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: #C4B49E; }
-  .option-dot.rec { background: #7A5C20; }
-  .option-action { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #5C5040; margin-bottom: 4px; }
-  .option-action.rec { color: #1C1810; font-style: italic; }
-  .option-rec-badge { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 2px; color: #7A5C20; margin-left: 10px; }
-  .option-detail { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; line-height: 1.5; }
-
-  /* COMPARABLES */
-  .comp-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(196,180,158,.3); gap: 12px; }
-  .comp-row:last-child { border-bottom: none; }
-  .comp-title { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #1C1810; margin-bottom: 2px; }
-  .comp-sub { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #8A7A66; }
-  .comp-val { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 16px; color: #7A5C20; flex-shrink: 0; }
-
-  /* FOOTER */
-  .card-footer { padding: 20px; border-top: 1px solid #C4B49E; display: flex; justify-content: space-between; align-items: center; }
-  .footer-brand { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 13px; font-style: italic; color: #7A5C20; margin-bottom: 3px; }
-  .ai-disclaimer { font-family: 'Prata', Georgia, serif; font-size: 9px; letter-spacing: 1px; color: #8A7A66; line-height: 1.6; max-width: 200px; }
-
-  /* STICKY ACTIONS */
-  .sticky-actions {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-    max-width: 100%; margin: 0 auto;
-    background: rgba(239,231,217,.96); backdrop-filter: blur(20px);
-    border-top: 1px solid #C4B49E;
-    padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
-    display: flex; gap: 8px;
-  }
-  .action-btn {
-    flex: 1; padding: 13px;
-    background: transparent; border: 1px solid #C4B49E;
-    font-family: 'Prata', Georgia, serif; font-size: 10px;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: #5C5040; cursor: pointer; text-decoration: none;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: border-color .2s;
-  }
-  .action-btn:hover { border-color: #7A5C20; color: #1C1810; }
-  .action-btn.primary { background: #1C1810; border-color: #1C1810; color: #EFE7D9; }
-
-  /* LOADING STATE */
-  .enrich-loading { padding: 32px 20px 40px; }
-  .enrich-loading-stage { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #7A5C20; text-align: center; margin-bottom: 20px; min-height: 16px; }
-  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
-  .enrich-loading-stage { animation: pulse 2s ease-in-out infinite; }
-  .enrich-progress-wrap { height: 2px; background: #DDD0BF; margin-bottom: 20px; overflow: hidden; }
-  .enrich-progress-bar { height: 100%; background: linear-gradient(90deg, #C8A060, #7A5C20); width: 0%; transition: width .6s ease; }
-  .enrich-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-  .enrich-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #E6DCCB; opacity: .4; transition: opacity .4s; }
-  .enrich-step.active { opacity: 1; }
-  .enrich-step.done { opacity: .7; }
-  .enrich-step-dot { width: 6px; height: 6px; border-radius: 50%; background: #C4B49E; flex-shrink: 0; transition: background .4s; }
-  .enrich-step.active .enrich-step-dot { background: #7A5C20; }
-  .enrich-step.done .enrich-step-dot { background: #2A7060; }
-  .enrich-step-text { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #5C5040; }
-  .enrich-disclaimer { font-family: 'Prata', Georgia, serif; font-size: 11px; color: #8A7A66; line-height: 1.8; text-align: center; border-top: 1px solid #C4B49E; padding-top: 16px; }
-</style>
-
-{isGIItem && <GIValuationCard item={item} />}
-
-{!isGIItem && <div class="card-wrap">
-  <header class="card-header">
-    <div class="card-logo">GAUK <span>Antiques</span></div>
-    <nav class="card-breadcrumb">
-      <a href="/library" class="bc-link">Library</a>
-      <span class="bc-sep">›</span>
-      <span class="bc-cur">{r.category}</span>
-      <span class="bc-sep bc-hide-sm">›</span>
-      <span class="bc-cur bc-hide-sm">{r.subcategory}</span>
-    </nav>
-  </header>
-
-  <!-- IMAGE + CONFIDENCE ARC -->
-  <div class="card-image-wrap">
-    {secondaryImageUrl ? (
-      <div class="card-image-dual">
-        <div>
-          <img src={imageUrl} alt={r.subcategory} />
-          <div class="card-image-dual-label">Front</div>
-        </div>
-        <div>
-          <img src={secondaryImageUrl} alt={`${r.subcategory} — reverse`} />
-          <div class="card-image-dual-label">Back · Base · Mark</div>
-        </div>
-      </div>
-    ) : (
-      <img class="card-image-single" src={imageUrl} alt={r.subcategory} />
-    )}
-    <div class="conf-arc" style="position:absolute;bottom:14px;right:14px;z-index:10;">
-      <svg width="50" height="50" viewBox="0 0 50 50">
-        <circle cx="25" cy="25" r="20" fill="rgba(239,231,217,.92)" stroke="#DDD0BF" stroke-width="2"/>
-        <circle cx="25" cy="25" r="20" fill="none" stroke="#7A5C20" stroke-width="2.5"
-          stroke-dasharray={confCircumference} stroke-dashoffset={confOffset} stroke-linecap="round"/>
-      </svg>
-      <div class="conf-label">{confidenceScore}%</div>
-    </div>
-  </div>
-
-  <!-- TITLE -->
-  <div class="card-badges">
-    <div class="card-category">{r.category}</div>
-  </div>
-  <div class="card-title">{r.subcategory}</div>
-  {(r.maker || r.manufacturer) && (
-    <div class="card-subtitle">{[r.maker, r.manufacturer].filter(Boolean).join(' · ')}{r.circa ? ` · ${r.circa}` : ''}</div>
-  )}
-  {r.tags && r.tags.length > 0 && (
-    <div class="tags">
-      {r.tags.map((tag: string) => <span class="tag">{tag}</span>)}
-    </div>
-  )}
-
-  <!-- VALUE -->
-  <div class="value-section">
-    <div class="cap" style="margin-bottom:12px">Estimated Value</div>
-    <div class="value-number">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
-    <div class="value-sub">AI appraisal estimate · not a formal valuation</div>
-    <div class="value-strip">
-      <div class="value-strip-cell">
-        <div class="value-strip-label">Low estimate</div>
-        <div class="value-strip-val">{formatSingleValue(r.value_range_low || 0)}</div>
-      </div>
-      <div class="value-strip-cell">
-        <div class="value-strip-label">High estimate</div>
-        <div class="value-strip-val">{formatSingleValue(r.value_range_high || 0)}</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- IDENTIFICATION -->
-  <div class="section">
-    <div class="section-head">
-      <div class="cap">Identification</div>
-      <div class="section-head-line"></div>
-    </div>
-    {r.maker && <div class="id-row"><div class="id-key">Maker</div><div class="id-val">{r.maker}</div></div>}
-    {r.manufacturer && r.manufacturer !== r.maker && <div class="id-row"><div class="id-key">Manufacturer</div><div class="id-val">{r.manufacturer}</div></div>}
-    {r.period && <div class="id-row"><div class="id-key">Period</div><div class="id-val">{r.period}{r.circa ? ` · ${r.circa}` : ''}</div></div>}
-    {r.country_of_origin && <div class="id-row"><div class="id-key">Origin</div><div class="id-val">{r.country_of_origin}</div></div>}
-    <div class="id-row"><div class="id-key">Condition</div><div class="id-val">{r.condition}</div></div>
-    {r.category_specific && Object.entries(r.category_specific).filter(([k]) => !k.includes('—')).map(([key, val]) => (
-      val && <div class="id-row"><div class="id-key">{key.replace(/_/g, ' ')}</div><div class="id-val">{String(val)}</div></div>
-    ))}
-  </div>
-
-  <!-- CONDITION -->
-  <div class="section">
-    <div class="section-head">
-      <div class="cap">Condition Report</div>
-      <div class="section-head-line"></div>
-    </div>
-    <div class="gauges">
-      <div class="gauge">
-        <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#7A5C20" stroke-width="4"
-            stroke-dasharray={circumference} stroke-dashoffset={conditionOffset} stroke-linecap="round"/>
-          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
-            transform="rotate(90 41 41)">{conditionScore}</text>
-        </svg>
-        <div class="gauge-label">Overall</div>
-      </div>
-      <div class="gauge">
-        <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#2A7060" stroke-width="4"
-            stroke-dasharray={circumference} stroke-dashoffset={desirabilityOffset} stroke-linecap="round"/>
-          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
-            transform="rotate(90 41 41)">{desirabilityScore}</text>
-        </svg>
-        <div class="gauge-label">Desirability</div>
-      </div>
-      <div class="gauge">
-        <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#C46028" stroke-width="4"
-            stroke-dasharray={circumference} stroke-dashoffset={rarityOffset} stroke-linecap="round"/>
-          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
-            transform="rotate(90 41 41)">{rarityScore}</text>
-        </svg>
-        <div class="gauge-label">Rarity</div>
-      </div>
-      <div class="gauge">
-        <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#DDD0BF" stroke-width="4"/>
-          <circle cx="41" cy="41" r="34" fill="none" stroke="#2A4A7C" stroke-width="4"
-            stroke-dasharray={circumference} stroke-dashoffset={confidenceOffset} stroke-linecap="round"/>
-          <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="#1C1810"
-            transform="rotate(90 41 41)">{confidenceScore}</text>
-        </svg>
-        <div class="gauge-label">Confidence</div>
-      </div>
-    </div>
-    <div class="condition-grade">
-      <span class="condition-grade-label">Grade</span>
-      <div style="display:flex;align-items:center;gap:16px;flex:1;margin-left:20px;">
-        <div style="flex:1;height:3px;background:#DDD0BF;border-radius:2px;overflow:hidden;">
-          <div style={`width:${conditionScore}%;height:100%;background:linear-gradient(90deg,#C8A060,#7A5C20);border-radius:2px;`}></div>
-        </div>
-        <span class="condition-grade-val">{r.condition === 'Mint' ? 'Mint — A+' : r.condition === 'Excellent' ? 'Excellent — A' : r.condition === 'Good' ? 'Very Good — B+' : r.condition === 'Fair' ? 'Fair — C' : 'Poor — D'}</span>
-      </div>
-    </div>
-    {r.condition_notes && (
-      <div class="check-list">
-        {r.condition_notes.split(/[.—–]/).filter((s: string) => s.trim().length > 8).map((note: string) => (
-          <div class="check-item">
-            <span class={`check-icon${note.toLowerCase().includes('chip') || note.toLowerCase().includes('crack') || note.toLowerCase().includes('scratch') || note.toLowerCase().includes('wear') || note.toLowerCase().includes('repair') || note.toLowerCase().includes('minor') ? ' warn' : ''}`}>
-              {note.toLowerCase().includes('chip') || note.toLowerCase().includes('crack') || note.toLowerCase().includes('scratch') || note.toLowerCase().includes('wear') || note.toLowerCase().includes('repair') || note.toLowerCase().includes('minor') ? '~' : '✓'}
-            </span>
-            <span class="check-text">{note.trim()}</span>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-
-  <!-- ENRICHMENT SECTIONS -->
-  <div id="enrichment-container">
-    {enrichment ? (
-      <>
-        {enrichment.price_history && enrichment.price_history.length > 0 && (() => {
-          const prices = enrichment.price_history
-          const values = prices.map((p: any) => p.value)
-          const minVal = Math.min(...values)
-          const maxVal = Math.max(...values)
-          const chartW = 480
-          const chartH = 160
-          const padL = 48
-          const padR = 16
-          const padT = 12
-          const padB = 32
-          const plotW = chartW - padL - padR
-          const plotH = chartH - padT - padB
-          const toX = (i: number) => padL + (i / (prices.length - 1)) * plotW
-          const toY = (v: number) => padT + plotH - ((v - minVal) / (maxVal - minVal || 1)) * plotH
-          const points = prices.map((p: any, i: number) => `${toX(i)},${toY(p.value)}`).join(' ')
-          const areaPoints = `${padL},${padT + plotH} ${points} ${toX(prices.length-1)},${padT + plotH}`
-          const peakY = enrichment.price_peak ? toY(enrichment.price_peak.value) : padT
-          return (
-            <div class="section">
-              <div class="section-head">
-                <div class="cap">Market Value 2010–2024</div>
-                <div class="section-head-line"></div>
-              </div>
-              {enrichment.price_context && (
-                <p style="font-family:'Prata',Georgia,serif;font-size:14px;color:#5C5040;margin-bottom:16px;line-height:1.7">{enrichment.price_context}</p>
-              )}
-              <svg width="100%" viewBox={`0 0 ${chartW} ${chartH}`} style="display:block;overflow:visible">
-                <defs>
-                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#A07830" stop-opacity="0.18"/>
-                    <stop offset="100%" stop-color="#A07830" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                {enrichment.price_peak && (
-                  <line x1={padL} y1={peakY} x2={chartW - padR} y2={peakY}
-                    stroke="#A07830" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
-                )}
-                <polygon points={areaPoints} fill="url(#areaGrad)"/>
-                <polyline points={points} fill="none" stroke="#7A5C20" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-                {prices.map((p: any, i: number) => (
-                  <circle cx={toX(i)} cy={toY(p.value)} r="3" fill="#7A5C20"/>
-                ))}
-                {[minVal, Math.round((minVal+maxVal)/2), maxVal].map((v, i) => (
-                  <text x={padL - 6} y={toY(v) + 4} text-anchor="end"
-                    font-family="Prata, Georgia, serif" font-size="9" fill="#8A7A66">
-                    £{v >= 1000 ? `${Math.round(v/1000)}k` : v}
-                  </text>
-                ))}
-                {prices.filter((_: any, i: number) => i % 2 === 0).map((p: any, i: number) => {
-                  const origIdx = i * 2
-                  return (
-                    <text x={toX(origIdx)} y={chartH - 4} text-anchor="middle"
-                      font-family="Prata, Georgia, serif" font-size="9" fill="#8A7A66">
-                      {p.year}
-                    </text>
-                  )
-                })}
-              </svg>
-              {enrichment.price_peak && (
-                <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-                  <div style="width:16px;border-top:1px dashed #A07830"></div>
-                  <span style="font-family:'Prata',Georgia,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8A7A66">
-                    Peak £{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})
-                  </span>
-                </div>
-              )}
-              <p style="font-family:'Prata',Georgia,serif;font-size:10px;color:#8A7A66;margin-top:12px;font-style:italic">AI-estimated market trend · not verified auction data</p>
-            </div>
-          )
-        })()}
-
-        {enrichment.desirability_index && enrichment.desirability_index.length > 0 && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">Desirability Index</div>
-              <div class="section-head-line"></div>
-            </div>
-            {enrichment.desirability_context && (
-              <p style="font-family:'Prata',Georgia,serif;font-size:14px;color:#5C5040;margin-bottom:20px;line-height:1.7">{enrichment.desirability_context}</p>
-            )}
-            <div style="display:flex;flex-direction:column;gap:14px;">
-              {enrichment.desirability_index.sort((a: any, b: any) => b.score - a.score).map((item: any) => (
-                <div>
-                  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-                    <span style={`font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${item.this_piece ? '#7A5C20' : '#8A7A66'};`}>
-                      {item.name}{item.this_piece ? ' ← This piece' : ''}
-                    </span>
-                    <span style={`font-family:'Playfair Display',Didot,Georgia,serif;font-size:14px;color:${item.this_piece ? '#7A5C20' : '#8A7A66'};`}>{item.score}</span>
-                  </div>
-                  <div style="height:3px;background:#DDD0BF;border-radius:2px;overflow:hidden;">
-                    <div style={`width:${item.score}%;height:100%;background:${item.this_piece ? 'linear-gradient(90deg,#C8A060,#7A5C20)' : '#C4B49E'};border-radius:2px;`}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {(enrichment.maker_detail || enrichment.manufacturer_detail) && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">{r.maker || 'Maker'}</div>
-              <div class="section-head-line"></div>
-            </div>
-            {enrichment.maker_detail?.bio && <p class="expert-para">{enrichment.maker_detail.bio}</p>}
-            {enrichment.maker_detail?.notable_works && <p class="expert-para">{enrichment.maker_detail.notable_works}</p>}
-            {enrichment.manufacturer_detail?.history && (
-              <>
-                <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin:16px 0 8px;">Manufacturer</div>
-                <p class="expert-para">{enrichment.manufacturer_detail.history}</p>
-                {enrichment.manufacturer_detail.relationship_to_maker && <p class="expert-para">{enrichment.manufacturer_detail.relationship_to_maker}</p>}
-              </>
-            )}
-          </div>
-        )}
-
-        {enrichment.maker_mark_explanation && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">Maker Mark</div>
-              <div class="section-head-line"></div>
-            </div>
-            {r.category_specific?.maker_mark && (
-              <div style="background:#E6DCCB;padding:12px 16px;margin-bottom:16px;border-left:3px solid #7A5C20;">
-                <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8A7A66;margin-bottom:6px;">Visible Mark</div>
-                <div style="font-family:'Prata',Georgia,serif;font-size:16px;color:#1C1810;">{r.category_specific.maker_mark}</div>
-              </div>
-            )}
-            <p class="expert-para">{enrichment.maker_mark_explanation}</p>
-          </div>
-        )}
-
-        {(enrichment.pattern_detail || enrichment.glaze_detail || enrichment.firing_detail) && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">Technical Notes</div>
-              <div class="section-head-line"></div>
-            </div>
-            {r.category_specific?.pattern_name && (
-              <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin-bottom:8px;">Pattern — {r.category_specific.pattern_name}</div>
-            )}
-            {enrichment.pattern_detail && <p class="expert-para">{enrichment.pattern_detail}</p>}
-            {r.category_specific?.glaze_type && (
-              <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin:16px 0 8px;">Glaze — {r.category_specific.glaze_type}</div>
-            )}
-            {enrichment.glaze_detail && <p class="expert-para">{enrichment.glaze_detail}</p>}
-            {r.category_specific?.firing_type && (
-              <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8A7A66;margin:16px 0 8px;">Firing — {r.category_specific.firing_type}</div>
-            )}
-            {enrichment.firing_detail && <p class="expert-para">{enrichment.firing_detail}</p>}
-          </div>
-        )}
-
-        {enrichment.expert_notes && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">Provenance & Expert Notes</div>
-              <div class="section-head-line"></div>
-            </div>
-            {enrichment.expert_notes.map((para: string) => (
-              <p class="expert-para">{para}</p>
-            ))}
-            {enrichment.market_insight && <p class="expert-para" style="margin-top:14px;padding-top:14px;border-top:1px solid #C4B49E">{enrichment.market_insight}</p>}
-          </div>
-        )}
-
-        {enrichment.maker_timeline && enrichment.maker_timeline.length > 0 && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">{r.maker ? `${r.maker} · Timeline` : 'Timeline'}</div>
-              <div class="section-head-line"></div>
-            </div>
-            <div class="timeline">
-              <div class="timeline-line"></div>
-              {enrichment.maker_timeline.map((entry: any) => (
-                <div class="tl-item">
-                  <div class={`tl-dot${entry.highlight ? ' highlight' : ''}`}></div>
-                  <div class="tl-inner">
-                    <div class={`tl-year${entry.highlight ? ' highlight' : ''}`}>{entry.year}</div>
-                    <div>
-                      <div class={`tl-label${entry.highlight ? ' highlight' : ''}`}>{entry.highlight ? 'This piece' : ''}</div>
-                      <div class="tl-note">{entry.event}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {enrichment.comparable_sales && enrichment.comparable_sales.length > 0 && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">Comparable Sales</div>
-              <div class="section-head-line"></div>
-            </div>
-            {enrichment.comparable_sales.map((comp: any) => (
-              <div class="comp-row">
-                <div>
-                  <div class="comp-title">{comp.title}</div>
-                  <div class="comp-sub">{comp.detail}</div>
-                </div>
-                <div class="comp-val">{comp.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {enrichment.your_options && enrichment.your_options.length > 0 && (
-          <div class="section">
-            <div class="section-head">
-              <div class="cap">Your Options</div>
-              <div class="section-head-line"></div>
-            </div>
-            <div class="options">
-              {enrichment.your_options.map((opt: any) => (
-                <div class={`option${opt.recommended ? ' rec' : ''}`}>
-                  <div class={`option-dot${opt.recommended ? ' rec' : ''}`}></div>
-                  <div>
-                    <div class={`option-action${opt.recommended ? ' rec' : ''}`}>
-                      {opt.action}
-                      {opt.recommended && <span class="option-rec-badge">RECOMMENDED</span>}
-                    </div>
-                    <div class="option-detail">{opt.detail}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </>
-    ) : (
-      <div id="enrich-cta" data-item-id={item.id} data-has-enrichment={enrichment ? "true" : "false"} data-result-json={JSON.stringify(r)} style="padding:40px 20px;text-align:center;border-top:1px solid #C4B49E;">
-        <div style="font-family:'Prata',Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#7A5C20;margin-bottom:12px;">Full Valuation Report</div>
-        <div style="font-family:'Playfair Display',Didot,Georgia,serif;font-size:22px;font-style:italic;color:#1C1810;margin-bottom:10px;">Unlock the complete report</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:14px;color:#8A7A66;line-height:1.8;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;">Expert notes, maker biography, market history, comparable sales, desirability index and your options.</div>
-        <div style="font-family:'Prata',Georgia,serif;font-size:12px;color:#8A7A66;margin-bottom:20px;letter-spacing:1px;">Cost: {creditCostEnrich} credits</div>
-        <div id="enrich-gate-wrap" data-credit-cost={creditCostEnrich}>
-          <button id="enrich-btn" style="display:block;width:100%;max-width:320px;margin:0 auto 10px;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;cursor:pointer;transition:opacity .2s;">Generate Full Report — {creditCostEnrich} Credits</button>
-          <a href="/account" id="enrich-topup" style="display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">Top Up Credits to Unlock</a>
-          <a href="/auth" id="enrich-register" style="display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:#B8860B;border:none;font-family:'Prata',Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">Register Free to Unlock</a>
-        </div>
-      </div>
-      <div class="enrich-loading" id="enrich-loading" style="display:none;">
-        <div class="enrich-loading-stage" id="enrich-stage">Consulting auction records</div>
-        <div class="enrich-progress-wrap">
-          <div class="enrich-progress-bar" id="enrich-progress"></div>
-        </div>
-        <div class="enrich-steps">
-          <div class="enrich-step active" id="step-0"><div class="enrich-step-dot"></div><div class="enrich-step-text">Researching maker &amp; provenance</div></div>
-          <div class="enrich-step" id="step-1"><div class="enrich-step-dot"></div><div class="enrich-step-text">Analysing auction &amp; comparable sales</div></div>
-          <div class="enrich-step" id="step-2"><div class="enrich-step-dot"></div><div class="enrich-step-text">Building market value history</div></div>
-          <div class="enrich-step" id="step-3"><div class="enrich-step-dot"></div><div class="enrich-step-text">Compiling expert notes &amp; options</div></div>
-          <div class="enrich-step" id="step-4"><div class="enrich-step-dot"></div><div class="enrich-step-text">Preparing your full report</div></div>
-        </div>
-        <div class="enrich-disclaimer">Full reports draw on multiple data sources &mdash;<br>this typically takes 10&ndash;15 seconds or more when busy.</div>
-      </div>
-    )}
-  </div>
-
-  <!-- FOOTER -->
-  <div class="card-footer">
-    <div>
-      <div class="footer-brand">GAUK Antiques</div>
-      <div class="ai-disclaimer">AI appraisal · estimates only · not a formal valuation · {date}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;">
-      <div style="text-align:right">
-        <div class="cap" style="margin-bottom:4px">Reference</div>
-        <div class="cap" style="color:#5C5040">{item.id.slice(0,8).toUpperCase()}</div>
-      </div>
-      <button id="delete-btn" class="delete-btn">Delete this report</button>
-    </div>
-  </div>
-
-  <div class="del-overlay hidden" id="del-overlay">
-    <div class="del-modal">
-      <div class="del-modal-title">Delete this report?</div>
-      <div class="del-modal-sub">This will permanently remove the identification and valuation from your library.</div>
-      <div class="del-modal-btns">
-        <button class="del-cancel" id="del-cancel">Cancel</button>
-        <button class="del-confirm" id="del-confirm">Delete</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="sticky-actions">
-  <button class="action-btn" onclick="window.print()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <polyline points="6 9 6 2 18 2 18 9"/>
-      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-      <rect x="6" y="14" width="12" height="8"/>
-    </svg>
-    Print
-  </button>
-  <button class="action-btn" id="share-btn">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-    </svg>
-    Share
-  </button>
-  <a href="/identify" class="action-btn primary">New Identification</a>
-</div>}
-
-
-<script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!enrichment, itemOwnerId: item.user_id, ANTIQUES_SITE_ID }}>
-  window.__val = { itemId, resultJson, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID }
-</script>
-
-<script>
-  import { supabase } from '../../lib/supabase-browser'
-  const { itemId, resultJson: r, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID } = window.__val
-
-  
-  // Single auth call — used throughout
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { window.location.href = '/auth' }
-
-  // Ownership check — redirect if this record belongs to someone else
-  if (itemOwnerId && session && session.user.id !== itemOwnerId) {
-    window.location.href = '/library'
+<ValuationLayout title={title}>
+  {isGIItem
+    ? <GIValuationCard item={item} />
+    : <GAValuationCard item={item} creditCostEnrich={creditCostEnrich} />
   }
 
-  // Share button
-  document.getElementById('share-btn')?.addEventListener('click', () => {
-    if (navigator.share) {
-      navigator.share({ title: 'GAUK Antiques Valuation', url: window.location.href })
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-      const btn = document.getElementById('share-btn')
-      if (btn) btn.textContent = 'Copied'
+  <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!item.enrichment_json, itemOwnerId: item.user_id, ANTIQUES_SITE_ID }}>
+    window.__val = { itemId, resultJson, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID }
+  </script>
+
+  <script>
+    import { supabase } from '../../lib/supabase-browser'
+    const { itemId, resultJson: r, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID } = window.__val
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = '/auth' }
+
+    if (itemOwnerId && session && session.user.id !== itemOwnerId) {
+      window.location.href = '/library'
     }
-  })
 
-  // Delete modal
-  document.getElementById('delete-btn')?.addEventListener('click', () => {
-    document.getElementById('del-overlay')?.classList.remove('hidden')
-  })
-  document.getElementById('del-cancel')?.addEventListener('click', () => {
-    document.getElementById('del-overlay')?.classList.add('hidden')
-  })
-  document.getElementById('del-confirm')?.addEventListener('click', async () => {
-    const btn = document.getElementById('del-confirm') as HTMLButtonElement
-    if (!btn) return
-    btn.textContent = 'Deleting...'
-    btn.disabled = true
-    if (!session) { window.location.href = '/auth'; return }
-    await supabase.from('identifications').delete().eq('id', itemId).eq('user_id', session.user.id)
-    window.location.href = '/library'
-  })
-
-  // Enrich CTA
-  const enrichCta = document.getElementById('enrich-cta')
-  if (enrichCta && enrichCta.dataset.hasEnrichment !== 'true') {
-    enrichCta.dataset.itemId = itemId
-    enrichCta.dataset.resultJson = JSON.stringify(r)
-
-    const enrichLoading = document.getElementById('enrich-loading')
-    const enrichBtn = document.getElementById('enrich-btn') as HTMLButtonElement | null
-    const enrichTopup = document.getElementById('enrich-topup')
-    const enrichRegister = document.getElementById('enrich-register')
-
-    if (!session) {
-      if (enrichBtn) enrichBtn.style.display = 'none'
-      if (enrichRegister) enrichRegister.style.display = 'block'
-    } else {
-      const creditsRes = await fetch(`/api/credits?site_id=${ANTIQUES_SITE_ID}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
-      const creditsData = await creditsRes.json()
-      const balance = creditsData.balance ?? 0
-
-      if (balance < 1) {
-        if (enrichBtn) enrichBtn.style.display = 'none'
-        if (enrichTopup) enrichTopup.style.display = 'block'
+    document.getElementById('share-btn')?.addEventListener('click', () => {
+      if (navigator.share) {
+        navigator.share({ title: 'GAUK Antiques Valuation', url: window.location.href })
       } else {
-        enrichBtn?.addEventListener('click', async () => {
-          if (!enrichBtn) return
-          enrichBtn.textContent = 'Generating...'
-          enrichBtn.setAttribute('disabled', 'true')
-          if (enrichCta) enrichCta.style.display = 'none'
-          if (enrichLoading) enrichLoading.style.display = 'block'
+        navigator.clipboard.writeText(window.location.href)
+        const btn = document.getElementById('share-btn')
+        if (btn) btn.textContent = 'Copied'
+      }
+    })
 
-          const stages = [
-            'Consulting auction records',
-            'Researching maker history',
-            'Analysing comparable sales',
-            'Building market value data',
-            'Compiling expert notes',
-            'Preparing your full report'
-          ]
-          const progressEl = document.getElementById('enrich-progress')
-          const stageEl = document.getElementById('enrich-stage')
-          const steps = [0,1,2,3,4].map(i => document.getElementById('step-' + i))
-          let currentStep = 0
-          const stepDuration = 14000 / stages.length
+    document.getElementById('delete-btn')?.addEventListener('click', () => {
+      document.getElementById('del-overlay')?.classList.remove('hidden')
+    })
+    document.getElementById('del-cancel')?.addEventListener('click', () => {
+      document.getElementById('del-overlay')?.classList.add('hidden')
+    })
+    document.getElementById('del-confirm')?.addEventListener('click', async () => {
+      const btn = document.getElementById('del-confirm') as HTMLButtonElement
+      if (!btn) return
+      btn.textContent = 'Deleting...'
+      btn.disabled = true
+      if (!session) { window.location.href = '/auth'; return }
+      await supabase.from('identifications').delete().eq('id', itemId).eq('user_id', session.user.id)
+      window.location.href = '/library'
+    })
 
-          function advanceStep() {
-            if (!progressEl || !stageEl) return
-            const pct = Math.min(85, Math.round((currentStep / (stages.length - 1)) * 85))
-            progressEl.style.width = pct + '%'
-            stageEl.textContent = stages[currentStep]
-            steps.forEach((s, i) => {
-              if (!s) return
-              s.classList.remove('active', 'done')
-              if (i < currentStep) s.classList.add('done')
-              else if (i === currentStep) s.classList.add('active')
-            })
-            if (currentStep < stages.length - 1) { currentStep++; setTimeout(advanceStep, stepDuration) }
-          }
-          setTimeout(advanceStep, 600)
+    const enrichCta = document.getElementById('enrich-cta')
+    if (enrichCta && enrichCta.dataset.hasEnrichment !== 'true') {
+      enrichCta.dataset.itemId = itemId
+      enrichCta.dataset.resultJson = JSON.stringify(r)
 
-          fetch('/api/enrich', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-            body: JSON.stringify({ identification_id: itemId, result: JSON.parse(enrichCta.dataset.resultJson || '{}') })
-          })
-          .then(r => r.json())
-          .then(data => {
-            if (data.enrichment) {
-              if (progressEl) progressEl.style.width = '100%'
-              if (stageEl) stageEl.textContent = 'Report ready'
-              setTimeout(() => window.location.reload(), 400)
-            } else if (data.error) {
-              if (enrichLoading) enrichLoading.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:12px;color:#8A7A66;padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>'
-            }
-          })
-          .catch(() => {
-            if (enrichLoading) enrichLoading.innerHTML = '<div style="font-family:Prata,Georgia,serif;font-size:12px;color:#8A7A66;padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>'
-          })
+      const enrichLoading = document.getElementById('enrich-loading')
+      const enrichBtn = document.getElementById('enrich-btn') as HTMLButtonElement | null
+      const enrichTopup = document.getElementById('enrich-topup')
+      const enrichRegister = document.getElementById('enrich-register')
+
+      if (!session) {
+        if (enrichBtn) enrichBtn.style.display = 'none'
+        if (enrichRegister) enrichRegister.style.display = 'block'
+      } else {
+        const creditsRes = await fetch(`/api/credits?site_id=${ANTIQUES_SITE_ID}`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
         })
+        const creditsData = await creditsRes.json()
+        const balance = creditsData.balance ?? 0
+
+        if (balance < 1) {
+          if (enrichBtn) enrichBtn.style.display = 'none'
+          if (enrichTopup) enrichTopup.style.display = 'block'
+        } else {
+          enrichBtn?.addEventListener('click', async () => {
+            if (!enrichBtn) return
+            enrichBtn.textContent = 'Generating...'
+            enrichBtn.setAttribute('disabled', 'true')
+            if (enrichCta) enrichCta.style.display = 'none'
+            if (enrichLoading) enrichLoading.style.display = 'block'
+
+            const stages = ['Consulting auction records','Researching maker history','Analysing comparable sales','Building market value data','Compiling expert notes','Preparing your full report']
+            const progressEl = document.getElementById('enrich-progress')
+            const stageEl = document.getElementById('enrich-stage')
+            const steps = [0,1,2,3,4].map(i => document.getElementById('step-' + i))
+            let currentStep = 0
+            const stepDuration = 14000 / stages.length
+
+            function advanceStep() {
+              if (!progressEl || !stageEl) return
+              const pct = Math.min(85, Math.round((currentStep / (stages.length - 1)) * 85))
+              progressEl.style.width = pct + '%'
+              stageEl.textContent = stages[currentStep]
+              steps.forEach((s, i) => {
+                if (!s) return
+                s.classList.remove('active', 'done')
+                if (i < currentStep) s.classList.add('done')
+                else if (i === currentStep) s.classList.add('active')
+              })
+              if (currentStep < stages.length - 1) { currentStep++; setTimeout(advanceStep, stepDuration) }
+            }
+            setTimeout(advanceStep, 600)
+
+            fetch('/api/enrich', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+              body: JSON.stringify({ identification_id: itemId, result: JSON.parse(enrichCta.dataset.resultJson || '{}') })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.enrichment) {
+                if (progressEl) progressEl.style.width = '100%'
+                if (stageEl) stageEl.textContent = 'Report ready'
+                setTimeout(() => window.location.reload(), 400)
+              } else if (data.error) {
+                if (enrichLoading) enrichLoading.innerHTML = `<div style="font-family:Prata,Georgia,serif;font-size:12px;color:var(--c-text-mid);padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>`
+              }
+            })
+            .catch(() => {
+              if (enrichLoading) enrichLoading.innerHTML = `<div style="font-family:Prata,Georgia,serif;font-size:12px;color:var(--c-text-mid);padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>`
+            })
+          })
+        }
       }
     }
-  }
-</script>
+  </script>
+</ValuationLayout>
