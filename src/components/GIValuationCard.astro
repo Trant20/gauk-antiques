@@ -194,6 +194,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <!-- IDENTIFICATION -->
   <div class="gi-section">
     <div class="gi-section-head"><div class="gi-section-title">Item Details</div></div>
+    {r.description && <div class="gi-id-row"><div class="gi-id-key">Description</div><div class="gi-id-val">{r.description}</div></div>}
     {r.category && <div class="gi-id-row"><div class="gi-id-key">Category</div><div class="gi-id-val">{r.category}</div></div>}
     {r.subcategory && r.subcategory !== r.title && <div class="gi-id-row"><div class="gi-id-key">Type</div><div class="gi-id-val">{r.subcategory}</div></div>}
     {r.brand && <div class="gi-id-row"><div class="gi-id-key">Brand</div><div class="gi-id-val">{r.brand}</div></div>}
@@ -312,7 +313,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   const { data: { session } } = await supabase.auth.getSession()
   const itemId = (window as any).__val?.itemId
-  const GI_SITE_ID = '7f6b4b2e-4b1a-4b1a-4b1a-4b1a4b1a4b1a'
+  const GI_SITE_ID = 'd065c030-58b4-4f48-a2df-f14d666d6cfa'
 
   // ── Pre-populate room select ──────────────────────────────────────────────
   if (itemId && session) {
