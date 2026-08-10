@@ -84,7 +84,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    const promptConfig = await getPromptConfig(supabase, context, 'system_prompt, description_instruction, model, max_tokens, gate_cta_text')
+    const promptConfig = await getPromptConfig(supabase, ANTIQUES_SITE_ID, context, 'system_prompt, description_instruction, model, max_tokens, gate_cta_text')
     if (!promptConfig) return json({ error: 'Prompt configuration not found' }, 500)
 
     const systemPrompt = promptConfig.system_prompt.replace(
