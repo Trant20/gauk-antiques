@@ -136,7 +136,6 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       <span class="gi-bc-sep">&rsaquo;</span>
       <span class="gi-bc-cur">{r.category || 'Item'}</span>
     </nav>
-    <button id="gi-delete-btn" class="gi-delete-btn">Delete</button>
   </header>
 
   <!-- IMAGE -->
@@ -286,9 +285,12 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       <div class="gi-footer-brand">GAUK Insurance</div>
       <div class="gi-ai-disclaimer">AI estimate &middot; not a formal valuation &middot; {date}</div>
     </div>
-    <div style="text-align:right">
-      <div style="font-family:var(--font-serif);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--c-text-mid);margin-bottom:4px;">Reference</div>
-      <div style="font-family:var(--font-serif);font-size:9px;letter-spacing:1px;color:var(--c-text-dim);">{item.id.slice(0,8).toUpperCase()}</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;">
+      <div style="text-align:right">
+        <div style="font-family:var(--font-serif);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--c-text-mid);margin-bottom:4px;">Reference</div>
+        <div style="font-family:var(--font-serif);font-size:9px;letter-spacing:1px;color:var(--c-text-dim);">{item.id.slice(0,8).toUpperCase()}</div>
+      </div>
+      <button id="gi-delete-btn" class="gi-delete-btn">Delete this item</button>
     </div>
   </div>
 
