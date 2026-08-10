@@ -263,7 +263,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
       <div id="vault-auth-gate" class="vault-state hidden">
         <div class="vault-state-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
         <div><div class="vault-state-title">Sign in to view your Vault</div><div class="vault-state-sub">Your identification history is saved to your account.</div></div>
-        <a href="/auth" class="vault-state-btn">Sign In</a>
+        <a href="https://gaukauth.com?from=gaukantiques.com&next=/library" class="vault-state-btn">Sign In</a>
       </div>
 
       <!-- Empty state -->
@@ -683,7 +683,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     delConfirm.textContent = 'Deleting…';
     (delConfirm as HTMLButtonElement).disabled = true
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = '/auth'; return }
+    if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library'; return }
     await supabase.from('identifications').delete().eq('id', pendingDeleteId).eq('user_id', session.user.id)
     allItems = allItems.filter(i => i.id !== pendingDeleteId)
     pendingDeleteId = null

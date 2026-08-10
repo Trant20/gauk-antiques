@@ -140,7 +140,7 @@ const pageDescription = channel.description
           {count && <div class="ch-count">{count} video{count !== 1 ? 's' : ''}</div>}
           {channel.description && <p class="ch-desc">{channel.description}</p>}
           <button class="ch-follow loading" id="ch-follow-btn" data-publisher-id={channel.id}>Follow</button>
-          <a href="/auth" class="ch-follow-signin" id="ch-follow-signin" style="display:none">Sign in to Follow</a>
+          <a href="https://gaukauth.com?from=gaukantiques.com&next=/library" class="ch-follow-signin" id="ch-follow-signin" style="display:none">Sign in to Follow</a>
         </div>
       </div>
     </div>
@@ -223,7 +223,7 @@ const pageDescription = channel.description
 
   btn?.addEventListener('click', async () => {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = '/auth'; return }
+    if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library'; return }
     btn.classList.add('loading')
     const isFollowing = btn.classList.contains('following')
     const res = await fetch('/api/follow', {

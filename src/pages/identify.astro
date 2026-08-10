@@ -84,7 +84,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
 <script>
   import { supabase } from '../lib/supabase-browser'
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { window.location.href = '/auth' }
+  if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library' }
 </script>
 
 </AppLayout>

@@ -142,7 +142,7 @@ const creditCostIdentify = Number(creditSetting?.value ?? 1)
   import { ANTIQUES_SITE_ID } from '../../lib/constants'
 
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { window.location.href = '/auth' }
+  if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library' }
 
   if (session) {
     window.__gauk_user_id = session.user.id

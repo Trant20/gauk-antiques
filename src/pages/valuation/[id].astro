@@ -45,7 +45,7 @@ const title = isGIItem
     const { itemId, resultJson: r, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID } = window.__val
 
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = '/auth' }
+    if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library' }
 
     if (itemOwnerId && session && session.user.id !== itemOwnerId) {
       window.location.href = '/library'
@@ -72,7 +72,7 @@ const title = isGIItem
       if (!btn) return
       btn.textContent = 'Deleting...'
       btn.disabled = true
-      if (!session) { window.location.href = '/auth'; return }
+      if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library'; return }
       await supabase.from('identifications').delete().eq('id', itemId).eq('user_id', session.user.id)
       window.location.href = '/library'
     })
