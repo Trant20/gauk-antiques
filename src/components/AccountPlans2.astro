@@ -96,7 +96,7 @@ const topups = plans?.filter(p => p.plan_type === 'topup') || []
 
   document.querySelectorAll('.ap2-checkout-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!session) { window.location.href = '/auth'; return }
+      if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library'; return }
       const price_id = (btn as HTMLElement).dataset.price
       const mode = (btn as HTMLElement).dataset.mode
       ;(btn as HTMLButtonElement).textContent = 'Loading...'
