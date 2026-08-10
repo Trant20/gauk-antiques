@@ -375,16 +375,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     window.location.href = '/library'
   })
 
-  // ── Share ─────────────────────────────────────────────────────────────────
-  document.getElementById('gi-share-btn')?.addEventListener('click', () => {
-    if (navigator.share) {
-      navigator.share({ title: 'GAUK Insurance Item', url: window.location.href })
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-      const btn = document.getElementById('gi-share-btn')
-      if (btn) btn.textContent = 'Copied'
-    }
-  })
+
 </script>
 
 <!-- STICKY ACTIONS -->
@@ -393,9 +384,6 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
     Print
   </button>
-  <button class="gi-action-btn" id="gi-share-btn">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-    Share
-  </button>
+
   <a href="/identify/insurance" class="gi-action-btn primary">New Scan</a>
 </div>

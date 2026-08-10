@@ -423,7 +423,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
         </div>
       </div>
       <div class="card-actions">
-        <a href="/valuation/${item.id}" class="card-action-btn">View</a>
+        <button class="card-action-btn" data-quickview="${item.id}">Quick View</button>
         <button class="card-action-btn danger" data-delete="${item.id}">Delete</button>
       </div>
     </div>`
@@ -595,8 +595,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
         const target = e.target as HTMLElement
         if (target.closest('.card-actions')) return
         const id = (card as HTMLElement).dataset.id!
-        const item = allItems.find(i => i.id === id)
-        if (item) openDrawer(item)
+        window.location.href = `/valuation/${id}`
       })
     })
   }
