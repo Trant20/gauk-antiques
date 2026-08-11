@@ -3,7 +3,7 @@ import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { getPromptConfig } from '../../lib/ai'
-import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
+import { ANTIQUES_SITE_ID, GI_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
 import type { CloudflareEnv } from '../../lib/constants'
 
 const GUEST_IDENTIFY_LIMIT = 2
@@ -36,9 +36,13 @@ function json(data: unknown, status = 200) {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { key, secondary_key, context = 'general' } = await request.json()
+    const { key, secondary_key, context = 'general', site_id: requestedSiteId } = await request.json()
 
     if (!key) return json({ error: 'No image key provided' }, 400)
+
+    // Validate site_id — only known properties accepted, default to GA
+    const VALID_SITE_IDS = new Set([ANTIQUES_SITE_ID, GI_SITE_ID])
+    const site_id = requestedSiteId && VALID_SITE_IDS.has(requestedSiteId) ? requestedSiteId : ANTIQUES_SITE_ID
 
     const supabase = getSupabase()
     const auth = request.headers.get('Authorization')
@@ -55,7 +59,7 @@ export const POST: APIRoute = async ({ request }) => {
       const { data: costSetting } = await supabase
         .from('site_settings')
         .select('value')
-        .eq('site_id', ANTIQUES_SITE_ID)
+        .eq('site_id', site_id)
         .eq('key', 'credit_cost_identify')
         .single()
       const creditCost = parseInt(costSetting?.value ?? '1', 10)
@@ -64,7 +68,7 @@ export const POST: APIRoute = async ({ request }) => {
       for (let i = 0; i < creditCost; i++) {
         const { data: ok } = await supabase.rpc('deduct_identification_credit', {
           p_user_id: userId,
-          p_site_id: ANTIQUES_SITE_ID,
+          p_site_id: site_id,
           p_identification_id: null
         })
         if (!ok) return json({ error: 'Insufficient credits' }, 402)
@@ -84,7 +88,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    const promptConfig = await getPromptConfig(supabase, ANTIQUES_SITE_ID, context, 'system_prompt, description_instruction, model, max_tokens, gate_cta_text')
+    const promptConfig = await getPromptConfig(supabase, site_id, context, 'system_prompt, description_instruction, model, max_tokens, gate_cta_text')
     if (!promptConfig) return json({ error: 'Prompt configuration not found' }, 500)
 
     const systemPrompt = promptConfig.system_prompt.replace(
@@ -157,7 +161,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: record, error: dbError } = await supabase
       .from('identifications')
       .insert({
-        site_id: ANTIQUES_SITE_ID,
+        site_id: site_id,
         user_id: userId,
         image_key: key,
         secondary_image_key: secondary_key || null,
@@ -179,7 +183,7 @@ export const POST: APIRoute = async ({ request }) => {
     const outputTokens = response.usage.output_tokens
     const costPence = Math.ceil((inputTokens * CLAUDE_INPUT_COST_PENCE_PER_TOKEN) + (outputTokens * CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN))
     await supabase.from('token_usage').insert({
-      site_id: ANTIQUES_SITE_ID,
+      site_id: site_id,
       user_id: userId,
       feature: 'identify',
       model: promptConfig.model,
