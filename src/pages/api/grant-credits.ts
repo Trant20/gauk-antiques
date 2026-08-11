@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { error } = await supabase.rpc('grant_signup_credits', {
       p_user_id: user.id,
-      p_site_id: ANTIQUES_SITE_ID
+      p_site_id: null
     })
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {

@@ -154,7 +154,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     const { data: credits } = await supabase
       .from('credits').select('balance')
       .eq('user_id', session.user.id)
-      .eq('site_id', ANTIQUES_SITE_ID).single()
+      .single()
     document.getElementById('credit-balance')!.textContent = String(credits?.balance ?? 0)
 
     // Subscription
@@ -210,7 +210,6 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     const { data: txs } = await supabase
       .from('credit_transactions').select('*')
       .eq('user_id', session.user.id)
-      .eq('site_id', ANTIQUES_SITE_ID)
       .order('created_at', { ascending: false })
       .limit(25)
 

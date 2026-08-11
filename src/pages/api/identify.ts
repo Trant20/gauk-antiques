@@ -68,7 +68,6 @@ export const POST: APIRoute = async ({ request }) => {
       for (let i = 0; i < creditCost; i++) {
         const { data: ok } = await supabase.rpc('deduct_identification_credit', {
           p_user_id: userId,
-          p_site_id: site_id,
           p_identification_id: null
         })
         if (!ok) return json({ error: 'Insufficient credits' }, 402)

@@ -7,9 +7,6 @@ export const GET: APIRoute = async ({ request }) => {
     const auth = request.headers.get('Authorization')
     if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
 
-    const site_id = new URL(request.url).searchParams.get('site_id')
-    if (!site_id) return new Response(JSON.stringify({ error: 'Missing site_id' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
-
     const supabase = await import('@supabase/supabase-js').then(m =>
       m.createClient((env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL, (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY)
     )
@@ -23,7 +20,6 @@ export const GET: APIRoute = async ({ request }) => {
       .from('credits')
       .select('balance')
       .eq('user_id', user.id)
-      .eq('site_id', site_id)
       .single()
 
     return new Response(JSON.stringify({ balance: credits?.balance ?? 0 }), {

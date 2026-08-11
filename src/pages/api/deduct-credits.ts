@@ -7,7 +7,7 @@ export const POST: APIRoute = async ({ request }) => {
     const auth = request.headers.get('Authorization')
     if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
 
-    const { site_id, identification_id, amount = 1 } = await request.json()
+    const { identification_id, amount = 1 } = await request.json()
 
     const supabase = await import('@supabase/supabase-js').then(m =>
       m.createClient((env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL, (env as unknown as CloudflareEnv).SUPABASE_SERVICE_ROLE_KEY)
@@ -21,7 +21,6 @@ export const POST: APIRoute = async ({ request }) => {
     for (let i = 0; i < amount; i++) {
       const { data: ok } = await supabase.rpc('deduct_identification_credit', {
         p_user_id: user.id,
-        p_site_id: site_id,
         p_identification_id: identification_id
       })
       if (!ok) return new Response(JSON.stringify({ error: 'Insufficient credits' }), { status: 402, headers: { 'Content-Type': 'application/json' } })

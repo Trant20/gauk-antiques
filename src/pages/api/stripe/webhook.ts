@@ -32,14 +32,14 @@ async function verifySignature(payload: string, sig: string, secret: string): Pr
 async function upsertCredits(supabase: ReturnType<typeof getSupabase>, user_id: string, site_id: string, credits: number) {
   const { data: existing } = await supabase
     .from('credits').select('balance')
-    .eq('user_id', user_id).eq('site_id', site_id).single()
+    .eq('user_id', user_id).single()
 
   if (existing) {
     await supabase.from('credits')
       .update({ balance: existing.balance + credits, updated_at: new Date().toISOString() })
-      .eq('user_id', user_id).eq('site_id', site_id)
+      .eq('user_id', user_id)
   } else {
-    await supabase.from('credits').insert({ user_id, site_id, balance: credits })
+    await supabase.from('credits').insert({ user_id, balance: credits })
   }
 }
 

@@ -86,7 +86,6 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     const { data: creditsData } = await supabase
       .from('credits').select('balance')
       .eq('user_id', session.user.id)
-      .eq('site_id', ANTIQUES_SITE_ID)
       .single()
     const balance = creditsData?.balance ?? 0
     sbCreditsVal.textContent = String(balance)
