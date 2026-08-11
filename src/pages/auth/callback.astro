@@ -84,14 +84,26 @@
         return
       }
 
-      // Claim pending GI scan if exists
-      var pendingScan = ''
-      try { pendingScan = localStorage.getItem('gi_pending_scan') || '' } catch(e) {}
-      if (pendingScan) {
+      // Claim pending GA guest scan if exists
+      var gaPendingScan = ''
+      try { gaPendingScan = localStorage.getItem('ga_pending_scan') || '' } catch(e) {}
+      if (gaPendingScan) {
         await fetch('/api/claim-identification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
-          body: JSON.stringify({ identification_id: pendingScan })
+          body: JSON.stringify({ identification_id: gaPendingScan })
+        })
+        try { localStorage.removeItem('ga_pending_scan') } catch(e) {}
+      }
+
+      // Claim pending GI guest scan if exists
+      var giPendingScan = ''
+      try { giPendingScan = localStorage.getItem('gi_pending_scan') || '' } catch(e) {}
+      if (giPendingScan) {
+        await fetch('/api/claim-identification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
+          body: JSON.stringify({ identification_id: giPendingScan })
         })
         try { localStorage.removeItem('gi_pending_scan') } catch(e) {}
       }

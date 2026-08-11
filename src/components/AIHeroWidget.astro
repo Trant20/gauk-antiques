@@ -403,6 +403,10 @@ const { context = 'general', category = 'Antiques' } = Astro.props
       if (identifyData.error) throw new Error(identifyData.error)
       status.textContent = ''
       scanOverlay.classList.remove('active')
+      // Store scan ID for guest users so it can be claimed after auth
+      if (!window.__gauk_token && identifyData.id) {
+        try { localStorage.setItem('ga_pending_scan', identifyData.id) } catch(e) {}
+      }
       document.dispatchEvent(new CustomEvent('identification-complete', { detail: identifyData }))
     } catch (err) {
       status.textContent = err.message
