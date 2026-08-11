@@ -66,76 +66,51 @@
     var errorEl = document.getElementById('callback-error')
     var params  = new URLSearchParams(window.location.search)
     var next    = params.get('next') || '/library'
-
-    // Path 1 — Cross-domain handoff from GI (access_token + refresh_token in URL)
     var accessToken  = params.get('access_token')
     var refreshToken = params.get('refresh_token')
 
-    if (accessToken && refreshToken) {
-      var result = await supabase.auth.setSession({
-        access_token:  accessToken,
-        refresh_token: refreshToken
-      })
-
-      if (result.error || !result.data.session) {
-        errorEl.textContent = 'Session handoff failed. Please sign in again.'
-        errorEl.style.display = 'block'
-        setTimeout(function() { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library' }, 3000)
-        return
-      }
-
-      // Claim pending GA guest scan if exists
-      var gaPendingScan = ''
-      try { gaPendingScan = localStorage.getItem('ga_pending_scan') || '' } catch(e) {}
-      if (gaPendingScan) {
-        await fetch('/api/claim-identification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
-          body: JSON.stringify({ identification_id: gaPendingScan })
-        })
-        try { localStorage.removeItem('ga_pending_scan') } catch(e) {}
-      }
-
-      // Claim pending GI guest scan if exists
-      var giPendingScan = ''
-      try { giPendingScan = localStorage.getItem('gi_pending_scan') || '' } catch(e) {}
-      if (giPendingScan) {
-        await fetch('/api/claim-identification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
-          body: JSON.stringify({ identification_id: giPendingScan })
-        })
-        try { localStorage.removeItem('gi_pending_scan') } catch(e) {}
-      }
-
-      window.location.href = next
-      return
-    }
-
-    // Path 2 — Supabase email OTP token_hash
-    var tokenHash = params.get('token_hash')
-    var type      = params.get('type')
-
-    if (!tokenHash || !type) {
-      errorEl.textContent = 'Invalid confirmation link. Please sign in again.'
+    if (!accessToken || !refreshToken) {
+      errorEl.textContent = 'Invalid sign-in link. Please sign in again.'
       errorEl.style.display = 'block'
       setTimeout(function() { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library' }, 3000)
       return
     }
 
-    var otpResult = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type })
-
-    if (otpResult.error || !otpResult.data.session) {
-      errorEl.textContent = 'Confirmation failed. Please sign in again.'
-      errorEl.style.display = 'block'
-      setTimeout(function() { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library' }, 3000)
-      return
-    }
-
-    await fetch('/api/grant-credits', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + otpResult.data.session.access_token }
+    var result = await supabase.auth.setSession({
+      access_token:  accessToken,
+      refresh_token: refreshToken
     })
+
+    if (result.error || !result.data.session) {
+      errorEl.textContent = 'Session handoff failed. Please sign in again.'
+      errorEl.style.display = 'block'
+      setTimeout(function() { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library' }, 3000)
+      return
+    }
+
+    // Claim pending GA guest scan if exists
+    var gaPendingScan = ''
+    try { gaPendingScan = localStorage.getItem('ga_pending_scan') || '' } catch(e) {}
+    if (gaPendingScan) {
+      await fetch('/api/claim-identification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
+        body: JSON.stringify({ identification_id: gaPendingScan })
+      })
+      try { localStorage.removeItem('ga_pending_scan') } catch(e) {}
+    }
+
+    // Claim pending GI guest scan if exists
+    var giPendingScan = ''
+    try { giPendingScan = localStorage.getItem('gi_pending_scan') || '' } catch(e) {}
+    if (giPendingScan) {
+      await fetch('/api/claim-identification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
+        body: JSON.stringify({ identification_id: giPendingScan })
+      })
+      try { localStorage.removeItem('gi_pending_scan') } catch(e) {}
+    }
 
     window.location.href = next
   }
