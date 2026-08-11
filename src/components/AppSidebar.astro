@@ -92,9 +92,8 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     sbCreditsVal.textContent = String(balance)
     if (balance <= 5) { sbCredits.classList.add('visible') }
 
-    sbSignout.addEventListener('click', async () => {
-      await supabase.auth.signOut()
-      window.location.href = '/'
+    sbSignout.addEventListener('click', () => {
+      window.location.href = 'https://gaukauth.com/api/logout?from=gaukantiques.com'
     })
   }
 </script>
