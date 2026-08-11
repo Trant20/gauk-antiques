@@ -46,6 +46,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (user_id) {
       const { data: creditOk } = await supabase.rpc('deduct_ask_message_credit', {
         p_user_id: user_id,
+        p_site_id: ANTIQUES_SITE_ID,
       })
       if (!creditOk) {
         return new Response(JSON.stringify({ error: 'Insufficient credits' }), {
