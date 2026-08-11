@@ -59,7 +59,7 @@ export const POST: APIRoute = async ({ request }) => {
       const { data: costSetting } = await supabase
         .from('site_settings')
         .select('value')
-        .eq('site_id', site_id)
+        .eq('site_id', ANTIQUES_SITE_ID)
         .eq('key', 'credit_cost_identify')
         .single()
       const creditCost = parseInt(costSetting?.value ?? '1', 10)
