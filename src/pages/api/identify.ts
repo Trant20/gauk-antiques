@@ -64,15 +64,14 @@ export const POST: APIRoute = async ({ request }) => {
         .single()
       const creditCost = parseInt(costSetting?.value ?? '1', 10)
 
-      // Deduct credits before AI call — reject if insufficient
-      for (let i = 0; i < creditCost; i++) {
-        const { data: ok } = await supabase.rpc('deduct_identification_credit', {
-          p_user_id: userId,
-          p_site_id: site_id,
-          p_identification_id: null
-        })
-        if (!ok) return json({ error: 'Insufficient credits' }, 402)
-      }
+      // Deduct full credit cost in one operation
+      const { data: ok } = await supabase.rpc('deduct_identification_credit', {
+        p_user_id: userId,
+        p_site_id: site_id,
+        p_identification_id: null,
+        p_amount: creditCost
+      })
+      if (!ok) return json({ error: 'Insufficient credits' }, 402)
     } else {
       // Guest — enforce limit via KV
       const kv = (env as unknown as CloudflareEnv).SESSION
