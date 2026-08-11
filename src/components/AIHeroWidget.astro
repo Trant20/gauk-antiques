@@ -2,11 +2,12 @@
 interface Props {
   context?: string
   category?: string
+  site_id?: string
 }
-const { context = 'general', category = 'Antiques' } = Astro.props
+const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
 ---
 
-<div class="ai-widget" id="ai-widget" data-context={context} data-category={category}>
+<div class="ai-widget" id="ai-widget" data-context={context} data-category={category} data-site-id={site_id}>
   <!-- TAB SWITCHER -->
   <div class="widget-tabs">
     <button class="widget-tab active" id="tab-identify">
@@ -391,7 +392,7 @@ const { context = 'general', category = 'Antiques' } = Astro.props
       const identifyRes = await fetch('/api/identify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(window.__gauk_token ? { 'Authorization': `Bearer ${window.__gauk_token}` } : {}) },
-        body: JSON.stringify({ key: uploadData.key, secondary_key: secondaryKey, context })
+        body: JSON.stringify({ key: uploadData.key, secondary_key: secondaryKey, context, site_id: widget.dataset.siteId || undefined })
       })
       const identifyData = await identifyRes.json()
       if (identifyData.guest_limit) {
