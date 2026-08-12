@@ -248,14 +248,14 @@ const { site_id, credit_cost = 1 } = Astro.props
       });
       var identifyData = await identifyRes.json();
 
-      if (identifyData.error) {
-        if (identifyData.error === 'Insufficient credits') {
-          setStatus('Insufficient credits. Top up to continue scanning.');
-        } else {
-          throw new Error(identifyData.error);
-        }
+      if (identifyData.error === 'Insufficient credits') {
+        statusEl.innerHTML = 'You\'ve been busy! <a href="/account" style="color:var(--gi-sage);text-decoration:none;border-bottom:1px solid rgba(124,144,130,.4);">Head to your account</a> to top up and keep scanning.'
+        statusEl.style.display = 'block'
         setScanActive(false);
         return;
+      }
+      if (identifyData.error) {
+        throw new Error(identifyData.error);
       }
 
       setScanActive(false);

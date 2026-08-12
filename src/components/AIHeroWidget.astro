@@ -401,6 +401,12 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
         document.dispatchEvent(new CustomEvent('guest-limit-reached'))
         return
       }
+      if (identifyData.error === 'Insufficient credits') {
+        status.innerHTML = 'You\'ve been busy! <a href="/account" style="color:var(--ga-gold-hi);text-decoration:none;border-bottom:1px solid rgba(200,149,46,.4);">Head to your account</a> to top up and keep scanning.'
+        status.style.display = 'block'
+        scanOverlay.classList.remove('active')
+        return
+      }
       if (identifyData.error) throw new Error(identifyData.error)
       status.textContent = ''
       scanOverlay.classList.remove('active')
