@@ -135,6 +135,11 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     rollover:             'Rollover'
   }
 
+  const SITE_LABELS: Record<string, string> = {
+    'add6d12c-ecd8-4517-b2e5-0f4977603744': 'GAUK Antiques',
+    'd065c030-58b4-4f48-a2df-f14d666d6cfa': 'GAUK Insurance',
+  }
+
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
@@ -220,7 +225,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
       txList.innerHTML = txs.map(tx => `
         <div class="account-tx-row">
           <div>
-            <div class="account-tx-reason">${REASON_LABELS[tx.reason] || tx.reason}</div>
+            <div class="account-tx-reason">${REASON_LABELS[tx.reason] || tx.reason}${tx.site_id && SITE_LABELS[tx.site_id] ? ' &middot; ' + SITE_LABELS[tx.site_id] : ''}</div>
             <div class="account-tx-date">${new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
           </div>
           <div class="account-tx-delta ${tx.delta > 0 ? 'pos' : 'neg'}">${tx.delta > 0 ? '+' : ''}${tx.delta}</div>
