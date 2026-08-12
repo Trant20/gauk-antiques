@@ -66,8 +66,8 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <div class="ask-empty-title">Ask our {category} expert</div>
-        <div class="ask-empty-sub">Cleaning, identification, valuation, history — ask anything.</div>
-        <div class="ask-suggestions">
+        <div class="ask-empty-sub" id="ask-empty-sub">Cleaning, identification, valuation, history — ask anything.</div>
+        <div class="ask-suggestions" id="ask-suggestions">
           <button class="ask-suggestion" data-q="How do I clean and care for my piece?">How do I clean and care for my piece?</button>
           <button class="ask-suggestion" data-q="How can I tell if it is genuine?">How can I tell if it is genuine?</button>
           <button class="ask-suggestion" data-q="Where is the best place to sell it?">Where is the best place to sell it?</button>
@@ -178,7 +178,7 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
   @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .ask-msg-user { align-items: flex-end; }
   .ask-msg-ai { align-items: flex-start; }
-  .ask-bubble { max-width: 88%; padding: 11px 15px; font-family: 'Prata', Georgia, serif; font-size: 14px; line-height: 1.75; }
+  .ask-bubble { max-width: 88%; padding: 11px 15px; font-family: var(--font-ui); font-size: 14px; line-height: 1.75; }
   .ask-bubble-user { background: rgba(200,160,96,.15); border: 1px solid rgba(200,160,96,.25); color: var(--text); }
   .ask-bubble-ai { background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--goldHi); }
   .ask-bubble-gate { background: rgba(200,160,96,.08); border: 1px solid rgba(200,160,96,.3); color: var(--goldHi); }
@@ -251,6 +251,7 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
 
   let askHistory = []
   let isSending = false
+  let lastScanResult = null
 
   // Clear guest count if user is logged in
   if (window.__gauk_user_id) {
@@ -356,6 +357,11 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
     placeholderPrimary.style.display = 'none'
     zonePrimary.classList.add('has-image')
     identifyBtn.removeAttribute('disabled')
+    lastScanResult = null
+    const askEmptySubR = document.getElementById('ask-empty-sub')
+    const askSuggestionsR = document.getElementById('ask-suggestions')
+    if (askEmptySubR) askEmptySubR.textContent = 'Cleaning, identification, valuation, history — ask anything.'
+    if (askSuggestionsR) askSuggestionsR.innerHTML = '<button class="ask-suggestion" data-q="How do I clean and care for my piece?">How do I clean and care for my piece?</button><button class="ask-suggestion" data-q="How can I tell if it is genuine?">How can I tell if it is genuine?</button><button class="ask-suggestion" data-q="Where is the best place to sell it?">Where is the best place to sell it?</button>'
     document.dispatchEvent(new CustomEvent('widget-reset-result'))
   }
 
@@ -414,6 +420,19 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
       if (!window.__gauk_token && identifyData.id) {
         try { localStorage.setItem('ga_pending_scan', identifyData.id) } catch(e) {}
       }
+      // Store scan result for Ask context
+      if (identifyData.result) {
+        lastScanResult = identifyData.result
+        const askEmptySub = document.getElementById('ask-empty-sub')
+        const askSuggestions = document.getElementById('ask-suggestions')
+        const title = identifyData.result.title || identifyData.result.category || 'this item'
+        if (askEmptySub) askEmptySub.textContent = 'You scanned ' + title + ' — is there something I can help you with?'
+        if (askSuggestions) askSuggestions.innerHTML = `
+          <button class="ask-suggestion" data-q="How do I clean and care for ${title}?">${'How do I clean and care for ' + title + '?'}</button>
+          <button class="ask-suggestion" data-q="How can I tell if this is genuine?">How can I tell if this is genuine?</button>
+          <button class="ask-suggestion" data-q="Where is the best place to sell ${title}?">${'Where is the best place to sell ' + title + '?'}</button>
+        `
+      }
       document.dispatchEvent(new CustomEvent('identification-complete', { detail: identifyData }))
     } catch (err) {
       status.textContent = err.message
@@ -463,7 +482,7 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
     scrollThread()
 
     try {
-      const data = await sendToAsk(question, askHistory, context, userId, null)
+      const data = await sendToAsk(question, askHistory, context, userId, lastScanResult)
       typing.remove()
       askHistory.push({ role: 'user', content: question })
       askHistory.push({ role: 'assistant', content: data.answer })
@@ -521,13 +540,14 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
   setupComposer('ask-input', 'ask-send')
   setupComposer('ask-modal-input', 'ask-modal-send')
 
-  document.querySelectorAll('.ask-suggestion').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const q = btn.getAttribute('data-q')
-      const inputId = isMobile() ? 'ask-modal-input' : 'ask-input'
-      const sendId = isMobile() ? 'ask-modal-send' : 'ask-send'
-      const input = document.getElementById(inputId)
-      if (input) { input.value = q; fire(input, document.getElementById(sendId)) }
-    })
+  // Event delegation for suggestion buttons — handles dynamically injected suggestions
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.ask-suggestion')
+    if (!btn) return
+    const q = btn.getAttribute('data-q')
+    const inputId = isMobile() ? 'ask-modal-input' : 'ask-input'
+    const sendId = isMobile() ? 'ask-modal-send' : 'ask-send'
+    const input = document.getElementById(inputId)
+    if (input) { (input as HTMLInputElement).value = q || ''; fire(input, document.getElementById(sendId)) }
   })
 </script>
