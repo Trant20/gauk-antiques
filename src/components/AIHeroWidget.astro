@@ -425,7 +425,7 @@ const { context = 'general', category = 'Antiques', site_id = '' } = Astro.props
         lastScanResult = identifyData.result
         const askEmptySub = document.getElementById('ask-empty-sub')
         const askSuggestions = document.getElementById('ask-suggestions')
-        const title = identifyData.result.title || identifyData.result.category || 'this item'
+        const title = identifyData.result.subcategory || identifyData.result.title || identifyData.result.category || 'this item'
         if (askEmptySub) askEmptySub.textContent = 'You scanned ' + title + ' — is there something I can help you with?'
         if (askSuggestions) askSuggestions.innerHTML = `
           <button class="ask-suggestion" data-q="How do I clean and care for ${title}?">${'How do I clean and care for ' + title + '?'}</button>
