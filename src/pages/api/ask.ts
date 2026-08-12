@@ -105,7 +105,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { sources, contextBlocks, marks } = await lookupSpine(supabase, terms, context, identification_result)
 
     // 4. Fetch prompt from ai_prompts
-    const activePrompt = await getPromptConfig(supabase, context, 'ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3, gate_cta_text')
+    const activePrompt = await getPromptConfig(supabase, ANTIQUES_SITE_ID, context, 'ask_system_prompt, model, max_tokens, hint_message_2, hint_message_3, gate_cta_text')
     if (!activePrompt?.ask_system_prompt) {
       return new Response(JSON.stringify({ error: 'Ask prompt not configured' }), {
         status: 500,
