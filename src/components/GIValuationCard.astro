@@ -20,123 +20,469 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 ---
 
 <style is:global>
-  .gi-card { width: 100%; max-width: 100%; padding-bottom: 100px; background: var(--c-bg); }
-
-  /* ── HEADER ── */
-  .gi-header {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px;
-    background: var(--c-dark-bg); backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--c-border);
+  .gi-card {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
   }
-  .gi-logo { font-family: var(--font-serif); font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: var(--c-text); }
-  .gi-logo span { color: var(--c-sage); }
-  .gi-breadcrumb { display: flex; align-items: center; gap: 6px; }
-  .gi-bc-link { font-family: var(--font-serif); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-sage); text-decoration: none; }
-  .gi-bc-link:hover { color: var(--c-text); }
-  .gi-bc-sep { font-family: var(--font-serif); font-size: 10px; color: var(--c-border); }
-  .gi-bc-cur { font-family: var(--font-serif); font-size: 10px; letter-spacing: 1px; color: var(--c-text-mid); text-transform: uppercase; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .gi-delete-btn { font-family: var(--font-serif); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-mid); background: none; border: 1px solid var(--c-border); padding: 6px 12px; cursor: pointer; transition: border-color .2s, color .2s; }
-  .gi-delete-btn:hover { border-color: var(--c-warn); color: var(--c-warn); }
-
-  /* ── DELETE MODAL ── */
-  .gi-del-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(28,24,16,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .gi-del-modal { background: var(--c-bg); border: 1px solid var(--c-border); padding: 32px 24px; max-width: 320px; width: 100%; text-align: center; }
-  .gi-del-title { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--c-text); margin-bottom: 10px; }
-  .gi-del-sub { font-family: var(--font-serif); font-size: 14px; color: var(--c-text-mid); line-height: 1.7; margin-bottom: 24px; }
-  .gi-del-btns { display: flex; gap: 8px; }
-  .gi-del-cancel { flex: 1; font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: none; border: 1px solid var(--c-border); padding: 12px; cursor: pointer; color: var(--c-text-dim); }
-  .gi-del-confirm { flex: 1; font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: var(--c-dark); border: 1px solid var(--c-dark); padding: 12px; cursor: pointer; color: var(--c-bg); }
 
   /* ── IMAGE ── */
-  .gi-image-wrap { position: relative; width: 100%; background: var(--c-surface); }
-  .gi-image { width: 100%; max-height: 380px; object-fit: contain; background: var(--c-surface); display: block; }
-  .gi-image-placeholder { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; background: var(--c-surface); }
-  .gi-image-placeholder-icon { color: var(--c-border); }
-  .gi-conf-arc { position: absolute; bottom: 14px; right: 14px; z-index: 10; }
-  .gi-conf-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 8px; color: var(--c-sage); }
+  .gi-image-wrap {
+    position: relative;
+    width: 100%;
+    border-left: 3px solid var(--gi-sage);
+    background: var(--surface);
+    margin-bottom: 24px;
+  }
+  .gi-image {
+    width: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    background: var(--surface);
+    display: block;
+  }
+  .gi-image-placeholder {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+  }
+  .gi-image-placeholder-icon { color: var(--text-faint); }
 
-  /* ── SECTION ── */
-  .gi-section { padding: 28px 20px; border-bottom: 1px solid var(--c-border); }
-  .gi-section-head { margin-bottom: 20px; padding-left: 12px; border-left: 2px solid var(--c-sage); }
-  .gi-section-title { font-size: 16px; letter-spacing: 2px; font-weight: 700; color: var(--c-sage); text-transform: uppercase; font-family: var(--font-serif); }
+  .gi-conf-arc {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    z-index: 10;
+  }
+  .gi-conf-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-ui);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gi-sage);
+  }
 
-  /* ── BADGE ── */
-  .gi-badge { display: inline-block; font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-sage); border: 1px solid var(--c-sage); padding: 3px 10px; margin: 16px 20px 0; }
+  /* ── BADGE + TITLE ── */
+  .gi-badge {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--gi-sage);
+    border: 1px solid var(--gi-sage);
+    padding: 3px 10px;
+    margin-bottom: 12px;
+  }
+  .gi-title {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .gi-date {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-mute);
+    letter-spacing: 0.05em;
+    margin-bottom: 24px;
+  }
 
-  /* ── TITLE ── */
-  .gi-title { font-family: var(--font-display); font-size: clamp(22px, 5vw, 30px); font-weight: 400; font-style: italic; color: var(--c-text); padding: 10px 20px 6px; line-height: 1.2; }
-  .gi-date { font-family: var(--font-ui); font-size: 11px; color: var(--c-text-mid); letter-spacing: 0.05em; padding: 0 20px 16px; }
-
-  /* ── VALUE ── */
-  .gi-value-block { background: var(--c-surface); border-top: 1px solid var(--c-border); border-bottom: 1px solid var(--c-border); padding: 28px 20px; }
-  .gi-value-cap { font-family: var(--font-serif); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); margin-bottom: 10px; text-align: center; }
-  .gi-value-amount { font-family: var(--font-display); font-size: clamp(28px, 6vw, 42px); font-weight: 400; color: var(--c-sage); letter-spacing: -1px; text-align: center; margin-bottom: 6px; }
-  .gi-value-note { font-family: var(--font-ui); font-size: 11px; color: var(--c-text-mid); text-align: center; margin-bottom: 20px; }
-  .gi-value-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--c-border); margin-top: 16px; }
-  .gi-value-strip-cell { background: var(--c-surface); padding: 14px 8px; text-align: center; }
-  .gi-value-strip-label { font-family: var(--font-serif); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); margin-bottom: 6px; }
-  .gi-value-strip-val { font-family: var(--font-display); font-size: 20px; color: var(--c-text); }
+  /* ── VALUE BLOCK ── */
+  .gi-value-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gi-sage);
+    padding: 28px 24px;
+    margin-bottom: 24px;
+  }
+  .gi-value-cap {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gi-sage);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .gi-value-amount {
+    font-family: var(--font-ui);
+    font-size: clamp(28px, 6vw, 42px);
+    font-weight: 600;
+    color: var(--gi-sage);
+    letter-spacing: -1px;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .gi-value-note {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-mute);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .gi-value-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    margin-top: 16px;
+  }
+  .gi-value-strip-cell {
+    background: var(--surface-hi);
+    padding: 14px 8px;
+    text-align: center;
+  }
+  .gi-value-strip-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+  }
+  .gi-value-strip-val {
+    font-family: var(--font-ui);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+  }
 
   /* ── EDIT VALUE ── */
-  .gi-edit-wrap { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--c-border); }
-  .gi-edit-label { font-family: var(--font-serif); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); margin-bottom: 8px; }
+  .gi-edit-wrap {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .gi-edit-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+  }
   .gi-edit-row { display: flex; gap: 8px; align-items: center; }
-  .gi-edit-input { flex: 1; padding: 10px 12px; background: var(--c-bg); border: 1px solid var(--c-border); font-family: var(--font-display); font-size: 18px; color: var(--c-text); outline: none; }
-  .gi-edit-input:focus { border-color: var(--c-sage); }
-  .gi-edit-btn { padding: 10px 16px; background: var(--c-sage); border: none; font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #fff; cursor: pointer; transition: opacity .2s; }
+  .gi-edit-input {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--shell);
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    outline: none;
+  }
+  .gi-edit-input:focus { border-color: var(--gi-sage); }
+  .gi-edit-input::placeholder { color: var(--text-faint); }
+  .gi-edit-btn {
+    padding: 10px 20px;
+    background: var(--gi-sage);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
   .gi-edit-btn:hover { opacity: 0.85; }
-  .gi-edit-saved { font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-sage); display: none; margin-top: 6px; }
+  .gi-edit-saved {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gi-sage);
+    display: none;
+    margin-top: 6px;
+  }
+
+  /* ── SECTION ── */
+  .gi-section {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .gi-section-head {
+    margin-bottom: 20px;
+    padding-left: 12px;
+    border-left: 2px solid var(--gi-sage);
+  }
+  .gi-section-title {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    font-weight: 700;
+    color: var(--gi-sage);
+    text-transform: uppercase;
+  }
 
   /* ── ID TABLE ── */
-  .gi-id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--c-border-lo); }
+  .gi-id-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
   .gi-id-row:last-child { border-bottom: none; }
-  .gi-id-key { width: 120px; flex-shrink: 0; font-family: var(--font-serif); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); padding-top: 2px; }
-  .gi-id-val { font-family: var(--font-serif); font-size: 16px; color: var(--c-text); line-height: 1.5; flex: 1; }
+  .gi-id-key {
+    width: 120px;
+    flex-shrink: 0;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    padding-top: 2px;
+  }
+  .gi-id-val {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+    flex: 1;
+  }
 
   /* ── CONFIDENCE ── */
-  .gi-confidence-wrap { display: flex; align-items: center; gap: 16px; padding: 16px 0; }
-  .gi-confidence-text { font-family: var(--font-serif); font-size: 14px; color: var(--c-text-dim); line-height: 1.7; flex: 1; }
+  .gi-confidence-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 0;
+  }
+  .gi-confidence-text {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    flex: 1;
+  }
 
   /* ── ROOM ── */
-  .gi-room-select { width: 100%; padding: 12px 14px; background: var(--c-bg); border: 1px solid var(--c-border); font-family: var(--font-serif); font-size: 15px; color: var(--c-text); outline: none; appearance: none; cursor: pointer; }
-  .gi-room-select:focus { border-color: var(--c-sage); }
-  .gi-room-saved { font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-sage); display: none; margin-top: 8px; }
+  .gi-room-select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--shell);
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .gi-room-select:focus { border-color: var(--gi-sage); }
+  .gi-room-saved {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gi-sage);
+    display: none;
+    margin-top: 8px;
+  }
 
   /* ── NOTES ── */
-  .gi-notes-text { font-family: var(--font-serif); font-size: 15px; line-height: 1.9; color: var(--c-text-dim); }
+  .gi-notes-text {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--text-dim);
+  }
+
+  /* ── ANTIQUE HANDOFF ── */
+  .gi-antique-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gi-sage);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .gi-antique-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+    font-style: italic;
+  }
+  .gi-antique-body {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .gi-antique-cta {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--gi-sage);
+    padding: 12px 24px;
+    text-decoration: none;
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+  .gi-antique-value {
+    font-family: var(--font-ui);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gi-sage);
+  }
 
   /* ── FOOTER ── */
-  .gi-footer { padding: 20px; border-top: 1px solid var(--c-border); display: flex; justify-content: space-between; align-items: center; }
-  .gi-footer-brand { font-family: var(--font-display); font-size: 13px; font-style: italic; color: var(--c-sage); margin-bottom: 3px; }
-  .gi-ai-disclaimer { font-family: var(--font-serif); font-size: 9px; letter-spacing: 1px; color: var(--c-text-mid); line-height: 1.6; max-width: 200px; }
+  .gi-footer {
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .gi-footer-brand {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--gi-sage);
+    margin-bottom: 4px;
+  }
+  .gi-ai-disclaimer {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-mute);
+    line-height: 1.6;
+  }
 
-  /* ── STICKY ACTIONS ── */
-  /* ── ANTIQUE HANDOFF ── */
-  .gi-antique-banner { background: var(--c-dark); border-left: 3px solid var(--c-sage); padding: 24px 20px; display: flex; flex-direction: column; gap: 12px; }
-  .gi-antique-title { font-family: var(--font-display); font-size: 20px; color: #ffffff; font-style: italic; }
-  .gi-antique-body { font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.7; }
-  .gi-antique-cta { display: inline-block; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-dark); background: var(--c-sage); padding: 12px 24px; text-decoration: none; margin-top: 4px; align-self: flex-start; }
-  .gi-antique-value { font-family: var(--font-display); font-size: 28px; color: var(--c-gold-hi); font-style: italic; }
+  /* ── CARD ACTIONS (inline, not sticky) ── */
+  .gi-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .gi-action-btn {
+    flex: 1;
+    padding: 13px;
+    background: transparent;
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: border-color .2s, color .2s;
+  }
+  .gi-action-btn:hover { border-color: var(--gi-sage); color: var(--text); }
+  .gi-action-btn.primary {
+    background: var(--gi-sage);
+    border-color: var(--gi-sage);
+    color: #fff;
+  }
+  .gi-action-btn.primary:hover { opacity: 0.85; }
 
-  .gi-sticky-actions { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: var(--c-dark-bg); backdrop-filter: blur(20px); border-top: 1px solid var(--c-border); padding: 12px 20px calc(24px + env(safe-area-inset-bottom)); display: flex; gap: 8px; }
-  .gi-action-btn { flex: 1; padding: 13px; background: transparent; border: 1px solid var(--c-border); font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-dim); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; transition: border-color .2s; }
-  .gi-action-btn:hover { border-color: var(--c-sage); color: var(--c-text); }
-  .gi-action-btn.primary { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-bg); }
+  /* ── DELETE BUTTON ── */
+  .gi-delete-btn {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    background: none;
+    border: 1px solid var(--border-hi);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .gi-delete-btn:hover { border-color: #c46028; color: #c46028; }
+
+  /* ── DELETE MODAL ── */
+  .gi-del-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .gi-del-modal {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    padding: 32px 24px;
+    max-width: 320px; width: 100%;
+    text-align: center;
+  }
+  .gi-del-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .gi-del-sub {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .gi-del-btns { display: flex; gap: 8px; }
+  .gi-del-cancel {
+    flex: 1;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid var(--border-hi);
+    padding: 12px;
+    cursor: pointer;
+    color: var(--text-dim);
+  }
+  .gi-del-confirm {
+    flex: 1;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #c46028;
+    border: 1px solid #c46028;
+    padding: 12px;
+    cursor: pointer;
+    color: #fff;
+  }
+
+  @media (max-width: 768px) {
+    .gi-card { padding: 20px 16px 100px; }
+  }
 </style>
 
 <div class="gi-card">
-
-  <!-- HEADER -->
-  <header class="gi-header">
-    <div class="gi-logo">GAUK <span>Insurance</span></div>
-    <nav class="gi-breadcrumb">
-      <a href="/library" class="gi-bc-link">The Vault</a>
-      <span class="gi-bc-sep">&rsaquo;</span>
-      <span class="gi-bc-cur">{r.category || 'Item'}</span>
-    </nav>
-  </header>
 
   <!-- IMAGE -->
   <div class="gi-image-wrap">
@@ -149,8 +495,8 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     )}
     <div class="gi-conf-arc">
       <svg width="44" height="44" viewBox="0 0 44 44">
-        <circle cx="22" cy="22" r="20" fill="rgba(239,231,217,.92)" stroke="var(--c-surface-mid)" stroke-width="2"/>
-        <circle cx="22" cy="22" r="20" fill="none" stroke="var(--c-sage)" stroke-width="2.5"
+        <circle cx="22" cy="22" r="20" fill="var(--surface)" stroke="var(--border-hi)" stroke-width="2"/>
+        <circle cx="22" cy="22" r="20" fill="none" stroke="var(--gi-sage)" stroke-width="2.5"
           stroke-dasharray={confCircumference} stroke-dashoffset={confOffset} stroke-linecap="round"
           transform="rotate(-90 22 22)"/>
       </svg>
@@ -161,7 +507,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <!-- BADGE + TITLE -->
   <div class="gi-badge">GAUK Insurance</div>
   {r.antique_category && r.antique_category !== r.category && (
-    <div class="gi-badge" style="background:rgba(122,92,32,0.12);color:var(--c-gold);border-color:var(--c-gold);">{r.antique_category}</div>
+    <div class="gi-badge" style="margin-left:8px;color:var(--ga-gold);border-color:var(--ga-gold);">{r.antique_category}</div>
   )}
   <div class="gi-title">{r.title || r.subcategory || 'Unidentified Item'}</div>
   <div class="gi-date">{date}</div>
@@ -208,11 +554,11 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     <div class="gi-section-head"><div class="gi-section-title">Confidence</div></div>
     <div class="gi-confidence-wrap">
       <svg width="44" height="44" viewBox="0 0 44 44" style="flex-shrink:0">
-        <circle cx="22" cy="22" r="20" fill="none" stroke="var(--c-surface-mid)" stroke-width="3"/>
-        <circle cx="22" cy="22" r="20" fill="none" stroke="var(--c-sage)" stroke-width="3"
+        <circle cx="22" cy="22" r="20" fill="none" stroke="var(--border-hi)" stroke-width="3"/>
+        <circle cx="22" cy="22" r="20" fill="none" stroke="var(--gi-sage)" stroke-width="3"
           stroke-dasharray={confCircumference} stroke-dashoffset={confOffset} stroke-linecap="round"
           transform="rotate(-90 22 22)"/>
-        <text x="22" y="27" text-anchor="middle" font-family="Prata, Georgia, serif" font-size="11" fill="var(--c-text)">{confidenceScore}%</text>
+        <text x="22" y="27" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="var(--text)">{confidenceScore}%</text>
       </svg>
       <div class="gi-confidence-text">
         {r.confidence === 'High'
@@ -252,7 +598,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     </div>
   )}
 
-  <!-- ANTIQUE HANDOFF — shown when GI scan identifies a potential antique -->
+  <!-- ANTIQUE DETAILS -->
   {r.is_antique && (r.maker || r.period || r.condition) && (
     <div class="gi-section">
       <div class="gi-section-head"><div class="gi-section-title">Antique Details</div></div>
@@ -260,19 +606,18 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       {r.period && <div class="gi-id-row"><div class="gi-id-key">Period</div><div class="gi-id-val">{r.period}</div></div>}
       {r.condition && <div class="gi-id-row"><div class="gi-id-key">Condition</div><div class="gi-id-val">{r.condition}</div></div>}
       {r.antique_value_range_low && r.antique_value_range_high && (
-        <div style="padding-top:16px;border-top:1px solid var(--c-border);margin-top:12px;">
-          <div style="font-family:var(--font-serif);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--c-text-mid);margin-bottom:8px;">Estimated Antique Value</div>
+        <div style="padding-top:16px;border-top:1px solid var(--border);margin-top:12px;">
+          <div style="font-family:var(--font-ui);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Estimated Antique Value</div>
           <div class="gi-antique-value">{formatGIValueRange(r.antique_value_range_low, r.antique_value_range_high, currency)}</div>
         </div>
       )}
     </div>
   )}
 
+  <!-- ANTIQUE HANDOFF BANNER -->
   {r.is_antique && (
     <div class="gi-antique-banner">
-      <div class="gi-antique-title">
-        This item may be an antique worth specialist assessment.
-      </div>
+      <div class="gi-antique-title">This item may be an antique worth specialist assessment.</div>
       <div class="gi-antique-body">
         Our AI has flagged this as a potential antique. A specialist deep dive checks our antiques knowledge graph, recent auction results and maker databases to give you a definitive picture &mdash; so you know exactly what you have and what it is worth to insure correctly.
       </div>
@@ -286,13 +631,22 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       <div class="gi-footer-brand">GAUK Insurance</div>
       <div class="gi-ai-disclaimer">AI estimate &middot; not a formal valuation &middot; {date}</div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;">
-      <div style="text-align:right">
-        <div style="font-family:var(--font-serif);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--c-text-mid);margin-bottom:4px;">Reference</div>
-        <div style="font-family:var(--font-serif);font-size:9px;letter-spacing:1px;color:var(--c-text-dim);">{item.id.slice(0,8).toUpperCase()}</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
+      <div style="text-align:right;">
+        <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:4px;">Reference</div>
+        <div style="font-family:var(--font-ui);font-size:11px;color:var(--text-dim);">{item.id.slice(0,8).toUpperCase()}</div>
       </div>
       <button id="gi-delete-btn" class="gi-delete-btn">Delete this item</button>
     </div>
+  </div>
+
+  <!-- CARD ACTIONS -->
+  <div class="gi-card-actions">
+    <button class="gi-action-btn" onclick="window.print()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print
+    </button>
+    <a href="/identify/insurance" class="gi-action-btn primary">New Scan</a>
   </div>
 
   <!-- DELETE MODAL -->
@@ -375,16 +729,4 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       .eq('id', itemId).eq('user_id', session.user.id)
     window.location.href = '/library'
   })
-
-
 </script>
-
-<!-- STICKY ACTIONS -->
-<div class="gi-sticky-actions">
-  <button class="gi-action-btn" onclick="window.print()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-    Print
-  </button>
-
-  <a href="/identify/insurance" class="gi-action-btn primary">New Scan</a>
-</div>
