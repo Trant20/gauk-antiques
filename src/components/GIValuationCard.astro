@@ -308,6 +308,71 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     color: var(--text-dim);
   }
 
+  /* ── INLINE EDIT ── */
+  .gi-inline-edit-wrap { position: relative; }
+  .gi-inline-text {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+    flex: 1;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--border-hi);
+    padding-bottom: 2px;
+    transition: border-color .2s;
+  }
+  .gi-inline-text:hover { border-bottom-color: var(--gi-sage); }
+  .gi-inline-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--shell);
+    border: 1px solid var(--gi-sage);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    display: none;
+  }
+  .gi-inline-actions {
+    display: none;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .gi-inline-save {
+    padding: 7px 16px;
+    background: var(--gi-sage);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+  }
+  .gi-inline-cancel {
+    padding: 7px 16px;
+    background: none;
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    cursor: pointer;
+  }
+  .gi-inline-hint {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    color: var(--text-mute);
+    margin-top: 4px;
+    display: block;
+  }
+
   /* ── ANTIQUE HANDOFF ── */
   .gi-antique-banner {
     background: var(--surface);
@@ -553,7 +618,20 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   <!-- IDENTIFICATION -->
   <div class="gi-section">
     <div class="gi-section-head"><div class="gi-section-title">Item Details</div></div>
-    {r.description && <div class="gi-id-row"><div class="gi-id-key">Description</div><div class="gi-id-val">{r.description}</div></div>}
+    {r.description && (
+      <div class="gi-id-row">
+        <div class="gi-id-key">Description</div>
+        <div class="gi-id-val gi-inline-edit-wrap">
+          <div class="gi-inline-text" id="gi-desc-text">{r.description}</div>
+          <textarea class="gi-inline-textarea" id="gi-desc-textarea">{r.description}</textarea>
+          <div class="gi-inline-actions" id="gi-desc-actions">
+            <button class="gi-inline-save" id="gi-desc-save">Save</button>
+            <button class="gi-inline-cancel" id="gi-desc-cancel">Cancel</button>
+          </div>
+          <span class="gi-inline-hint">Click to edit</span>
+        </div>
+      </div>
+    )}
     {r.category && <div class="gi-id-row"><div class="gi-id-key">Category</div><div class="gi-id-val">{r.category}</div></div>}
     {r.subcategory && r.subcategory !== r.title && <div class="gi-id-row"><div class="gi-id-key">Type</div><div class="gi-id-val">{r.subcategory}</div></div>}
     {r.brand && <div class="gi-id-row"><div class="gi-id-key">Brand</div><div class="gi-id-val">{r.brand}</div></div>}
@@ -733,6 +811,55 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     if (!error && saved) {
       saved.style.display = 'block'
       setTimeout(() => { if (saved) saved.style.display = 'none' }, 2000)
+    }
+  })
+
+  // ── Edit description ─────────────────────────────────────────────────────
+  const descText = document.getElementById('gi-desc-text')
+  const descTextarea = document.getElementById('gi-desc-textarea') as HTMLTextAreaElement
+  const descActions = document.getElementById('gi-desc-actions')
+  const descSave = document.getElementById('gi-desc-save')
+  const descCancel = document.getElementById('gi-desc-cancel')
+
+  function openDescEdit() {
+    if (!descText || !descTextarea || !descActions) return
+    descTextarea.value = descText.textContent || ''
+    descText.style.display = 'none'
+    descTextarea.style.display = 'block'
+    descActions.style.display = 'flex'
+    descTextarea.focus()
+  }
+
+  function closeDescEdit() {
+    if (!descText || !descTextarea || !descActions) return
+    descText.style.display = 'block'
+    descTextarea.style.display = 'none'
+    descActions.style.display = 'none'
+  }
+
+  descText?.addEventListener('click', openDescEdit)
+
+  descCancel?.addEventListener('click', closeDescEdit)
+
+  descSave?.addEventListener('click', async () => {
+    if (!descTextarea || !session || !itemId) return
+    const newDesc = descTextarea.value.trim()
+    if (!newDesc) return
+
+    const currentResult = (window as any).__val?.resultJson || {}
+    const updatedResult = { ...currentResult, description: newDesc }
+
+    const { error } = await supabase
+      .from('identifications')
+      .update({ result_json: updatedResult })
+      .eq('id', itemId)
+      .eq('user_id', session.user.id)
+
+    if (!error) {
+      if (descText) descText.textContent = newDesc
+      // Keep window.__val in sync
+      if ((window as any).__val) (window as any).__val.resultJson = updatedResult
+      closeDescEdit()
     }
   })
 
