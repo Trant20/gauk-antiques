@@ -1,6 +1,8 @@
 ---
 import { ANTIQUES_SITE_ID, GI_SITE_ID, R2_CDN } from '../../lib/constants'
-import ValuationLayout from '../../layouts/ValuationLayout.astro'
+import AppLayout from '../../layouts/AppLayout.astro'
+import AppSidebar from '../../components/AppSidebar.astro'
+import AppBottomNav from '../../components/AppBottomNav.astro'
 import GAValuationCard from '../../components/GAValuationCard.astro'
 import GIValuationCard from '../../components/GIValuationCard.astro'
 import { supabase } from '../../lib/supabase'
@@ -30,7 +32,10 @@ const title = isGIItem
   ? `${r.title || 'Item'} — GAUK Insurance`
   : `${r.subcategory} — GAUK Antiques Valuation`
 ---
-<ValuationLayout title={title}>
+<AppLayout title={title}>
+  <div class="app-shell">
+    <AppSidebar activePage="vault" />
+    <div class="app-main val-main">
   {isGIItem
     ? <GIValuationCard item={item} />
     : <GAValuationCard item={item} creditCostEnrich={creditCostEnrich} />
@@ -153,4 +158,18 @@ const title = isGIItem
       }
     }
   </script>
-</ValuationLayout>
+    </div>
+  </div>
+  <AppBottomNav activePage="vault" />
+
+<style is:global>
+  .val-main {
+    margin-left: 220px;
+    min-height: 100vh;
+    background: var(--shell);
+  }
+  @media (max-width: 768px) {
+    .val-main { margin-left: 0; }
+  }
+</style>
+</AppLayout>
