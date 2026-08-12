@@ -14,6 +14,8 @@ const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium'
 const confCircumference = 2 * Math.PI * 20
 const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
 const valueDisplay = formatGIValueRange(r.value_range_low || 0, r.value_range_high || 0, currency)
+const userValue = item.user_value ?? null
+const userValueDisplay = userValue ? formatGISingleValue(userValue, currency) : null
 const valueLow = formatGISingleValue(r.value_range_low || 0, currency)
 const valueHigh = formatGISingleValue(r.value_range_high || 0, currency)
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -514,23 +516,34 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   <!-- VALUE -->
   <div class="gi-value-block">
-    <div class="gi-value-cap">Est. Replacement Cost</div>
-    <div class="gi-value-amount" id="gi-value-display">{valueDisplay}</div>
-    <div class="gi-value-note">AI estimate based on current retail pricing</div>
-    <div class="gi-value-strip">
-      <div class="gi-value-strip-cell">
-        <div class="gi-value-strip-label">Low estimate</div>
-        <div class="gi-value-strip-val">{valueLow}</div>
-      </div>
-      <div class="gi-value-strip-cell">
-        <div class="gi-value-strip-label">High estimate</div>
-        <div class="gi-value-strip-val">{valueHigh}</div>
-      </div>
-    </div>
+    {userValueDisplay ? (
+      <>
+        <div class="gi-value-cap" id="gi-value-cap">Your valuation</div>
+        <div class="gi-value-amount" id="gi-value-display">{userValueDisplay}</div>
+        <div class="gi-value-note" id="gi-value-note">Human verified &middot; overrides AI estimate</div>
+      </>
+    ) : (
+      <>
+        <div class="gi-value-cap" id="gi-value-cap">Est. Replacement Cost</div>
+        <div class="gi-value-amount" id="gi-value-display">{valueDisplay}</div>
+        <div class="gi-value-note" id="gi-value-note">AI estimate based on current retail pricing</div>
+        <div class="gi-value-strip">
+          <div class="gi-value-strip-cell">
+            <div class="gi-value-strip-label">Low estimate</div>
+            <div class="gi-value-strip-val">{valueLow}</div>
+          </div>
+          <div class="gi-value-strip-cell">
+            <div class="gi-value-strip-label">High estimate</div>
+            <div class="gi-value-strip-val">{valueHigh}</div>
+          </div>
+        </div>
+      </>
+    )}
+    <div class="gi-value-strip" id="gi-ai-strip" style={userValueDisplay ? 'display:none' : ''}></div>
     <div class="gi-edit-wrap">
-      <div class="gi-edit-label">Override value</div>
+      <div class="gi-edit-label">{userValueDisplay ? 'Update value' : 'Override value'}</div>
       <div class="gi-edit-row">
-        <input class="gi-edit-input" id="gi-edit-input" type="number" placeholder={String(r.value_range_high || 0)} />
+        <input class="gi-edit-input" id="gi-edit-input" type="number" placeholder={userValueDisplay ? String(userValue) : String(r.value_range_high || 0)} />
         <button class="gi-edit-btn" id="gi-edit-btn">Confirm</button>
       </div>
       <div class="gi-edit-saved" id="gi-edit-saved">Value updated</div>
@@ -677,25 +690,35 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       const roomSelect = document.getElementById('gi-room-select') as HTMLSelectElement
       if (roomSelect) roomSelect.value = item.room
     }
-    if (item?.user_value) {
-      const editInput = document.getElementById('gi-edit-input') as HTMLInputElement
-      if (editInput) editInput.placeholder = String(item.user_value)
-    }
+    // user_value rendered server-side — no client placeholder needed
   }
 
   // ── Edit price ────────────────────────────────────────────────────────────
   document.getElementById('gi-edit-btn')?.addEventListener('click', async () => {
     const input = document.getElementById('gi-edit-input') as HTMLInputElement
     const saved = document.getElementById('gi-edit-saved')
+    const capEl = document.getElementById('gi-value-cap')
+    const displayEl = document.getElementById('gi-value-display')
+    const noteEl = document.getElementById('gi-value-note')
+    const aiStrip = document.getElementById('gi-ai-strip')
     if (!input || !session || !itemId) return
     const val = parseFloat(input.value)
     if (isNaN(val) || val <= 0) return
     const { error } = await supabase
       .from('identifications').update({ user_value: val })
       .eq('id', itemId).eq('user_id', session.user.id)
-    if (!error && saved) {
-      saved.style.display = 'block'
-      setTimeout(() => { if (saved) saved.style.display = 'none' }, 2000)
+    if (!error) {
+      // Update display to human verified state
+      if (capEl) capEl.textContent = 'Your valuation'
+      if (displayEl) displayEl.textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val)
+      if (noteEl) noteEl.innerHTML = 'Human verified &middot; overrides AI estimate'
+      if (aiStrip) aiStrip.style.display = 'none'
+      input.placeholder = String(val)
+      input.value = ''
+      if (saved) {
+        saved.style.display = 'block'
+        setTimeout(() => { if (saved) saved.style.display = 'none' }, 2000)
+      }
     }
   })
 
