@@ -47,15 +47,14 @@ export const POST: APIRoute = async ({ request }) => {
       .single()
     const creditCost = parseInt(costSetting?.value ?? '5', 10)
 
-    // Deduct credits before AI call — reject if insufficient
-    for (let i = 0; i < creditCost; i++) {
-      const { data: ok } = await supabase.rpc('deduct_identification_credit', {
-        p_user_id: user.id,
-        p_site_id: ANTIQUES_SITE_ID,
-        p_identification_id: identification_id || null
-      })
-      if (!ok) return json({ error: 'Insufficient credits' }, 402)
-    }
+    // Deduct full credit cost in one operation
+    const { data: ok } = await supabase.rpc('deduct_identification_credit', {
+      p_user_id: user.id,
+      p_site_id: ANTIQUES_SITE_ID,
+      p_identification_id: identification_id || null,
+      p_amount: creditCost
+    })
+    if (!ok) return json({ error: 'Insufficient credits' }, 402)
 
     const promptConfig = await getPromptConfig(supabase, ANTIQUES_SITE_ID, 'enrich', 'system_prompt, model, max_tokens')
     if (!promptConfig?.system_prompt) return json({ error: 'Enrich prompt not configured' }, 500)
