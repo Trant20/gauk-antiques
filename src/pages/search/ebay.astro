@@ -1,0 +1,405 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import AppSidebar from '../../components/AppSidebar.astro'
+import AppBottomNav from '../../components/AppBottomNav.astro'
+import { supabase } from '../../lib/supabase'
+import { R2_CDN, ANTIQUES_SITE_ID } from '../../lib/constants'
+
+const identificationId = Astro.url.searchParams.get('id')
+
+let connectedItem: any = null
+let suggestedQuery = ''
+
+if (identificationId) {
+  const { data: item } = await supabase
+    .from('identifications')
+    .select('id, result_json, ebay_sold')
+    .eq('id', identificationId)
+    .single()
+
+  if (item) {
+    connectedItem = item
+    const r = item.result_json || {}
+    // Build suggested query from maker + subcategory core
+    const parts: string[] = []
+    if (r.maker && r.maker !== 'Unknown') parts.push(r.maker)
+    if (r.subcategory) {
+      const strip = new Set(['art','deco','nouveau','victorian','edwardian','georgian','antique','vintage','old','rare','english','british','french','german','lidded','covered','footed','small','large','a','an','the','and','or','of','with'])
+      const words = r.subcategory.toLowerCase().split(/[\s\/\-]+/)
+      const meaningful = words.filter((w: string) => w.length > 2 && !strip.has(w))
+      if (meaningful.length > 0) parts.push(meaningful.slice(0, 2).join(' '))
+    }
+    if (r.category_specific?.range && !/^(likely|possibly)/i.test(r.category_specific.range)) {
+      parts.push(r.category_specific.range.split(/[\s,\/]/)[0])
+    }
+    suggestedQuery = parts.join(' ')
+  }
+}
+---
+
+<AppLayout title="eBay Sold Search — GAUK">
+<style is:global>
+  .search-shell { display: flex; height: 100vh; overflow: hidden; }
+  .search-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  @media (max-width: 768px) { .search-main { margin-left: 0; padding-bottom: 64px; } }
+
+  /* ── TOPBAR ── */
+  .search-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+  .search-back { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; font-weight: 600; transition: color 0.15s; }
+  .search-back:hover { color: var(--text); }
+  .search-back-icon { color: var(--ga-gold-hi); }
+  .search-topbar-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; }
+
+  /* ── SCROLL ── */
+  .search-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+  @media (max-width: 768px) { .search-scroll { padding: 16px; } }
+
+  /* ── CONNECTED BANNER ── */
+  .search-connected-banner {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-left: 3px solid var(--ga-gold);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .search-connected-label { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ga-gold-hi); font-weight: 600; margin-bottom: 4px; }
+  .search-connected-title { font-family: var(--font-display); font-size: 18px; font-style: italic; color: var(--text); }
+  .search-connected-back { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; border: 1px solid var(--border-hi); padding: 7px 14px; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
+  .search-connected-back:hover { border-color: var(--ga-gold); color: var(--text); }
+
+  /* ── SEARCH BOX ── */
+  .search-box-wrap { margin-bottom: 24px; }
+  .search-box-label { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 10px; display: block; }
+  .search-box-row { display: flex; gap: 8px; }
+  .search-box-input { flex: 1; padding: 13px 16px; background: var(--surface); border: 1px solid var(--border-hi); font-family: var(--font-ui); font-size: 15px; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .search-box-input:focus { border-color: var(--ga-gold); }
+  .search-box-input::placeholder { color: var(--text-faint); }
+  .search-box-btn { padding: 13px 24px; background: var(--ga-gold); border: none; font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; flex-shrink: 0; }
+  .search-box-btn:hover { opacity: 0.85; }
+  .search-box-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .search-credit-note { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); margin-top: 8px; }
+  .search-credit-note strong { color: var(--ga-gold-hi); }
+
+  /* ── RESULTS ── */
+  .search-results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .search-results-label { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; }
+  .search-save-all-btn { font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 14px; background: var(--ga-gold); border: none; color: #fff; cursor: pointer; transition: opacity 0.15s; }
+  .search-save-all-btn:hover { opacity: 0.85; }
+
+  /* ── RESULT CARDS ── */
+  .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  @media (max-width: 600px) { .search-grid { grid-template-columns: 1fr; } }
+
+  .search-card { background: var(--surface); border: 1px solid var(--border-hi); border-left: 3px solid var(--ga-gold); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+  .search-card.selected { border-color: var(--ga-gold-hi); background: var(--surface-hi); }
+  .search-card-thumb { height: 140px; background: var(--surface-hi); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+  .search-card-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+  .search-card-thumb-placeholder { font-family: var(--font-display); font-size: 48px; color: var(--ga-gold); opacity: 0.2; }
+  .search-card-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; }
+  .search-card-title { font-family: var(--font-ui); font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+  .search-card-price { font-family: var(--font-display); font-size: 20px; color: var(--ga-gold-hi); margin-bottom: 6px; }
+  .search-card-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .search-card-condition { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); }
+  .search-card-date { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); }
+  .search-card-format { font-family: var(--font-ui); font-size: 10px; color: var(--text-mute); margin-top: 4px; }
+  .search-card-footer { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .search-card-select { display: flex; align-items: center; gap: 8px; font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); cursor: pointer; }
+  .search-card-select input { width: 14px; height: 14px; accent-color: var(--ga-gold); cursor: pointer; }
+  .search-card-link { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; transition: color 0.15s; }
+  .search-card-link:hover { color: var(--ga-gold-hi); }
+
+  /* ── STATES ── */
+  .search-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 240px; gap: 16px; text-align: center; }
+  .search-state-title { font-family: var(--font-display); font-size: 22px; color: var(--text-mute); font-style: italic; }
+  .search-state-sub { font-family: var(--font-ui); font-size: 13px; color: var(--text-mute); line-height: 1.6; max-width: 320px; }
+
+  /* ── SAVE CONFIRM ── */
+  .search-save-confirm { background: var(--surface); border: 1px solid var(--border-hi); border-left: 3px solid var(--ga-gold); padding: 16px 18px; margin-bottom: 24px; display: none; }
+  .search-save-confirm-text { font-family: var(--font-ui); font-size: 14px; color: var(--text); }
+  .search-save-confirm-text strong { color: var(--ga-gold-hi); }
+
+  /* ── LOADING ── */
+  .search-loading { display: none; }
+  .search-loading-text { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ga-gold-hi); animation: pulse 1.5s ease-in-out infinite; margin-bottom: 16px; }
+  .search-shimmer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .search-shimmer-card { background: var(--surface); border: 1px solid var(--border-hi); }
+  .search-shimmer-thumb { height: 140px; }
+  .search-shimmer-line { height: 10px; margin: 12px 14px 4px; border-radius: 2px; }
+  .search-shimmer-line-short { height: 10px; width: 55%; margin: 4px 14px 14px; border-radius: 2px; }
+  .shimmer { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hi) 50%, var(--surface) 75%); background-size: 400px 100%; animation: shimmer 1.4s ease-in-out infinite; }
+</style>
+
+<div class="search-shell">
+  <AppSidebar activePage="vault" />
+
+  <div class="search-main">
+    <div class="search-topbar">
+      <a href={connectedItem ? `/valuation/${connectedItem.id}` : '/library'} class="search-back">
+        <svg class="search-back-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        {connectedItem ? 'Back to Valuation' : 'The Vault'}
+      </a>
+      <span class="search-topbar-title">eBay Sold Search</span>
+    </div>
+
+    <div class="search-scroll">
+
+      {connectedItem && (
+        <div class="search-connected-banner">
+          <div>
+            <div class="search-connected-label">Connected to valuation</div>
+            <div class="search-connected-title">{connectedItem.result_json?.subcategory || connectedItem.result_json?.title || 'Item'}</div>
+          </div>
+          <a href={`/valuation/${connectedItem.id}`} class="search-connected-back">View Valuation</a>
+        </div>
+      )}
+
+      <!-- SEARCH BOX -->
+      <div class="search-box-wrap">
+        <label class="search-box-label" for="search-input">Search eBay Sold Listings</label>
+        <div class="search-box-row">
+          <input
+            class="search-box-input"
+            id="search-input"
+            type="text"
+            placeholder="e.g. Clarice Cliff teapot Bizarre"
+            value={suggestedQuery}
+          />
+          <button class="search-box-btn" id="search-btn">Search</button>
+        </div>
+        <div class="search-credit-note">
+          <strong>1 credit</strong> per search. Access to millions of real eBay sold prices.
+        </div>
+      </div>
+
+      <!-- SAVE CONFIRM -->
+      <div class="search-save-confirm" id="save-confirm">
+        <div class="search-save-confirm-text" id="save-confirm-text"></div>
+      </div>
+
+      <!-- LOADING -->
+      <div class="search-loading" id="search-loading">
+        <div class="search-loading-text">Searching sold listings...</div>
+        <div class="search-shimmer-grid">
+          {Array(4).fill(0).map(() => (
+            <div class="search-shimmer-card">
+              <div class="search-shimmer-thumb shimmer"></div>
+              <div class="search-shimmer-line shimmer"></div>
+              <div class="search-shimmer-line-short shimmer"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="search-results-wrap" style="display:none;">
+        <div class="search-results-head">
+          <div class="search-results-label" id="results-label"></div>
+          <button class="search-save-all-btn" id="save-selected-btn" style="display:none;">Save Selected</button>
+        </div>
+        <div class="search-grid" id="search-grid"></div>
+        <div style="font-family:var(--font-ui);font-size:11px;color:var(--text-mute);font-style:italic;margin-top:8px;">
+          Real sold prices from eBay. Results may include reproduction or loosely related pieces. Use as market context.
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div class="search-state" id="search-empty" style="display:none;">
+        <div class="search-state-title">No results found</div>
+        <div class="search-state-sub">Try a broader search. Use maker name and item type only, without qualifiers.</div>
+      </div>
+
+      <!-- INITIAL STATE -->
+      <div class="search-state" id="search-initial">
+        <div class="search-state-title">Search sold listings</div>
+        <div class="search-state-sub">Enter a maker, item type and style to find real sold prices from eBay. Each search costs 1 credit.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<AppBottomNav activePage="vault" />
+
+<script define:vars={{ identificationId, R2_CDN, suggestedQuery }}>
+  window.__ebaySearch = { identificationId, R2_CDN, suggestedQuery }
+</script>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+
+  const { identificationId, R2_CDN } = window.__ebaySearch
+
+  const searchInput = document.getElementById('search-input') as HTMLInputElement
+  const searchBtn = document.getElementById('search-btn') as HTMLButtonElement
+  const searchLoading = document.getElementById('search-loading')!
+  const searchResultsWrap = document.getElementById('search-results-wrap')!
+  const searchGrid = document.getElementById('search-grid')!
+  const resultsLabel = document.getElementById('results-label')!
+  const searchEmpty = document.getElementById('search-empty')!
+  const searchInitial = document.getElementById('search-initial')!
+  const saveSelectedBtn = document.getElementById('save-selected-btn')!
+  const saveConfirm = document.getElementById('save-confirm')!
+  const saveConfirmText = document.getElementById('save-confirm-text')!
+
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/search/ebay'
+  }
+
+  let currentResults: any[] = []
+  let selectedIds = new Set<string>()
+
+  function fmtPrice(price: number, shipping: number): string {
+    const total = price + (shipping || 0)
+    return '£' + total.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+  }
+
+  function fmtDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  function renderCards(results: any[]) {
+    searchGrid.innerHTML = results.map(item => {
+      const imageUrl = item.r2_key ? `${R2_CDN}/${item.r2_key}` : null
+      const price = fmtPrice(item.sale_price, item.shipping_price)
+      const date = item.date_sold ? fmtDate(item.date_sold) : ''
+      const bidsText = item.bids ? ` · ${item.bids} bids` : ''
+      const isSelected = selectedIds.has(item.item_id)
+
+      return `<div class="search-card${isSelected ? ' selected' : ''}" data-id="${item.item_id}">
+        <div class="search-card-thumb">
+          ${imageUrl
+            ? `<img src="${imageUrl}" alt="${item.title}" loading="lazy" />`
+            : `<div class="search-card-thumb-placeholder">£</div>`
+          }
+        </div>
+        <div class="search-card-body">
+          <div class="search-card-title">${item.title}</div>
+          <div class="search-card-price">${price}</div>
+          <div class="search-card-meta">
+            <span class="search-card-condition">${item.condition_raw || item.condition || ''}</span>
+            <span class="search-card-date">${date}</span>
+          </div>
+          <div class="search-card-format">${item.buying_format || ''}${bidsText}</div>
+        </div>
+        <div class="search-card-footer">
+          <label class="search-card-select">
+            <input type="checkbox" data-item-id="${item.item_id}" ${isSelected ? 'checked' : ''} />
+            Save to valuation
+          </label>
+          <a href="${item.item_link}" target="_blank" rel="noopener noreferrer" class="search-card-link">View on eBay</a>
+        </div>
+      </div>`
+    }).join('')
+
+    // Bind checkboxes
+    searchGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const target = e.target as HTMLInputElement
+        const itemId = target.dataset.itemId!
+        const card = target.closest('.search-card') as HTMLElement
+        if (target.checked) {
+          selectedIds.add(itemId)
+          card?.classList.add('selected')
+        } else {
+          selectedIds.delete(itemId)
+          card?.classList.remove('selected')
+        }
+        saveSelectedBtn.style.display = selectedIds.size > 0 ? 'block' : 'none'
+      })
+    })
+  }
+
+  async function doSearch() {
+    const query = searchInput.value.trim()
+    if (!query || !session) return
+
+    searchBtn.disabled = true
+    searchBtn.textContent = 'Searching...'
+    searchInitial.style.display = 'none'
+    searchEmpty.style.display = 'none'
+    searchResultsWrap.style.display = 'none'
+    searchLoading.style.display = 'block'
+    selectedIds.clear()
+
+    try {
+      const res = await fetch('/api/ebay-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ query, identification_id: identificationId || null })
+      })
+      const data = await res.json()
+
+      searchLoading.style.display = 'none'
+
+      if (data.error) {
+        searchEmpty.style.display = 'flex'
+        searchEmpty.querySelector('.search-state-sub')!.textContent = data.error
+      } else if (!data.results || data.results.length === 0) {
+        searchEmpty.style.display = 'flex'
+      } else {
+        currentResults = data.results
+        resultsLabel.textContent = `${data.results.length} results for "${query}"`
+        saveSelectedBtn.style.display = 'none'
+        searchResultsWrap.style.display = 'block'
+        renderCards(data.results)
+      }
+    } catch {
+      searchLoading.style.display = 'none'
+      searchEmpty.style.display = 'flex'
+    } finally {
+      searchBtn.disabled = false
+      searchBtn.textContent = 'Search'
+    }
+  }
+
+  searchBtn.addEventListener('click', doSearch)
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch()
+  })
+
+  // Save selected — handled in F4
+  saveSelectedBtn.addEventListener('click', async () => {
+    if (selectedIds.size === 0 || !session) return
+    const selected = currentResults.filter(r => selectedIds.has(r.item_id))
+
+    saveSelectedBtn.disabled = true
+    saveSelectedBtn.textContent = 'Saving...'
+
+    try {
+      const res = await fetch('/api/ebay-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          results: selected,
+          identification_id: identificationId || null,
+          query: searchInput.value.trim()
+        })
+      })
+      const data = await res.json()
+
+      if (data.error) {
+        saveSelectedBtn.textContent = 'Save Selected'
+        saveSelectedBtn.disabled = false
+      } else {
+        saveConfirmText.innerHTML = identificationId
+          ? `<strong>${selected.length} listing${selected.length > 1 ? 's' : ''}</strong> saved to your valuation card.`
+          : `<strong>${selected.length} listing${selected.length > 1 ? 's' : ''}</strong> saved to your search history.`
+        saveConfirm.style.display = 'block'
+        saveSelectedBtn.textContent = 'Saved'
+        setTimeout(() => {
+          saveSelectedBtn.textContent = 'Save Selected'
+          saveSelectedBtn.disabled = false
+        }, 2000)
+      }
+    } catch {
+      saveSelectedBtn.textContent = 'Save Selected'
+      saveSelectedBtn.disabled = false
+    }
+  })
+</script>
+</AppLayout>
