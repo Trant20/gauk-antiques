@@ -31,15 +31,60 @@ function arrayBufferToBase64Chunked(buffer: ArrayBuffer): string {
   return btoa(binary)
 }
 
-// Build a clean search query from identification result
-// Prefers search_terms from AI output (set at scan time), falls back to maker + category
+// Strip adjectives and filler words from subcategory to extract core item type
+// e.g. "Art Deco Lidded Preserve Pot / Jam Pot" → "Preserve Pot"
+function extractItemType(subcategory: string): string {
+  const strip = new Set([
+    'art','deco','nouveau','arts','crafts','victorian','edwardian','georgian',
+    'regency','baroque','rococo','gothic','medieval','renaissance',
+    'antique','vintage','old','rare','unusual','unique','fine','quality',
+    'english','british','french','german','italian','japanese','chinese',
+    'lidded','covered','footed','handled','mounted','fitted','framed',
+    'small','large','miniature','full','half','pair','set','collection',
+    'early','late','mid','circa','period','style','type','form','shape',
+    'a','an','the','and','or','of','with','for','by','in','on','from'
+  ])
+  // Split on space, slash, dash — take meaningful words only
+  const words = subcategory.toLowerCase().split(/[\s\/\-]+/)
+  const meaningful = words.filter(w => w.length > 2 && !strip.has(w))
+  // Take first 2 meaningful words max
+  return meaningful.slice(0, 2).join(' ')
+}
+
+// Build a clean search query from identification result — server-side extraction
+// maker + item type + distinguishing term (range or pattern)
 function buildTrawlQuery(result: any): string {
-  if (result.search_terms && result.search_terms.trim().length > 0) {
-    return result.search_terms.trim()
-  }
   const parts: string[] = []
-  if (result.maker && result.maker !== 'Unknown') parts.push(result.maker)
-  if (result.category) parts.push(result.category)
+
+  // 1. Maker
+  if (result.maker && result.maker.toLowerCase() !== 'unknown') {
+    parts.push(result.maker)
+  }
+
+  // 2. Core item type from subcategory
+  if (result.subcategory) {
+    const itemType = extractItemType(result.subcategory)
+    if (itemType) parts.push(itemType)
+  }
+
+  // 3. Distinguishing term — range first, then pattern (skip uncertain ones)
+  const cs = result.category_specific || {}
+  const uncertain = /^(likely|possibly|probably|perhaps|maybe)/i
+
+  if (cs.range && !uncertain.test(cs.range)) {
+    // Use first word of range only e.g. "Bizarre or Fantasque" → "Bizarre"
+    const rangeWord = cs.range.split(/[\s,\/]/)[0]
+    if (rangeWord && rangeWord.length > 2) parts.push(rangeWord)
+  } else if (cs.pattern && !uncertain.test(cs.pattern)) {
+    const patternWord = cs.pattern.split(/[\s,\/]/)[0]
+    if (patternWord && patternWord.length > 2) parts.push(patternWord)
+  }
+
+  // Fallback — if nothing useful, use category
+  if (parts.length === 0 && result.category) {
+    parts.push(result.category)
+  }
+
   return parts.join(' ').trim()
 }
 
