@@ -32,11 +32,14 @@ function arrayBufferToBase64Chunked(buffer: ArrayBuffer): string {
 }
 
 // Build a clean search query from identification result
+// Prefers search_terms from AI output (set at scan time), falls back to maker + category
 function buildTrawlQuery(result: any): string {
+  if (result.search_terms && result.search_terms.trim().length > 0) {
+    return result.search_terms.trim()
+  }
   const parts: string[] = []
   if (result.maker && result.maker !== 'Unknown') parts.push(result.maker)
-  if (result.subcategory) parts.push(result.subcategory)
-  else if (result.category) parts.push(result.category)
+  if (result.category) parts.push(result.category)
   return parts.join(' ').trim()
 }
 
