@@ -24,6 +24,8 @@ const confidenceOffset = circumference - (circumference * confidenceScore / 100)
 const confCircumference = 2 * Math.PI * 20
 const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+const userValue = item.user_value ?? null
+const userValueDisplay = userValue ? formatSingleValue(userValue) : null
 ---
 
 <style is:global>
@@ -196,6 +198,57 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     font-family: var(--font-display);
     font-size: 20px;
     color: var(--text);
+  }
+
+  /* ── EDIT VALUE ── */
+  .ga-edit-wrap {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .ga-edit-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+  }
+  .ga-edit-row { display: flex; gap: 8px; align-items: center; }
+  .ga-edit-input {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--shell);
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--text);
+    outline: none;
+  }
+  .ga-edit-input:focus { border-color: var(--ga-gold); }
+  .ga-edit-input::placeholder { color: var(--text-faint); }
+  .ga-edit-btn {
+    padding: 10px 20px;
+    background: var(--ga-gold);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .ga-edit-btn:hover { opacity: 0.85; }
+  .ga-edit-saved {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ga-gold-hi);
+    display: none;
+    margin-top: 6px;
   }
 
   /* ── SECTION ── */
@@ -812,18 +865,36 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   <!-- VALUE -->
   <div class="ga-value-section">
-    <div class="ga-value-cap">Estimated Value</div>
-    <div class="ga-value-number">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
-    <div class="ga-value-sub">AI appraisal estimate · not a formal valuation</div>
-    <div class="ga-value-strip">
-      <div class="ga-value-strip-cell">
-        <div class="ga-value-strip-label">Low estimate</div>
-        <div class="ga-value-strip-val">{formatSingleValue(r.value_range_low || 0)}</div>
+    {userValueDisplay ? (
+      <>
+        <div class="ga-value-cap" id="ga-value-cap">Your valuation</div>
+        <div class="ga-value-number" id="ga-value-display">{userValueDisplay}</div>
+        <div class="ga-value-sub" id="ga-value-sub">Owner verified &middot; overrides AI estimate</div>
+      </>
+    ) : (
+      <>
+        <div class="ga-value-cap" id="ga-value-cap">Estimated Value</div>
+        <div class="ga-value-number" id="ga-value-display">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
+        <div class="ga-value-sub" id="ga-value-sub">AI appraisal estimate · not a formal valuation</div>
+        <div class="ga-value-strip" id="ga-ai-strip">
+          <div class="ga-value-strip-cell">
+            <div class="ga-value-strip-label">Low estimate</div>
+            <div class="ga-value-strip-val">{formatSingleValue(r.value_range_low || 0)}</div>
+          </div>
+          <div class="ga-value-strip-cell">
+            <div class="ga-value-strip-label">High estimate</div>
+            <div class="ga-value-strip-val">{formatSingleValue(r.value_range_high || 0)}</div>
+          </div>
+        </div>
+      </>
+    )}
+    <div class="ga-edit-wrap">
+      <div class="ga-edit-label">{userValueDisplay ? 'Update value' : 'Override value'}</div>
+      <div class="ga-edit-row">
+        <input class="ga-edit-input" id="ga-edit-input" type="number" placeholder={userValueDisplay ? String(userValue) : String(r.value_range_high || 0)} />
+        <button class="ga-edit-btn" id="ga-edit-btn">Confirm</button>
       </div>
-      <div class="ga-value-strip-cell">
-        <div class="ga-value-strip-label">High estimate</div>
-        <div class="ga-value-strip-val">{formatSingleValue(r.value_range_high || 0)}</div>
-      </div>
+      <div class="ga-edit-saved" id="ga-edit-saved">Value updated</div>
     </div>
   </div>
 
@@ -1193,6 +1264,34 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   descText?.addEventListener('click', openDescEdit)
   descCancel?.addEventListener('click', closeDescEdit)
+
+  // ── Override value ────────────────────────────────────────────────────────
+  document.getElementById('ga-edit-btn')?.addEventListener('click', async () => {
+    const input = document.getElementById('ga-edit-input') as HTMLInputElement
+    const saved = document.getElementById('ga-edit-saved')
+    const capEl = document.getElementById('ga-value-cap')
+    const displayEl = document.getElementById('ga-value-display')
+    const subEl = document.getElementById('ga-value-sub')
+    const aiStrip = document.getElementById('ga-ai-strip')
+    if (!input || !session || !itemId) return
+    const val = parseFloat(input.value)
+    if (isNaN(val) || val <= 0) return
+    const { error } = await supabase
+      .from('identifications').update({ user_value: val })
+      .eq('id', itemId).eq('user_id', session.user.id)
+    if (!error) {
+      if (capEl) capEl.textContent = 'Your valuation'
+      if (displayEl) displayEl.textContent = '£' + val.toLocaleString('en-GB')
+      if (subEl) subEl.innerHTML = 'Owner verified &middot; overrides AI estimate'
+      if (aiStrip) aiStrip.style.display = 'none'
+      input.placeholder = String(val)
+      input.value = ''
+      if (saved) {
+        saved.style.display = 'block'
+        setTimeout(() => { if (saved) saved.style.display = 'none' }, 2000)
+      }
+    }
+  })
 
   descSave?.addEventListener('click', async () => {
     if (!descTextarea || !session || !itemId) return
