@@ -57,7 +57,7 @@ export const POST: APIRoute = async ({ request }) => {
       if (!ok) return json({ error: 'Insufficient credits' }, 402)
     }
 
-    const promptConfig = await getPromptConfig(supabase, 'enrich', 'system_prompt, model, max_tokens')
+    const promptConfig = await getPromptConfig(supabase, ANTIQUES_SITE_ID, 'enrich', 'system_prompt, model, max_tokens')
     if (!promptConfig?.system_prompt) return json({ error: 'Enrich prompt not configured' }, 500)
 
     const client = new Anthropic({ apiKey: (env as unknown as CloudflareEnv).ANTHROPIC_API_KEY })
