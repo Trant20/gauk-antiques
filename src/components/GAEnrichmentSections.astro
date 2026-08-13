@@ -210,7 +210,7 @@ const { enrichment, r } = Astro.props
     {enrichment.maker_detail?.notable_works && <p class="ga-expert-para">{enrichment.maker_detail.notable_works}</p>}
     {enrichment.manufacturer_detail?.history && (
       <>
-        <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin:16px 0 8px;">Manufacturer</div>
+        <div class="ga-section-head" style="margin-top:16px;"><div class="ga-section-title">Manufacturer</div></div>
         <p class="ga-expert-para">{enrichment.manufacturer_detail.history}</p>
         {enrichment.manufacturer_detail.relationship_to_maker && <p class="ga-expert-para">{enrichment.manufacturer_detail.relationship_to_maker}</p>}
       </>
