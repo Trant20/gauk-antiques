@@ -88,19 +88,6 @@ function buildTrawlQuery(result: any): string {
   return parts.join(' ').trim()
 }
 
-// Calculate price range from sold results, excluding top/bottom 10% outliers
-function calcPriceRange(results: any[]): { low: number; high: number } | null {
-  if (!results || results.length === 0) return null
-  const prices = results.map(r => r.sale_price).filter(p => p > 0).sort((a, b) => a - b)
-  if (prices.length === 0) return null
-  const trim = Math.floor(prices.length * 0.1)
-  const trimmed = prices.length > 4 ? prices.slice(trim, prices.length - trim) : prices
-  return {
-    low: Math.round(trimmed[0]),
-    high: Math.round(trimmed[trimmed.length - 1])
-  }
-}
-
 // Fetch eBay sold data from Trawl and proxy images to R2
 async function fetchEbaySold(
   result: any,
@@ -249,19 +236,10 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ error: 'AI returned malformed response' }, 500)
     }
 
-    // Calculate real price range from eBay data
-    const realPriceRange = calcPriceRange(ebaySold)
-
-    // Build update payload
+    // Build update payload — price range always from AI, not eBay
     const updatePayload: Record<string, any> = {
       enrichment_json: enrichment,
       ebay_sold: ebaySold.length > 0 ? ebaySold : null
-    }
-
-    // Update value_range with real data if available
-    if (realPriceRange) {
-      updatePayload.value_range_low = realPriceRange.low
-      updatePayload.value_range_high = realPriceRange.high
     }
 
     if (identification_id) {
@@ -286,7 +264,7 @@ export const POST: APIRoute = async ({ request }) => {
       cost_pence: costPence
     })
 
-    return json({ enrichment, ebay_sold: ebaySold, real_price_range: realPriceRange })
+    return json({ enrichment, ebay_sold: ebaySold })
 
   } catch (err: any) {
     return json({ error: err.message }, 500)
