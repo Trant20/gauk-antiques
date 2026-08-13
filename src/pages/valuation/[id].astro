@@ -147,11 +147,11 @@ const title = isGIItem
                 if (stageEl) stageEl.textContent = 'Report ready'
                 setTimeout(() => window.location.reload(), 400)
               } else if (data.error) {
-                if (enrichLoading) enrichLoading.innerHTML = `<div style="font-family:Prata,Georgia,serif;font-size:12px;color:var(--c-text-mid);padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>`
+                if (enrichLoading) enrichLoading.innerHTML = `<div style="font-family:Inter,sans-serif;font-size:12px;color:var(--text-mute);padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>`
               }
             })
             .catch(() => {
-              if (enrichLoading) enrichLoading.innerHTML = `<div style="font-family:Prata,Georgia,serif;font-size:12px;color:var(--c-text-mid);padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>`
+              if (enrichLoading) enrichLoading.innerHTML = `<div style="font-family:Inter,sans-serif;font-size:12px;color:var(--text-mute);padding:20px;text-align:center">Report generation unavailable — please refresh to try again.</div>`
             })
           })
         }
