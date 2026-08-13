@@ -27,170 +27,747 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 ---
 
 <style is:global>
-  .ga-card { width: 100%; max-width: 100%; padding-bottom: 100px; background: var(--c-bg); }
-
-  /* ── CAP / SECTION ── */
-  .cap { font-family: var(--font-serif); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); }
-  .section { padding: 28px 20px; border-bottom: 1px solid var(--c-border); }
-  .section-head { margin-bottom: 20px; padding-left: 12px; border-left: 2px solid var(--c-gold); }
-  .section-head .cap { font-size: 16px; letter-spacing: 2px; font-weight: 700; color: var(--c-gold); text-transform: uppercase; }
-  .section-head-line { display: none; }
-
-  /* ── HEADER ── */
-  .ga-header {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px;
-    background: var(--c-dark-bg); backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--c-border);
+  .ga-card {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
   }
-  @media (max-width: 767px) { .ga-header { padding-left: 20px; } }
-  .ga-logo { font-family: var(--font-serif); font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: var(--c-text); }
-  .ga-logo span { color: var(--c-gold); }
-  .ga-breadcrumb { display: flex; align-items: center; gap: 6px; }
-  .ga-bc-link { font-family: var(--font-serif); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-gold); text-decoration: none; }
-  .ga-bc-link:hover { color: var(--c-text); }
-  .ga-bc-sep { font-family: var(--font-serif); font-size: 10px; color: var(--c-border); }
-  .ga-bc-cur { font-family: var(--font-serif); font-size: 10px; letter-spacing: 1px; color: var(--c-text-mid); text-transform: uppercase; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  @media (max-width: 400px) { .ga-bc-hide-sm { display: none; } }
-  .ga-delete-btn { font-family: var(--font-serif); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-mid); background: none; border: 1px solid var(--c-border); padding: 6px 12px; cursor: pointer; transition: border-color .2s, color .2s; }
-  .ga-delete-btn:hover { border-color: var(--c-warn); color: var(--c-warn); }
 
-  /* ── DELETE MODAL ── */
-  .ga-del-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(28,24,16,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .ga-del-modal { background: var(--c-bg); border: 1px solid var(--c-border); padding: 32px 24px; max-width: 320px; width: 100%; text-align: center; }
-  .ga-del-title { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--c-text); margin-bottom: 10px; }
-  .ga-del-sub { font-family: var(--font-serif); font-size: 14px; color: var(--c-text-mid); line-height: 1.7; margin-bottom: 24px; }
-  .ga-del-btns { display: flex; gap: 8px; }
-  .ga-del-cancel { flex: 1; font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: none; border: 1px solid var(--c-border); padding: 12px; cursor: pointer; color: var(--c-text-dim); }
-  .ga-del-confirm { flex: 1; font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: var(--c-dark); border: 1px solid var(--c-dark); padding: 12px; cursor: pointer; color: var(--c-bg); }
-
-  /* ── HERO IMAGE ── */
-  .ga-image-wrap { position: relative; }
-  .ga-image-single { width: 100%; max-height: 420px; object-fit: contain; background: var(--c-surface); display: block; }
-  .ga-image-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--c-border); }
-  .ga-image-dual img { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: var(--c-surface); display: block; }
-  .ga-image-dual-label { font-family: var(--font-serif); font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-mid); text-align: center; padding: 5px 0; background: var(--c-surface); }
-  @media (max-width: 480px) { .ga-image-dual { grid-template-columns: 1fr; } .ga-image-dual img { aspect-ratio: 4/3; } }
-  .ga-conf-arc { position: absolute; bottom: 14px; right: 14px; z-index: 10; }
-  .ga-conf-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 10px; color: var(--c-gold); }
+  /* ── IMAGE ── */
+  .ga-image-wrap {
+    position: relative;
+    border-left: 3px solid var(--ga-gold);
+    background: var(--surface);
+    margin-bottom: 24px;
+  }
+  .ga-image-single {
+    width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+    background: var(--surface);
+    display: block;
+  }
+  .ga-image-dual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+  .ga-image-dual img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: contain;
+    background: var(--surface);
+    display: block;
+  }
+  .ga-image-dual-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    text-align: center;
+    padding: 5px 0;
+    background: var(--surface);
+  }
+  @media (max-width: 480px) {
+    .ga-image-dual { grid-template-columns: 1fr; }
+    .ga-image-dual img { aspect-ratio: 4/3; }
+  }
+  .ga-conf-arc {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    z-index: 10;
+  }
+  .ga-conf-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-ui);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--ga-gold-hi);
+  }
 
   /* ── TITLE ── */
-  .ga-badges { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0; }
-  .ga-category { font-family: var(--font-serif); font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--c-gold); }
-  .ga-title { font-family: var(--font-display); font-size: clamp(22px, 5vw, 30px); font-weight: 400; line-height: 1.2; color: var(--c-text); padding: 10px 20px 6px; font-style: italic; }
-  .ga-subtitle { font-family: var(--font-serif); font-size: 16px; color: var(--c-text-dim); padding: 0 20px 12px; }
-  .ga-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 16px; }
-  .ga-tag { display: inline-block; padding: 4px 10px; border: 1px solid var(--c-border); font-family: var(--font-serif); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-text-dim); }
+  .ga-badges {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .ga-category {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ga-gold-hi);
+  }
+  .ga-title {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--text);
+    font-style: italic;
+    margin-bottom: 6px;
+  }
+  .ga-subtitle {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .ga-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .ga-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
 
   /* ── VALUE ── */
-  .ga-value-section { background: var(--c-surface); border-top: 1px solid var(--c-border); border-bottom: 1px solid var(--c-border); padding: 28px 20px; text-align: center; }
-  .ga-value-number { font-family: var(--font-display); font-size: clamp(32px, 7vw, 48px); font-weight: 400; line-height: 1; color: var(--c-gold); letter-spacing: -1px; margin-bottom: 6px; }
-  .ga-value-sub { font-family: var(--font-serif); font-size: 16px; color: var(--c-text-mid); margin-bottom: 20px; }
-  .ga-value-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--c-border); margin-top: 16px; }
-  .ga-value-strip-cell { background: var(--c-surface); padding: 14px 8px; }
-  .ga-value-strip-label { font-family: var(--font-serif); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); margin-bottom: 6px; }
-  .ga-value-strip-val { font-family: var(--font-display); font-size: 20px; color: var(--c-text); }
+  .ga-value-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--ga-gold);
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .ga-value-cap {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-mute);
+    margin-bottom: 12px;
+  }
+  .ga-value-number {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 7vw, 48px);
+    font-weight: 400;
+    line-height: 1;
+    color: var(--ga-gold-hi);
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .ga-value-sub {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-mute);
+    margin-bottom: 20px;
+  }
+  .ga-value-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    margin-top: 16px;
+  }
+  .ga-value-strip-cell {
+    background: var(--surface-hi);
+    padding: 14px 8px;
+  }
+  .ga-value-strip-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+  }
+  .ga-value-strip-val {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+  }
+
+  /* ── SECTION ── */
+  .ga-section {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ga-section-head {
+    margin-bottom: 20px;
+    padding-left: 12px;
+    border-left: 2px solid var(--ga-gold);
+  }
+  .ga-section-title {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    font-weight: 700;
+    color: var(--ga-gold-hi);
+    text-transform: uppercase;
+  }
 
   /* ── ID TABLE ── */
-  .ga-id-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--c-border-lo); }
+  .ga-id-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
   .ga-id-row:last-child { border-bottom: none; }
-  .ga-id-key { width: 120px; flex-shrink: 0; font-family: var(--font-serif); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); padding-top: 2px; }
-  .ga-id-val { font-family: var(--font-serif); font-size: 16px; color: var(--c-text); line-height: 1.5; flex: 1; }
+  .ga-id-key {
+    width: 120px;
+    flex-shrink: 0;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    padding-top: 2px;
+  }
+  .ga-id-val {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  /* ── INLINE EDIT ── */
+  .ga-inline-edit-wrap { position: relative; flex: 1; }
+  .ga-inline-text {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--border-hi);
+    padding-bottom: 2px;
+    transition: border-color .2s;
+    display: block;
+  }
+  .ga-inline-text:hover { border-bottom-color: var(--ga-gold); }
+  .ga-inline-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--shell);
+    border: 1px solid var(--ga-gold);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    display: none;
+  }
+  .ga-inline-actions {
+    display: none;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .ga-inline-save {
+    padding: 7px 16px;
+    background: var(--ga-gold);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+  }
+  .ga-inline-cancel {
+    padding: 7px 16px;
+    background: none;
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    cursor: pointer;
+  }
+  .ga-inline-hint {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    color: var(--text-mute);
+    margin-top: 4px;
+    display: block;
+  }
 
   /* ── GAUGES ── */
-  .ga-gauges { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-  @media (max-width: 480px) { .ga-gauges { grid-template-columns: 1fr 1fr; gap: 16px; } }
+  .ga-gauges {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 480px) {
+    .ga-gauges { grid-template-columns: 1fr 1fr; gap: 16px; }
+  }
   .ga-gauge { text-align: center; }
   .ga-gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
-  .ga-gauge-label { font-family: var(--font-serif); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-mid); }
+  .ga-gauge-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
 
   /* ── CONDITION ── */
-  .ga-condition-grade { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--c-border); margin-bottom: 16px; }
-  .ga-condition-grade-label { font-family: var(--font-serif); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-text-mid); }
-  .ga-condition-grade-val { font-family: var(--font-display); font-size: 20px; color: var(--c-text); font-style: italic; }
+  .ga-condition-grade {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .ga-condition-grade-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+  .ga-condition-grade-val {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+    font-style: italic;
+  }
   .ga-check-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
   .ga-check-item { display: flex; gap: 10px; align-items: flex-start; }
-  .ga-check-icon { font-family: var(--font-serif); font-size: 16px; line-height: 1.5; flex-shrink: 0; color: var(--c-teal); width: 16px; }
-  .ga-check-icon.warn { color: var(--c-warn); }
-  .ga-check-text { font-family: var(--font-serif); font-size: 16px; color: var(--c-text-dim); line-height: 1.5; }
+  .ga-check-icon {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.5;
+    flex-shrink: 0;
+    color: #2A7060;
+    width: 16px;
+  }
+  .ga-check-icon.warn { color: #C46028; }
+  .ga-check-text {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
 
   /* ── EXPERT NOTES ── */
-  .ga-expert-para { font-family: var(--font-serif); font-size: 16px; line-height: 1.9; color: var(--c-text-dim); margin-bottom: 14px; }
+  .ga-expert-para {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
   .ga-expert-para:last-child { margin-bottom: 0; }
 
   /* ── TIMELINE ── */
   .ga-timeline { position: relative; padding-left: 22px; }
-  .ga-timeline-line { position: absolute; left: 5px; top: 10px; bottom: 10px; width: 1px; background: var(--c-border); }
-  .ga-tl-item { position: relative; padding: 10px 0 10px 14px; border-bottom: 1px solid var(--c-border-lo); }
+  .ga-timeline-line {
+    position: absolute;
+    left: 5px; top: 10px; bottom: 10px;
+    width: 1px;
+    background: var(--border);
+  }
+  .ga-tl-item {
+    position: relative;
+    padding: 10px 0 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
   .ga-tl-item:last-child { border-bottom: none; }
-  .ga-tl-dot { position: absolute; left: -17px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--c-surface-mid); border: 1.5px solid var(--c-border); z-index: 1; }
-  .ga-tl-dot.highlight { background: var(--c-gold); border-color: var(--c-gold); }
+  .ga-tl-dot {
+    position: absolute;
+    left: -17px; top: 14px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--surface-hi);
+    border: 1.5px solid var(--border-hi);
+    z-index: 1;
+  }
+  .ga-tl-dot.highlight { background: var(--ga-gold); border-color: var(--ga-gold); }
   .ga-tl-inner { display: flex; gap: 10px; align-items: baseline; }
-  .ga-tl-year { font-family: var(--font-display); font-size: 16px; color: var(--c-text-mid); flex-shrink: 0; width: 48px; }
-  .ga-tl-year.highlight { color: var(--c-gold); font-style: italic; }
-  .ga-tl-label { font-family: var(--font-serif); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-text-mid); margin-bottom: 2px; }
-  .ga-tl-label.highlight { color: var(--c-gold); }
-  .ga-tl-note { font-family: var(--font-serif); font-size: 16px; color: var(--c-text-dim); line-height: 1.5; }
+  .ga-tl-year {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text-mute);
+    flex-shrink: 0;
+    width: 48px;
+  }
+  .ga-tl-year.highlight { color: var(--ga-gold-hi); font-style: italic; }
+  .ga-tl-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 2px;
+  }
+  .ga-tl-label.highlight { color: var(--ga-gold-hi); }
+  .ga-tl-note {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
 
   /* ── OPTIONS ── */
-  .ga-options { display: flex; flex-direction: column; gap: 1px; background: var(--c-border); }
-  .ga-option { padding: 16px; display: flex; align-items: flex-start; gap: 12px; background: var(--c-surface-lo); }
-  .ga-option.rec { background: var(--c-surface-mid); }
-  .ga-option-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: var(--c-border); }
-  .ga-option-dot.rec { background: var(--c-gold); }
-  .ga-option-action { font-family: var(--font-display); font-size: 16px; color: var(--c-text-dim); margin-bottom: 4px; }
-  .ga-option-action.rec { color: var(--c-text); font-style: italic; }
-  .ga-option-rec-badge { font-family: var(--font-serif); font-size: 9px; letter-spacing: 2px; color: var(--c-gold); margin-left: 10px; }
-  .ga-option-detail { font-family: var(--font-serif); font-size: 16px; color: var(--c-text-mid); line-height: 1.5; }
+  .ga-options { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+  .ga-option {
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface);
+  }
+  .ga-option.rec { background: var(--surface-hi); }
+  .ga-option-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+    background: var(--border-hi);
+  }
+  .ga-option-dot.rec { background: var(--ga-gold); }
+  .ga-option-action {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .ga-option-action.rec { color: var(--text); font-style: italic; }
+  .ga-option-rec-badge {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--ga-gold-hi);
+    margin-left: 10px;
+  }
+  .ga-option-detail {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-mute);
+    line-height: 1.5;
+  }
 
   /* ── COMPARABLES ── */
-  .ga-comp-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--c-border-lo); gap: 12px; }
+  .ga-comp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
   .ga-comp-row:last-child { border-bottom: none; }
-  .ga-comp-title { font-family: var(--font-serif); font-size: 16px; color: var(--c-text); margin-bottom: 2px; }
-  .ga-comp-sub { font-family: var(--font-serif); font-size: 16px; color: var(--c-text-mid); }
-  .ga-comp-val { font-family: var(--font-display); font-size: 16px; color: var(--c-gold); flex-shrink: 0; }
+  .ga-comp-title {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .ga-comp-sub {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-mute);
+  }
+  .ga-comp-val {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--ga-gold-hi);
+    flex-shrink: 0;
+  }
 
   /* ── FOOTER ── */
-  .ga-footer { padding: 20px; border-top: 1px solid var(--c-border); display: flex; justify-content: space-between; align-items: center; }
-  .ga-footer-brand { font-family: var(--font-display); font-size: 13px; font-style: italic; color: var(--c-gold); margin-bottom: 3px; }
-  .ga-ai-disclaimer { font-family: var(--font-serif); font-size: 9px; letter-spacing: 1px; color: var(--c-text-mid); line-height: 1.6; max-width: 200px; }
+  .ga-footer {
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .ga-footer-brand {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ga-gold-hi);
+    margin-bottom: 4px;
+  }
+  .ga-ai-disclaimer {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-mute);
+    line-height: 1.6;
+  }
 
-  /* ── STICKY ACTIONS ── */
-  .ga-sticky-actions { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: var(--c-dark-bg); backdrop-filter: blur(20px); border-top: 1px solid var(--c-border); padding: 12px 20px calc(24px + env(safe-area-inset-bottom)); display: flex; gap: 8px; }
-  .ga-action-btn { flex: 1; padding: 13px; background: transparent; border: 1px solid var(--c-border); font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-dim); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; transition: border-color .2s; }
-  .ga-action-btn:hover { border-color: var(--c-gold); color: var(--c-text); }
-  .ga-action-btn.primary { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-bg); }
+  /* ── DELETE BUTTON ── */
+  .ga-delete-btn {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    background: none;
+    border: 1px solid var(--border-hi);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .ga-delete-btn:hover { border-color: #c46028; color: #c46028; }
+
+  /* ── DELETE MODAL ── */
+  .ga-del-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .ga-del-modal {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    padding: 32px 24px;
+    max-width: 320px; width: 100%;
+    text-align: center;
+  }
+  .ga-del-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .ga-del-sub {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .ga-del-btns { display: flex; gap: 8px; }
+  .ga-del-cancel {
+    flex: 1;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid var(--border-hi);
+    padding: 12px;
+    cursor: pointer;
+    color: var(--text-dim);
+  }
+  .ga-del-confirm {
+    flex: 1;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #c46028;
+    border: 1px solid #c46028;
+    padding: 12px;
+    cursor: pointer;
+    color: #fff;
+  }
+
+  /* ── CARD ACTIONS (inline) ── */
+  .ga-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .ga-action-btn {
+    flex: 1;
+    padding: 13px;
+    background: transparent;
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: border-color .2s, color .2s;
+  }
+  .ga-action-btn:hover { border-color: var(--ga-gold); color: var(--text); }
+  .ga-action-btn.primary {
+    background: var(--ga-gold);
+    border-color: var(--ga-gold);
+    color: #fff;
+  }
+  .ga-action-btn.primary:hover { opacity: 0.85; }
+
+  /* ── ENRICH GATE ── */
+  .ga-enrich-gate {
+    padding: 40px 24px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+  .ga-enrich-gate-eyebrow {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ga-gold-hi);
+    margin-bottom: 12px;
+  }
+  .ga-enrich-gate-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .ga-enrich-gate-body {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.8;
+    margin-bottom: 24px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .ga-enrich-gate-cost {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-mute);
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+  .ga-enrich-btn {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 10px;
+    padding: 16px;
+    background: var(--ga-gold);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .ga-enrich-btn:hover { opacity: 0.85; }
+  .ga-enrich-link {
+    display: none;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 16px;
+    background: var(--ga-gold);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    text-decoration: none;
+    text-align: center;
+    box-sizing: border-box;
+  }
 
   /* ── ENRICH LOADING ── */
-  .ga-enrich-loading { padding: 32px 20px 40px; }
-  .ga-enrich-stage { font-family: var(--font-serif); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-gold); text-align: center; margin-bottom: 20px; min-height: 16px; animation: pulse 2s ease-in-out infinite; }
-  .ga-enrich-progress-wrap { height: 2px; background: var(--c-surface-mid); margin-bottom: 20px; overflow: hidden; }
-  .ga-enrich-progress-bar { height: 100%; background: linear-gradient(90deg, var(--c-gold-hi), var(--c-gold)); width: 0%; transition: width .6s ease; }
+  .ga-enrich-loading { padding: 32px 24px 40px; }
+  .ga-enrich-stage {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ga-gold-hi);
+    text-align: center;
+    margin-bottom: 20px;
+    min-height: 16px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .ga-enrich-progress-wrap {
+    height: 2px;
+    background: var(--border-hi);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .ga-enrich-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ga-gold-hi), var(--ga-gold));
+    width: 0%;
+    transition: width .6s ease;
+  }
   .ga-enrich-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-  .ga-enrich-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--c-surface); opacity: .4; transition: opacity .4s; }
+  .ga-enrich-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface);
+    opacity: .4;
+    transition: opacity .4s;
+  }
   .ga-enrich-step.active { opacity: 1; }
   .ga-enrich-step.done { opacity: .7; }
-  .ga-enrich-step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c-border); flex-shrink: 0; transition: background .4s; }
-  .ga-enrich-step.active .ga-enrich-step-dot { background: var(--c-gold); }
-  .ga-enrich-step.done .ga-enrich-step-dot { background: var(--c-teal); }
-  .ga-enrich-step-text { font-family: var(--font-serif); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-dim); }
-  .ga-enrich-disclaimer { font-family: var(--font-serif); font-size: 11px; color: var(--c-text-mid); line-height: 1.8; text-align: center; border-top: 1px solid var(--c-border); padding-top: 16px; }
+  .ga-enrich-step-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border-hi);
+    flex-shrink: 0;
+    transition: background .4s;
+  }
+  .ga-enrich-step.active .ga-enrich-step-dot { background: var(--ga-gold); }
+  .ga-enrich-step.done .ga-enrich-step-dot { background: #2A7060; }
+  .ga-enrich-step-text {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .ga-enrich-disclaimer {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-mute);
+    line-height: 1.8;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .ga-card { padding: 20px 16px 100px; }
+  }
 </style>
 
 <div class="ga-card">
-
-  <!-- HEADER -->
-  <header class="ga-header">
-    <div class="ga-logo">GAUK <span>Antiques</span></div>
-    <nav class="ga-breadcrumb">
-      <a href="/library" class="ga-bc-link">The Vault</a>
-      <span class="ga-bc-sep">›</span>
-      <span class="ga-bc-cur">{r.category}</span>
-      <span class="ga-bc-sep ga-bc-hide-sm">›</span>
-      <span class="ga-bc-cur ga-bc-hide-sm">{r.subcategory}</span>
-    </nav>
-  </header>
 
   <!-- IMAGE + CONFIDENCE ARC -->
   <div class="ga-image-wrap">
@@ -210,9 +787,10 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     )}
     <div class="ga-conf-arc">
       <svg width="50" height="50" viewBox="0 0 50 50">
-        <circle cx="25" cy="25" r="20" fill={`rgba(239,231,217,.92)`} stroke={`var(--c-surface-mid)`} stroke-width="2"/>
-        <circle cx="25" cy="25" r="20" fill="none" stroke="var(--c-gold)" stroke-width="2.5"
-          stroke-dasharray={confCircumference} stroke-dashoffset={confOffset} stroke-linecap="round"/>
+        <circle cx="25" cy="25" r="20" fill="var(--surface)" stroke="var(--border-hi)" stroke-width="2"/>
+        <circle cx="25" cy="25" r="20" fill="none" stroke="var(--ga-gold)" stroke-width="2.5"
+          stroke-dasharray={confCircumference} stroke-dashoffset={confOffset} stroke-linecap="round"
+          transform="rotate(-90 25 25)"/>
       </svg>
       <div class="ga-conf-label">{confidenceScore}%</div>
     </div>
@@ -234,7 +812,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 
   <!-- VALUE -->
   <div class="ga-value-section">
-    <div class="cap" style="margin-bottom:12px">Estimated Value</div>
+    <div class="ga-value-cap">Estimated Value</div>
     <div class="ga-value-number">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
     <div class="ga-value-sub">AI appraisal estimate · not a formal valuation</div>
     <div class="ga-value-strip">
@@ -250,11 +828,22 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   </div>
 
   <!-- IDENTIFICATION -->
-  <div class="section">
-    <div class="section-head">
-      <div class="cap">Identification</div>
-      <div class="section-head-line"></div>
-    </div>
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Identification</div></div>
+    {r.description && (
+      <div class="ga-id-row">
+        <div class="ga-id-key">Description</div>
+        <div class="ga-inline-edit-wrap">
+          <span class="ga-inline-text" id="ga-desc-text">{r.description}</span>
+          <textarea class="ga-inline-textarea" id="ga-desc-textarea">{r.description}</textarea>
+          <div class="ga-inline-actions" id="ga-desc-actions">
+            <button class="ga-inline-save" id="ga-desc-save">Save</button>
+            <button class="ga-inline-cancel" id="ga-desc-cancel">Cancel</button>
+          </div>
+          <span class="ga-inline-hint">Click to edit</span>
+        </div>
+      </div>
+    )}
     {r.maker && <div class="ga-id-row"><div class="ga-id-key">Maker</div><div class="ga-id-val">{r.maker}</div></div>}
     {r.manufacturer && r.manufacturer !== r.maker && <div class="ga-id-row"><div class="ga-id-key">Manufacturer</div><div class="ga-id-val">{r.manufacturer}</div></div>}
     {r.period && <div class="ga-id-row"><div class="ga-id-key">Period</div><div class="ga-id-val">{r.period}{r.circa ? ` · ${r.circa}` : ''}</div></div>}
@@ -266,52 +855,49 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   </div>
 
   <!-- CONDITION -->
-  <div class="section">
-    <div class="section-head">
-      <div class="cap">Condition Report</div>
-      <div class="section-head-line"></div>
-    </div>
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Condition Report</div></div>
     <div class="ga-gauges">
       <div class="ga-gauge">
         <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--c-surface-mid)" stroke-width="4"/>
-          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--c-gold)" stroke-width="4"
+          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--ga-gold)" stroke-width="4"
             stroke-dasharray={circumference} stroke-dashoffset={conditionOffset} stroke-linecap="round"/>
           <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="var(--c-text)"
+            font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
             transform="rotate(90 41 41)">{conditionScore}</text>
         </svg>
         <div class="ga-gauge-label">Overall</div>
       </div>
       <div class="ga-gauge">
         <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--c-surface-mid)" stroke-width="4"/>
-          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--c-teal)" stroke-width="4"
+          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#2A7060" stroke-width="4"
             stroke-dasharray={circumference} stroke-dashoffset={desirabilityOffset} stroke-linecap="round"/>
           <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="var(--c-text)"
+            font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
             transform="rotate(90 41 41)">{desirabilityScore}</text>
         </svg>
         <div class="ga-gauge-label">Desirability</div>
       </div>
       <div class="ga-gauge">
         <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--c-surface-mid)" stroke-width="4"/>
-          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--c-warn)" stroke-width="4"
+          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="#C46028" stroke-width="4"
             stroke-dasharray={circumference} stroke-dashoffset={rarityOffset} stroke-linecap="round"/>
           <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="var(--c-text)"
+            font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
             transform="rotate(90 41 41)">{rarityScore}</text>
         </svg>
         <div class="ga-gauge-label">Rarity</div>
       </div>
       <div class="ga-gauge">
         <svg width="82" height="82" viewBox="0 0 82 82">
-          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--c-surface-mid)" stroke-width="4"/>
+          <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
           <circle cx="41" cy="41" r="34" fill="none" stroke="#2A4A7C" stroke-width="4"
             stroke-dasharray={circumference} stroke-dashoffset={confidenceOffset} stroke-linecap="round"/>
           <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
-            font-family="Playfair Display, serif" font-size="14" fill="var(--c-text)"
+            font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
             transform="rotate(90 41 41)">{confidenceScore}</text>
         </svg>
         <div class="ga-gauge-label">Confidence</div>
@@ -320,8 +906,8 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     <div class="ga-condition-grade">
       <span class="ga-condition-grade-label">Grade</span>
       <div style="display:flex;align-items:center;gap:16px;flex:1;margin-left:20px;">
-        <div style={`flex:1;height:3px;background:var(--c-surface-mid);border-radius:2px;overflow:hidden;`}>
-          <div style={`width:${conditionScore}%;height:100%;background:linear-gradient(90deg,var(--c-gold-hi),var(--c-gold));border-radius:2px;`}></div>
+        <div style="flex:1;height:3px;background:var(--border-hi);border-radius:2px;overflow:hidden;">
+          <div style={`width:${conditionScore}%;height:100%;background:linear-gradient(90deg,var(--ga-gold-hi),var(--ga-gold));border-radius:2px;`}></div>
         </div>
         <span class="ga-condition-grade-val">{r.condition === 'Mint' ? 'Mint — A+' : r.condition === 'Excellent' ? 'Excellent — A' : r.condition === 'Good' ? 'Very Good — B+' : r.condition === 'Fair' ? 'Fair — C' : 'Poor — D'}</span>
       </div>
@@ -360,51 +946,51 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
           const areaPoints = `${padL},${padT + plotH} ${points} ${toX(prices.length-1)},${padT + plotH}`
           const peakY = enrichment.price_peak ? toY(enrichment.price_peak.value) : padT
           return (
-            <div class="section">
-              <div class="section-head"><div class="cap">Market Value 2010–2024</div><div class="section-head-line"></div></div>
-              {enrichment.price_context && <p style={`font-family:var(--font-serif);font-size:14px;color:var(--c-text-dim);margin-bottom:16px;line-height:1.7`}>{enrichment.price_context}</p>}
+            <div class="ga-section">
+              <div class="ga-section-head"><div class="ga-section-title">Market Value 2010–2024</div></div>
+              {enrichment.price_context && <p class="ga-expert-para">{enrichment.price_context}</p>}
               <svg width="100%" viewBox={`0 0 ${chartW} ${chartH}`} style="display:block;overflow:visible">
                 <defs>
                   <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="var(--c-gold-chart)" stop-opacity="0.18"/>
-                    <stop offset="100%" stop-color="var(--c-gold-chart)" stop-opacity="0"/>
+                    <stop offset="0%" stop-color="var(--ga-gold-hi)" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="var(--ga-gold)" stop-opacity="0"/>
                   </linearGradient>
                 </defs>
-                {enrichment.price_peak && <line x1={padL} y1={peakY} x2={chartW - padR} y2={peakY} stroke="var(--c-gold-chart)" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>}
+                {enrichment.price_peak && <line x1={padL} y1={peakY} x2={chartW - padR} y2={peakY} stroke="var(--ga-gold)" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>}
                 <polygon points={areaPoints} fill="url(#areaGrad)"/>
-                <polyline points={points} fill="none" stroke="var(--c-gold)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-                {prices.map((p: any, i: number) => <circle cx={toX(i)} cy={toY(p.value)} r="3" fill="var(--c-gold)"/>)}
+                <polyline points={points} fill="none" stroke="var(--ga-gold-hi)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+                {prices.map((p: any, i: number) => <circle cx={toX(i)} cy={toY(p.value)} r="3" fill="var(--ga-gold-hi)"/>)}
                 {[minVal, Math.round((minVal+maxVal)/2), maxVal].map((v) => (
-                  <text x={padL - 6} y={toY(v) + 4} text-anchor="end" font-family="Prata, Georgia, serif" font-size="9" fill="var(--c-text-mid)">£{v >= 1000 ? `${Math.round(v/1000)}k` : v}</text>
+                  <text x={padL - 6} y={toY(v) + 4} text-anchor="end" font-family="Inter, sans-serif" font-size="9" fill="var(--text-mute)">£{v >= 1000 ? `${Math.round(v/1000)}k` : v}</text>
                 ))}
                 {prices.filter((_: any, i: number) => i % 2 === 0).map((p: any, i: number) => (
-                  <text x={toX(i * 2)} y={chartH - 4} text-anchor="middle" font-family="Prata, Georgia, serif" font-size="9" fill="var(--c-text-mid)">{p.year}</text>
+                  <text x={toX(i * 2)} y={chartH - 4} text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="var(--text-mute)">{p.year}</text>
                 ))}
               </svg>
               {enrichment.price_peak && (
                 <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-                  <div style={`width:16px;border-top:1px dashed var(--c-gold-chart)`}></div>
-                  <span style={`font-family:var(--font-serif);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--c-text-mid)`}>Peak £{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})</span>
+                  <div style="width:16px;border-top:1px dashed var(--ga-gold);"></div>
+                  <span style="font-family:Inter,sans-serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute)">Peak £{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})</span>
                 </div>
               )}
-              <p style={`font-family:var(--font-serif);font-size:10px;color:var(--c-text-mid);margin-top:12px;font-style:italic`}>AI-estimated market trend · not verified auction data</p>
+              <p style="font-family:Inter,sans-serif;font-size:10px;color:var(--text-mute);margin-top:12px;font-style:italic">AI-estimated market trend · not verified auction data</p>
             </div>
           )
         })()}
 
         {enrichment.desirability_index && enrichment.desirability_index.length > 0 && (
-          <div class="section">
-            <div class="section-head"><div class="cap">Desirability Index</div><div class="section-head-line"></div></div>
-            {enrichment.desirability_context && <p style={`font-family:var(--font-serif);font-size:14px;color:var(--c-text-dim);margin-bottom:20px;line-height:1.7`}>{enrichment.desirability_context}</p>}
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">Desirability Index</div></div>
+            {enrichment.desirability_context && <p class="ga-expert-para">{enrichment.desirability_context}</p>}
             <div style="display:flex;flex-direction:column;gap:14px;">
               {enrichment.desirability_index.sort((a: any, b: any) => b.score - a.score).map((di: any) => (
                 <div>
                   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-                    <span style={`font-family:var(--font-serif);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${di.this_piece ? 'var(--c-gold)' : 'var(--c-text-mid)'};`}>{di.name}{di.this_piece ? ' ← This piece' : ''}</span>
-                    <span style={`font-family:var(--font-display);font-size:14px;color:${di.this_piece ? 'var(--c-gold)' : 'var(--c-text-mid)'};`}>{di.score}</span>
+                    <span style={`font-family:Inter,sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:${di.this_piece ? 'var(--ga-gold-hi)' : 'var(--text-mute)'};`}>{di.name}{di.this_piece ? ' ← This piece' : ''}</span>
+                    <span style={`font-family:var(--font-display);font-size:14px;color:${di.this_piece ? 'var(--ga-gold-hi)' : 'var(--text-mute)'};`}>{di.score}</span>
                   </div>
-                  <div style={`height:3px;background:var(--c-surface-mid);border-radius:2px;overflow:hidden;`}>
-                    <div style={`width:${di.score}%;height:100%;background:${di.this_piece ? 'linear-gradient(90deg,var(--c-gold-hi),var(--c-gold))' : 'var(--c-border)'};border-radius:2px;`}></div>
+                  <div style="height:3px;background:var(--border-hi);border-radius:2px;overflow:hidden;">
+                    <div style={`width:${di.score}%;height:100%;background:${di.this_piece ? 'linear-gradient(90deg,var(--ga-gold-hi),var(--ga-gold))' : 'var(--border)'};border-radius:2px;`}></div>
                   </div>
                 </div>
               ))}
@@ -413,13 +999,13 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         )}
 
         {(enrichment.maker_detail || enrichment.manufacturer_detail) && (
-          <div class="section">
-            <div class="section-head"><div class="cap">{r.maker || 'Maker'}</div><div class="section-head-line"></div></div>
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">{r.maker || 'Maker'}</div></div>
             {enrichment.maker_detail?.bio && <p class="ga-expert-para">{enrichment.maker_detail.bio}</p>}
             {enrichment.maker_detail?.notable_works && <p class="ga-expert-para">{enrichment.maker_detail.notable_works}</p>}
             {enrichment.manufacturer_detail?.history && (
               <>
-                <div style={`font-family:var(--font-serif);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--c-text-mid);margin:16px 0 8px;`}>Manufacturer</div>
+                <div style="font-family:Inter,sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin:16px 0 8px;">Manufacturer</div>
                 <p class="ga-expert-para">{enrichment.manufacturer_detail.history}</p>
                 {enrichment.manufacturer_detail.relationship_to_maker && <p class="ga-expert-para">{enrichment.manufacturer_detail.relationship_to_maker}</p>}
               </>
@@ -428,12 +1014,12 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         )}
 
         {enrichment.maker_mark_explanation && (
-          <div class="section">
-            <div class="section-head"><div class="cap">Maker Mark</div><div class="section-head-line"></div></div>
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">Maker Mark</div></div>
             {r.category_specific?.maker_mark && (
-              <div style={`background:var(--c-surface);padding:12px 16px;margin-bottom:16px;border-left:3px solid var(--c-gold);`}>
-                <div style={`font-family:var(--font-serif);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--c-text-mid);margin-bottom:6px;`}>Visible Mark</div>
-                <div style={`font-family:var(--font-serif);font-size:16px;color:var(--c-text);`}>{r.category_specific.maker_mark}</div>
+              <div style="background:var(--surface);padding:12px 16px;margin-bottom:16px;border-left:3px solid var(--ga-gold);">
+                <div style="font-family:Inter,sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:6px;">Visible Mark</div>
+                <div style="font-family:Inter,sans-serif;font-size:15px;color:var(--text);">{r.category_specific.maker_mark}</div>
               </div>
             )}
             <p class="ga-expert-para">{enrichment.maker_mark_explanation}</p>
@@ -441,28 +1027,28 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         )}
 
         {(enrichment.pattern_detail || enrichment.glaze_detail || enrichment.firing_detail) && (
-          <div class="section">
-            <div class="section-head"><div class="cap">Technical Notes</div><div class="section-head-line"></div></div>
-            {r.category_specific?.pattern_name && <div style={`font-family:var(--font-serif);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--c-text-mid);margin-bottom:8px;`}>Pattern — {r.category_specific.pattern_name}</div>}
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">Technical Notes</div></div>
+            {r.category_specific?.pattern_name && <div style="font-family:Inter,sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Pattern — {r.category_specific.pattern_name}</div>}
             {enrichment.pattern_detail && <p class="ga-expert-para">{enrichment.pattern_detail}</p>}
-            {r.category_specific?.glaze_type && <div style={`font-family:var(--font-serif);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--c-text-mid);margin:16px 0 8px;`}>Glaze — {r.category_specific.glaze_type}</div>}
+            {r.category_specific?.glaze_type && <div style="font-family:Inter,sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin:16px 0 8px;">Glaze — {r.category_specific.glaze_type}</div>}
             {enrichment.glaze_detail && <p class="ga-expert-para">{enrichment.glaze_detail}</p>}
-            {r.category_specific?.firing_type && <div style={`font-family:var(--font-serif);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--c-text-mid);margin:16px 0 8px;`}>Firing — {r.category_specific.firing_type}</div>}
+            {r.category_specific?.firing_type && <div style="font-family:Inter,sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin:16px 0 8px;">Firing — {r.category_specific.firing_type}</div>}
             {enrichment.firing_detail && <p class="ga-expert-para">{enrichment.firing_detail}</p>}
           </div>
         )}
 
         {enrichment.expert_notes && (
-          <div class="section">
-            <div class="section-head"><div class="cap">Provenance & Expert Notes</div><div class="section-head-line"></div></div>
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">Provenance &amp; Expert Notes</div></div>
             {enrichment.expert_notes.map((para: string) => <p class="ga-expert-para">{para}</p>)}
-            {enrichment.market_insight && <p class="ga-expert-para" style={`margin-top:14px;padding-top:14px;border-top:1px solid var(--c-border)`}>{enrichment.market_insight}</p>}
+            {enrichment.market_insight && <p class="ga-expert-para" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">{enrichment.market_insight}</p>}
           </div>
         )}
 
         {enrichment.maker_timeline && enrichment.maker_timeline.length > 0 && (
-          <div class="section">
-            <div class="section-head"><div class="cap">{r.maker ? `${r.maker} · Timeline` : 'Timeline'}</div><div class="section-head-line"></div></div>
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">{r.maker ? `${r.maker} · Timeline` : 'Timeline'}</div></div>
             <div class="ga-timeline">
               <div class="ga-timeline-line"></div>
               {enrichment.maker_timeline.map((entry: any) => (
@@ -482,8 +1068,8 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         )}
 
         {enrichment.comparable_sales && enrichment.comparable_sales.length > 0 && (
-          <div class="section">
-            <div class="section-head"><div class="cap">Comparable Sales</div><div class="section-head-line"></div></div>
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">Comparable Sales</div></div>
             {enrichment.comparable_sales.map((comp: any) => (
               <div class="ga-comp-row">
                 <div><div class="ga-comp-title">{comp.title}</div><div class="ga-comp-sub">{comp.detail}</div></div>
@@ -494,8 +1080,8 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         )}
 
         {enrichment.your_options && enrichment.your_options.length > 0 && (
-          <div class="section">
-            <div class="section-head"><div class="cap">Your Options</div><div class="section-head-line"></div></div>
+          <div class="ga-section">
+            <div class="ga-section-head"><div class="ga-section-title">Your Options</div></div>
             <div class="ga-options">
               {enrichment.your_options.map((opt: any) => (
                 <div class={`ga-option${opt.recommended ? ' rec' : ''}`}>
@@ -511,28 +1097,30 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
         )}
       </>
     ) : (
-      <div id="enrich-cta" data-item-id={item.id} data-has-enrichment={enrichment ? "true" : "false"} data-result-json={JSON.stringify(r)} style={`padding:40px 20px;text-align:center;border-top:1px solid var(--c-border);`}>
-        <div style={`font-family:var(--font-serif);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--c-gold);margin-bottom:12px;`}>Full Valuation Report</div>
-        <div style={`font-family:var(--font-display);font-size:22px;font-style:italic;color:var(--c-text);margin-bottom:10px;`}>Unlock the complete report</div>
-        <div style={`font-family:var(--font-serif);font-size:14px;color:var(--c-text-mid);line-height:1.8;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto;`}>Expert notes, maker biography, market history, comparable sales, desirability index and your options.</div>
-        <div style={`font-family:var(--font-serif);font-size:12px;color:var(--c-text-mid);margin-bottom:20px;letter-spacing:1px;`}>Cost: {creditCostEnrich} credits</div>
-        <div id="enrich-gate-wrap" data-credit-cost={creditCostEnrich}>
-          <button id="enrich-btn" style={`display:block;width:100%;max-width:320px;margin:0 auto 10px;padding:16px;background:var(--c-gold);border:none;font-family:var(--font-serif);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;cursor:pointer;transition:opacity .2s;`}>Generate Full Report — {creditCostEnrich} Credits</button>
-          <a href="/account" id="enrich-topup" style={`display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:var(--c-gold);border:none;font-family:var(--font-serif);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;`}>Top Up Credits to Unlock</a>
-          <a href="https://gaukauth.com?from=gaukantiques.com&next=/library" id="enrich-register" style={`display:none;width:100%;max-width:320px;margin:0 auto;padding:16px;background:var(--c-gold);border:none;font-family:var(--font-serif);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;`}>Register Free to Unlock</a>
+      <div id="enrich-cta" data-item-id={item.id} data-has-enrichment="false" data-result-json={JSON.stringify(r)}>
+        <div class="ga-enrich-gate">
+          <div class="ga-enrich-gate-eyebrow">Full Valuation Report</div>
+          <div class="ga-enrich-gate-title">Unlock the complete report</div>
+          <div class="ga-enrich-gate-body">Expert notes, maker biography, market history, comparable sales, desirability index and your options.</div>
+          <div class="ga-enrich-gate-cost">Cost: {creditCostEnrich} credits</div>
+          <div id="enrich-gate-wrap" data-credit-cost={creditCostEnrich}>
+            <button id="enrich-btn" class="ga-enrich-btn">Generate Full Report — {creditCostEnrich} Credits</button>
+            <a href="/account" id="enrich-topup" class="ga-enrich-link">Top Up Credits to Unlock</a>
+            <a href="https://gaukauth.com?from=gaukantiques.com&next=/library" id="enrich-register" class="ga-enrich-link">Register Free to Unlock</a>
+          </div>
         </div>
-      </div>
-      <div class="ga-enrich-loading" id="enrich-loading" style="display:none;">
-        <div class="ga-enrich-stage" id="enrich-stage">Consulting auction records</div>
-        <div class="ga-enrich-progress-wrap"><div class="ga-enrich-progress-bar" id="enrich-progress"></div></div>
-        <div class="ga-enrich-steps">
-          <div class="ga-enrich-step active" id="step-0"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Researching maker &amp; provenance</div></div>
-          <div class="ga-enrich-step" id="step-1"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Analysing auction &amp; comparable sales</div></div>
-          <div class="ga-enrich-step" id="step-2"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Building market value history</div></div>
-          <div class="ga-enrich-step" id="step-3"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Compiling expert notes &amp; options</div></div>
-          <div class="ga-enrich-step" id="step-4"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Preparing your full report</div></div>
+        <div class="ga-enrich-loading" id="enrich-loading" style="display:none;">
+          <div class="ga-enrich-stage" id="enrich-stage">Consulting auction records</div>
+          <div class="ga-enrich-progress-wrap"><div class="ga-enrich-progress-bar" id="enrich-progress"></div></div>
+          <div class="ga-enrich-steps">
+            <div class="ga-enrich-step active" id="step-0"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Researching maker &amp; provenance</div></div>
+            <div class="ga-enrich-step" id="step-1"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Analysing auction &amp; comparable sales</div></div>
+            <div class="ga-enrich-step" id="step-2"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Building market value history</div></div>
+            <div class="ga-enrich-step" id="step-3"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Compiling expert notes &amp; options</div></div>
+            <div class="ga-enrich-step" id="step-4"><div class="ga-enrich-step-dot"></div><div class="ga-enrich-step-text">Preparing your full report</div></div>
+          </div>
+          <div class="ga-enrich-disclaimer">Full reports draw on multiple data sources &mdash;<br>this typically takes 10&ndash;15 seconds or more when busy.</div>
         </div>
-        <div class="ga-enrich-disclaimer">Full reports draw on multiple data sources &mdash;<br>this typically takes 10&ndash;15 seconds or more when busy.</div>
       </div>
     )}
   </div>
@@ -543,15 +1131,25 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       <div class="ga-footer-brand">GAUK Antiques</div>
       <div class="ga-ai-disclaimer">AI appraisal · estimates only · not a formal valuation · {date}</div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;">
-      <div style="text-align:right">
-        <div class="cap" style="margin-bottom:4px">Reference</div>
-        <div class="cap" style={`color:var(--c-text-dim)`}>{item.id.slice(0,8).toUpperCase()}</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
+      <div style="text-align:right;">
+        <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:4px;">Reference</div>
+        <div style="font-family:var(--font-ui);font-size:11px;color:var(--text-dim);">{item.id.slice(0,8).toUpperCase()}</div>
       </div>
       <button id="delete-btn" class="ga-delete-btn">Delete this report</button>
     </div>
   </div>
 
+  <!-- CARD ACTIONS -->
+  <div class="ga-card-actions">
+    <button class="ga-action-btn" onclick="window.print()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print
+    </button>
+    <a href="/identify/antiques" class="ga-action-btn primary">New Scan</a>
+  </div>
+
+  <!-- DELETE MODAL -->
   <div class="ga-del-overlay hidden" id="del-overlay">
     <div class="ga-del-modal">
       <div class="ga-del-title">Delete this report?</div>
@@ -564,11 +1162,53 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
   </div>
 </div>
 
-<div class="ga-sticky-actions">
-  <button class="ga-action-btn" onclick="window.print()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-    Print
-  </button>
+<script>
+  import { supabase } from '../lib/supabase-browser'
 
-  <a href="/identify/antiques" class="ga-action-btn primary">New Scan</a>
-</div>
+  const itemId = (window as any).__val?.itemId
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // ── Inline edit description ───────────────────────────────────────────────
+  const descText = document.getElementById('ga-desc-text')
+  const descTextarea = document.getElementById('ga-desc-textarea') as HTMLTextAreaElement
+  const descActions = document.getElementById('ga-desc-actions')
+  const descSave = document.getElementById('ga-desc-save')
+  const descCancel = document.getElementById('ga-desc-cancel')
+
+  function openDescEdit() {
+    if (!descText || !descTextarea || !descActions) return
+    descTextarea.value = descText.textContent || ''
+    descText.style.display = 'none'
+    descTextarea.style.display = 'block'
+    descActions.style.display = 'flex'
+    descTextarea.focus()
+  }
+
+  function closeDescEdit() {
+    if (!descText || !descTextarea || !descActions) return
+    descText.style.display = 'block'
+    descTextarea.style.display = 'none'
+    descActions.style.display = 'none'
+  }
+
+  descText?.addEventListener('click', openDescEdit)
+  descCancel?.addEventListener('click', closeDescEdit)
+
+  descSave?.addEventListener('click', async () => {
+    if (!descTextarea || !session || !itemId) return
+    const newDesc = descTextarea.value.trim()
+    if (!newDesc) return
+    const currentResult = (window as any).__val?.resultJson || {}
+    const updatedResult = { ...currentResult, description: newDesc }
+    const { error } = await supabase
+      .from('identifications')
+      .update({ result_json: updatedResult })
+      .eq('id', itemId)
+      .eq('user_id', session.user.id)
+    if (!error) {
+      if (descText) descText.textContent = newDesc
+      if ((window as any).__val) (window as any).__val.resultJson = updatedResult
+      closeDescEdit()
+    }
+  })
+</script>
