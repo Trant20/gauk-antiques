@@ -6,7 +6,6 @@ import { ANTIQUES_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST
 import { getPromptConfig } from '../../lib/ai'
 import type { CloudflareEnv } from '../../lib/constants'
 
-
 function getSupabase() {
   return createClient(
     (env as unknown as CloudflareEnv).PUBLIC_SUPABASE_URL,
@@ -21,6 +20,103 @@ function json(data: unknown, status = 200) {
   })
 }
 
+function arrayBufferToBase64Chunked(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  const chunkSize = 8192
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize)
+    binary += String.fromCodePoint(...chunk)
+  }
+  return btoa(binary)
+}
+
+// Build a clean search query from identification result
+function buildTrawlQuery(result: any): string {
+  const parts: string[] = []
+  if (result.maker && result.maker !== 'Unknown') parts.push(result.maker)
+  if (result.subcategory) parts.push(result.subcategory)
+  else if (result.category) parts.push(result.category)
+  return parts.join(' ').trim()
+}
+
+// Calculate price range from sold results, excluding top/bottom 10% outliers
+function calcPriceRange(results: any[]): { low: number; high: number } | null {
+  if (!results || results.length === 0) return null
+  const prices = results.map(r => r.sale_price).filter(p => p > 0).sort((a, b) => a - b)
+  if (prices.length === 0) return null
+  const trim = Math.floor(prices.length * 0.1)
+  const trimmed = prices.length > 4 ? prices.slice(trim, prices.length - trim) : prices
+  return {
+    low: Math.round(trimmed[0]),
+    high: Math.round(trimmed[trimmed.length - 1])
+  }
+}
+
+// Fetch eBay sold data from Trawl and proxy images to R2
+async function fetchEbaySold(
+  result: any,
+  identificationId: string,
+  bucket: R2Bucket,
+  trawlKey: string
+): Promise<any[]> {
+  const query = buildTrawlQuery(result)
+  if (!query) return []
+
+  const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query)}&site=EBAY_GB&limit=10`
+
+  let trawlData: any
+  try {
+    const res = await fetch(url, { headers: { 'x-api-key': trawlKey } })
+    if (!res.ok) return []
+    trawlData = await res.json()
+  } catch {
+    return []
+  }
+
+  if (!trawlData?.results?.length) return []
+
+  // Proxy images to R2 in parallel
+  const results = await Promise.all(
+    trawlData.results.map(async (item: any) => {
+      let r2Key: string | null = null
+
+      if (item.image_url) {
+        try {
+          const imgRes = await fetch(item.image_url)
+          if (imgRes.ok) {
+            const imgBuffer = await imgRes.arrayBuffer()
+            const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
+            r2Key = `ebay-sold/${identificationId}/${item.item_id}.jpg`
+            await bucket.put(r2Key, imgBuffer, {
+              httpMetadata: { contentType }
+            })
+          }
+        } catch {
+          // Image proxy failed — continue without image
+          r2Key = null
+        }
+      }
+
+      return {
+        item_id: item.item_id,
+        title: item.title,
+        sale_price: item.sale_price,
+        shipping_price: item.shipping_price || 0,
+        currency: item.currency || '£',
+        condition: item.condition,
+        condition_raw: item.condition_raw,
+        date_sold: item.date_sold,
+        buying_format: item.buying_format,
+        bids: item.bids || null,
+        item_link: item.item_link,
+        r2_key: r2Key
+      }
+    })
+  )
+
+  return results.filter(Boolean)
+}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -47,17 +143,39 @@ export const POST: APIRoute = async ({ request }) => {
       .single()
     const creditCost = parseInt(costSetting?.value ?? '5', 10)
 
-    // Deduct full credit cost in one operation
-    const { data: ok } = await supabase.rpc('deduct_identification_credit', {
-      p_user_id: user.id,
-      p_site_id: ANTIQUES_SITE_ID,
-      p_identification_id: identification_id || null,
-      p_amount: creditCost
-    })
-    if (!ok) return json({ error: 'Insufficient credits' }, 402)
+    // Deduct credits before AI call — reject if insufficient
+    for (let i = 0; i < creditCost; i++) {
+      const { data: ok } = await supabase.rpc('deduct_identification_credit', {
+        p_user_id: user.id,
+        p_site_id: ANTIQUES_SITE_ID,
+        p_identification_id: identification_id || null
+      })
+      if (!ok) return json({ error: 'Insufficient credits' }, 402)
+    }
 
+    // Fetch eBay sold data — non-blocking, enrich proceeds even if Trawl fails
+    const bucket = (env as unknown as CloudflareEnv).gauk_antiques_images
+    const trawlKey = (env as unknown as CloudflareEnv).TRAWL_API_KEY as string
+    let ebaySold: any[] = []
+
+    if (trawlKey && bucket) {
+      ebaySold = await fetchEbaySold(result, identification_id || 'unknown', bucket, trawlKey)
+    }
+
+    // Build Claude prompt — inject eBay sold data as context if available
     const promptConfig = await getPromptConfig(supabase, ANTIQUES_SITE_ID, 'enrich', 'system_prompt, model, max_tokens')
     if (!promptConfig?.system_prompt) return json({ error: 'Enrich prompt not configured' }, 500)
+
+    const ebayContext = ebaySold.length > 0
+      ? `\n\nREAL EBAY SOLD DATA (use this to ground your valuation and comparable sales):\n${JSON.stringify(ebaySold.map(s => ({
+          title: s.title,
+          sale_price: s.sale_price,
+          condition: s.condition_raw,
+          date_sold: s.date_sold,
+          buying_format: s.buying_format,
+          bids: s.bids
+        })), null, 2)}\n\nUse the above real sold prices to inform your comparable_sales section and price_history. These are actual transactions, not estimates.`
+      : ''
 
     const client = new Anthropic({ apiKey: (env as unknown as CloudflareEnv).ANTHROPIC_API_KEY })
     const response = await client.messages.create({
@@ -66,7 +184,7 @@ export const POST: APIRoute = async ({ request }) => {
       system: String(promptConfig.system_prompt),
       messages: [{
         role: 'user',
-        content: `Generate enrichment content for this antique identification:\n\n${JSON.stringify(result, null, 2)}`
+        content: `Generate enrichment content for this antique identification:\n\n${JSON.stringify(result, null, 2)}${ebayContext}`
       }]
     })
 
@@ -83,14 +201,30 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ error: 'AI returned malformed response' }, 500)
     }
 
+    // Calculate real price range from eBay data
+    const realPriceRange = calcPriceRange(ebaySold)
+
+    // Build update payload
+    const updatePayload: Record<string, any> = {
+      enrichment_json: enrichment,
+      ebay_sold: ebaySold.length > 0 ? ebaySold : null
+    }
+
+    // Update value_range with real data if available
+    if (realPriceRange) {
+      updatePayload.value_range_low = realPriceRange.low
+      updatePayload.value_range_high = realPriceRange.high
+    }
+
     if (identification_id) {
       const { error: updateError } = await supabase
         .from('identifications')
-        .update({ enrichment_json: enrichment })
+        .update(updatePayload)
         .eq('id', identification_id)
       if (updateError) console.error('Enrichment update error:', updateError)
     }
 
+    // Log token usage
     const inputTokens = response.usage.input_tokens
     const outputTokens = response.usage.output_tokens
     const costPence = Math.ceil((inputTokens * CLAUDE_INPUT_COST_PENCE_PER_TOKEN) + (outputTokens * CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN))
@@ -104,7 +238,7 @@ export const POST: APIRoute = async ({ request }) => {
       cost_pence: costPence
     })
 
-    return json({ enrichment })
+    return json({ enrichment, ebay_sold: ebaySold, real_price_range: realPriceRange })
 
   } catch (err: any) {
     return json({ error: err.message }, 500)
