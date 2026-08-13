@@ -143,8 +143,10 @@ async function fetchEbaySold(
   const query = buildTrawlQuery(result)
   if (!query) return []
 
-  // Look up category ID for tighter results
-  const categoryId = await getCategoryId(query, trawlKey, supabase)
+  // Look up category ID using item type only (not full query — too specific for category matching)
+  const itemType = extractItemType(result.subcategory || '')
+  const categoryQuery = itemType || result.category || ''
+  const categoryId = categoryQuery ? await getCategoryId(categoryQuery, trawlKey, supabase) : null
   const categoryParam = categoryId ? `&category=${categoryId}` : ''
   const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query)}&site=EBAY_GB&limit=10${categoryParam}`
 
