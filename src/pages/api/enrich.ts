@@ -89,66 +89,16 @@ function buildTrawlQuery(result: any): string {
 }
 
 // Fetch eBay sold data from Trawl and proxy images to R2
-// Look up eBay category ID with Supabase cache
-async function getCategoryId(
-  query: string,
-  trawlKey: string,
-  supabase: any
-): Promise<string | null> {
-  const site = 'EBAY_GB'
-
-  // Check cache first
-  try {
-    const { data: cached } = await supabase
-      .from('trawl_category_cache')
-      .select('category_id')
-      .eq('query', query)
-      .eq('site', site)
-      .single()
-    if (cached?.category_id) return cached.category_id
-  } catch {
-    // Cache miss — proceed to API
-  }
-
-  // Call Trawl categories endpoint
-  try {
-    const url = `https://api.trawl.dev/ebay/v1/categories?query=${encodeURIComponent(query)}&site=${site}`
-    const res = await fetch(url, { headers: { 'x-api-key': trawlKey } })
-    if (!res.ok) return null
-    const data = await res.json()
-    const first = data?.categories?.[0]
-    if (!first?.categoryId) return null
-
-    // Save to cache
-    await supabase.from('trawl_category_cache').upsert({
-      query,
-      site,
-      category_id: String(first.categoryId),
-      category_name: first.name || null
-    }, { onConflict: 'query,site' })
-
-    return String(first.categoryId)
-  } catch {
-    return null
-  }
-}
-
 async function fetchEbaySold(
   result: any,
   identificationId: string,
   bucket: R2Bucket,
-  trawlKey: string,
-  supabase: any
+  trawlKey: string
 ): Promise<any[]> {
   const query = buildTrawlQuery(result)
   if (!query) return []
 
-  // Look up category ID using item type only (not full query — too specific for category matching)
-  const itemType = extractItemType(result.subcategory || '')
-  const categoryQuery = itemType || result.category || ''
-  const categoryId = categoryQuery ? await getCategoryId(categoryQuery, trawlKey, supabase) : null
-  const categoryParam = categoryId ? `&category=${categoryId}` : ''
-  const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query)}&site=EBAY_GB&limit=10${categoryParam}`
+  const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query)}&site=EBAY_GB&limit=10`
 
   let trawlData: any
   try {
@@ -244,7 +194,7 @@ export const POST: APIRoute = async ({ request }) => {
     let ebaySold: any[] = []
 
     if (trawlKey && bucket) {
-      ebaySold = await fetchEbaySold(result, identification_id || 'unknown', bucket, trawlKey, supabase)
+      ebaySold = await fetchEbaySold(result, identification_id || 'unknown', bucket, trawlKey)
     }
 
     // Build Claude prompt — inject eBay sold data as context if available
