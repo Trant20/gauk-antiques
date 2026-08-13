@@ -1,0 +1,302 @@
+---
+interface Props {
+  enrichment: any
+  r: any
+}
+
+const { enrichment, r } = Astro.props
+---
+
+<style is:global>
+  /* ── EXPERT NOTES ── */
+  .ga-expert-para {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .ga-expert-para:last-child { margin-bottom: 0; }
+
+  /* ── TIMELINE ── */
+  .ga-timeline { position: relative; padding-left: 22px; }
+  .ga-timeline-line {
+    position: absolute;
+    left: 5px; top: 10px; bottom: 10px;
+    width: 1px;
+    background: var(--border);
+  }
+  .ga-tl-item {
+    position: relative;
+    padding: 10px 0 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ga-tl-item:last-child { border-bottom: none; }
+  .ga-tl-dot {
+    position: absolute;
+    left: -17px; top: 14px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--surface-hi);
+    border: 1.5px solid var(--border-hi);
+    z-index: 1;
+  }
+  .ga-tl-dot.highlight { background: var(--ga-gold); border-color: var(--ga-gold); }
+  .ga-tl-inner { display: flex; gap: 10px; align-items: baseline; }
+  .ga-tl-year {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text-mute);
+    flex-shrink: 0;
+    width: 48px;
+  }
+  .ga-tl-year.highlight { color: var(--ga-gold-hi); font-style: italic; }
+  .ga-tl-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 2px;
+  }
+  .ga-tl-label.highlight { color: var(--ga-gold-hi); }
+  .ga-tl-note {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── OPTIONS ── */
+  .ga-options { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+  .ga-option {
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface);
+  }
+  .ga-option.rec { background: var(--surface-hi); }
+  .ga-option-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+    background: var(--border-hi);
+  }
+  .ga-option-dot.rec { background: var(--ga-gold); }
+  .ga-option-action {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .ga-option-action.rec { color: var(--text); font-style: italic; }
+  .ga-option-rec-badge {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--ga-gold-hi);
+    margin-left: 10px;
+  }
+  .ga-option-detail {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-mute);
+    line-height: 1.5;
+  }
+
+  /* ── COMPARABLES ── */
+  .ga-comp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .ga-comp-row:last-child { border-bottom: none; }
+  .ga-comp-title {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .ga-comp-sub {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-mute);
+  }
+  .ga-comp-val {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--ga-gold-hi);
+    flex-shrink: 0;
+  }
+</style>
+
+{enrichment.price_history && enrichment.price_history.length > 0 && (() => {
+  const prices = enrichment.price_history
+  const values = prices.map((p: any) => p.value)
+  const minVal = Math.min(...values)
+  const maxVal = Math.max(...values)
+  const chartW = 480
+  const chartH = 160
+  const padL = 48; const padR = 16; const padT = 12; const padB = 32
+  const plotW = chartW - padL - padR
+  const plotH = chartH - padT - padB
+  const toX = (i: number) => padL + (i / (prices.length - 1)) * plotW
+  const toY = (v: number) => padT + plotH - ((v - minVal) / (maxVal - minVal || 1)) * plotH
+  const points = prices.map((p: any, i: number) => `${toX(i)},${toY(p.value)}`).join(' ')
+  const areaPoints = `${padL},${padT + plotH} ${points} ${toX(prices.length-1)},${padT + plotH}`
+  const peakY = enrichment.price_peak ? toY(enrichment.price_peak.value) : padT
+  return (
+    <div class="ga-section">
+      <div class="ga-section-head"><div class="ga-section-title">Market Value 2010–2024</div></div>
+      {enrichment.price_context && <p class="ga-expert-para">{enrichment.price_context}</p>}
+      <svg width="100%" viewBox={`0 0 ${chartW} ${chartH}`} style="display:block;overflow:visible">
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--ga-gold-hi)" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="var(--ga-gold)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        {enrichment.price_peak && <line x1={padL} y1={peakY} x2={chartW - padR} y2={peakY} stroke="var(--ga-gold)" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>}
+        <polygon points={areaPoints} fill="url(#areaGrad)"/>
+        <polyline points={points} fill="none" stroke="var(--ga-gold-hi)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        {prices.map((p: any, i: number) => <circle cx={toX(i)} cy={toY(p.value)} r="3" fill="var(--ga-gold-hi)"/>)}
+        {[minVal, Math.round((minVal+maxVal)/2), maxVal].map((v) => (
+          <text x={padL - 6} y={toY(v) + 4} text-anchor="end" font-family="Inter, sans-serif" font-size="9" fill="var(--text-mute)">£{v >= 1000 ? `${Math.round(v/1000)}k` : v}</text>
+        ))}
+        {prices.filter((_: any, i: number) => i % 2 === 0).map((p: any, i: number) => (
+          <text x={toX(i * 2)} y={chartH - 4} text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="var(--text-mute)">{p.year}</text>
+        ))}
+      </svg>
+      {enrichment.price_peak && (
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <div style="width:16px;border-top:1px dashed var(--ga-gold);"></div>
+          <span style="font-family:var(--font-ui);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute)">Peak £{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})</span>
+        </div>
+      )}
+      <p style="font-family:var(--font-ui);font-size:10px;color:var(--text-mute);margin-top:12px;font-style:italic">AI-estimated market trend · not verified auction data</p>
+    </div>
+  )
+})()}
+
+{enrichment.desirability_index && enrichment.desirability_index.length > 0 && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Desirability Index</div></div>
+    {enrichment.desirability_context && <p class="ga-expert-para">{enrichment.desirability_context}</p>}
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      {enrichment.desirability_index.sort((a: any, b: any) => b.score - a.score).map((di: any) => (
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+            <span style={`font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:${di.this_piece ? 'var(--ga-gold-hi)' : 'var(--text-mute)'};`}>{di.name}{di.this_piece ? ' ← This piece' : ''}</span>
+            <span style={`font-family:var(--font-display);font-size:14px;color:${di.this_piece ? 'var(--ga-gold-hi)' : 'var(--text-mute)'};`}>{di.score}</span>
+          </div>
+          <div style="height:3px;background:var(--border-hi);border-radius:2px;overflow:hidden;">
+            <div style={`width:${di.score}%;height:100%;background:${di.this_piece ? 'linear-gradient(90deg,var(--ga-gold-hi),var(--ga-gold))' : 'var(--border)'};border-radius:2px;`}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+{(enrichment.maker_detail || enrichment.manufacturer_detail) && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">{r.maker || 'Maker'}</div></div>
+    {enrichment.maker_detail?.bio && <p class="ga-expert-para">{enrichment.maker_detail.bio}</p>}
+    {enrichment.maker_detail?.notable_works && <p class="ga-expert-para">{enrichment.maker_detail.notable_works}</p>}
+    {enrichment.manufacturer_detail?.history && (
+      <>
+        <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin:16px 0 8px;">Manufacturer</div>
+        <p class="ga-expert-para">{enrichment.manufacturer_detail.history}</p>
+        {enrichment.manufacturer_detail.relationship_to_maker && <p class="ga-expert-para">{enrichment.manufacturer_detail.relationship_to_maker}</p>}
+      </>
+    )}
+  </div>
+)}
+
+{enrichment.maker_mark_explanation && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Maker Mark</div></div>
+    {r.category_specific?.maker_mark && (
+      <div style="background:var(--surface);padding:12px 16px;margin-bottom:16px;border-left:3px solid var(--ga-gold);">
+        <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:6px;">Visible Mark</div>
+        <div style="font-family:var(--font-ui);font-size:15px;color:var(--text);">{r.category_specific.maker_mark}</div>
+      </div>
+    )}
+    <p class="ga-expert-para">{enrichment.maker_mark_explanation}</p>
+  </div>
+)}
+
+{(enrichment.pattern_detail || enrichment.glaze_detail || enrichment.firing_detail) && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Technical Notes</div></div>
+    {r.category_specific?.pattern_name && <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Pattern — {r.category_specific.pattern_name}</div>}
+    {enrichment.pattern_detail && <p class="ga-expert-para">{enrichment.pattern_detail}</p>}
+    {r.category_specific?.glaze_type && <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin:16px 0 8px;">Glaze — {r.category_specific.glaze_type}</div>}
+    {enrichment.glaze_detail && <p class="ga-expert-para">{enrichment.glaze_detail}</p>}
+    {r.category_specific?.firing_type && <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin:16px 0 8px;">Firing — {r.category_specific.firing_type}</div>}
+    {enrichment.firing_detail && <p class="ga-expert-para">{enrichment.firing_detail}</p>}
+  </div>
+)}
+
+{enrichment.expert_notes && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Provenance &amp; Expert Notes</div></div>
+    {enrichment.expert_notes.map((para: string) => <p class="ga-expert-para">{para}</p>)}
+    {enrichment.market_insight && <p class="ga-expert-para" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">{enrichment.market_insight}</p>}
+  </div>
+)}
+
+{enrichment.maker_timeline && enrichment.maker_timeline.length > 0 && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">{r.maker ? `${r.maker} · Timeline` : 'Timeline'}</div></div>
+    <div class="ga-timeline">
+      <div class="ga-timeline-line"></div>
+      {enrichment.maker_timeline.map((entry: any) => (
+        <div class="ga-tl-item">
+          <div class={`ga-tl-dot${entry.highlight ? ' highlight' : ''}`}></div>
+          <div class="ga-tl-inner">
+            <div class={`ga-tl-year${entry.highlight ? ' highlight' : ''}`}>{entry.year}</div>
+            <div>
+              <div class={`ga-tl-label${entry.highlight ? ' highlight' : ''}`}>{entry.highlight ? 'This piece' : ''}</div>
+              <div class="ga-tl-note">{entry.event}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+{enrichment.comparable_sales && enrichment.comparable_sales.length > 0 && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Comparable Sales</div></div>
+    {enrichment.comparable_sales.map((comp: any) => (
+      <div class="ga-comp-row">
+        <div><div class="ga-comp-title">{comp.title}</div><div class="ga-comp-sub">{comp.detail}</div></div>
+        <div class="ga-comp-val">{comp.value}</div>
+      </div>
+    ))}
+  </div>
+)}
+
+{enrichment.your_options && enrichment.your_options.length > 0 && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Your Options</div></div>
+    <div class="ga-options">
+      {enrichment.your_options.map((opt: any) => (
+        <div class={`ga-option${opt.recommended ? ' rec' : ''}`}>
+          <div class={`ga-option-dot${opt.recommended ? ' rec' : ''}`}></div>
+          <div>
+            <div class={`ga-option-action${opt.recommended ? ' rec' : ''}`}>{opt.action}{opt.recommended && <span class="ga-option-rec-badge">RECOMMENDED</span>}</div>
+            <div class="ga-option-detail">{opt.detail}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}

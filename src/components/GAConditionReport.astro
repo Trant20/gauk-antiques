@@ -1,0 +1,154 @@
+---
+interface Props {
+  r: any
+  enrichment: any
+  conditionScore: number
+  desirabilityScore: number
+  rarityScore: number
+  confidenceScore: number
+  circumference: number
+  conditionOffset: number
+  desirabilityOffset: number
+  rarityOffset: number
+  confidenceOffset: number
+}
+
+const {
+  r, enrichment,
+  conditionScore, desirabilityScore, rarityScore, confidenceScore,
+  circumference, conditionOffset, desirabilityOffset, rarityOffset, confidenceOffset
+} = Astro.props
+---
+
+<style is:global>
+  /* ── GAUGES ── */
+  .ga-gauges {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 480px) {
+    .ga-gauges { grid-template-columns: 1fr 1fr; gap: 16px; }
+  }
+  .ga-gauge { text-align: center; }
+  .ga-gauge svg { display: block; margin: 0 auto 8px; transform: rotate(-90deg); }
+  .ga-gauge-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+
+  /* ── CONDITION ── */
+  .ga-condition-grade {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .ga-condition-grade-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+  .ga-condition-grade-val {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+    font-style: italic;
+  }
+  .ga-check-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .ga-check-item { display: flex; gap: 10px; align-items: flex-start; }
+  .ga-check-icon {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.5;
+    flex-shrink: 0;
+    color: var(--ga-teal);
+    width: 16px;
+  }
+  .ga-check-icon.warn { color: var(--ga-warn); }
+  .ga-check-text {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+</style>
+
+<div class="ga-section">
+  <div class="ga-section-head"><div class="ga-section-title">Condition Report</div></div>
+  <div class="ga-gauges">
+    <div class="ga-gauge">
+      <svg width="82" height="82" viewBox="0 0 82 82">
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--ga-gold)" stroke-width="4"
+          stroke-dasharray={circumference} stroke-dashoffset={conditionOffset} stroke-linecap="round"/>
+        <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
+          font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
+          transform="rotate(90 41 41)">{conditionScore}</text>
+      </svg>
+      <div class="ga-gauge-label">Overall</div>
+    </div>
+    <div class="ga-gauge">
+      <svg width="82" height="82" viewBox="0 0 82 82">
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--ga-teal)" stroke-width="4"
+          stroke-dasharray={circumference} stroke-dashoffset={desirabilityOffset} stroke-linecap="round"/>
+        <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
+          font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
+          transform="rotate(90 41 41)">{desirabilityScore}</text>
+      </svg>
+      <div class="ga-gauge-label">Desirability</div>
+    </div>
+    <div class="ga-gauge">
+      <svg width="82" height="82" viewBox="0 0 82 82">
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--ga-warn)" stroke-width="4"
+          stroke-dasharray={circumference} stroke-dashoffset={rarityOffset} stroke-linecap="round"/>
+        <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
+          font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
+          transform="rotate(90 41 41)">{rarityScore}</text>
+      </svg>
+      <div class="ga-gauge-label">Rarity</div>
+    </div>
+    <div class="ga-gauge">
+      <svg width="82" height="82" viewBox="0 0 82 82">
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--border-hi)" stroke-width="4"/>
+        <circle cx="41" cy="41" r="34" fill="none" stroke="var(--ga-confidence)" stroke-width="4"
+          stroke-dasharray={circumference} stroke-dashoffset={confidenceOffset} stroke-linecap="round"/>
+        <text x="41" y="41" text-anchor="middle" dominant-baseline="central"
+          font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="var(--text)"
+          transform="rotate(90 41 41)">{confidenceScore}</text>
+      </svg>
+      <div class="ga-gauge-label">Confidence</div>
+    </div>
+  </div>
+  <div class="ga-condition-grade">
+    <span class="ga-condition-grade-label">Grade</span>
+    <div style="display:flex;align-items:center;gap:16px;flex:1;margin-left:20px;">
+      <div style="flex:1;height:3px;background:var(--border-hi);border-radius:2px;overflow:hidden;">
+        <div style={`width:${conditionScore}%;height:100%;background:linear-gradient(90deg,var(--ga-gold-hi),var(--ga-gold));border-radius:2px;`}></div>
+      </div>
+      <span class="ga-condition-grade-val">{r.condition === 'Mint' ? 'Mint — A+' : r.condition === 'Excellent' ? 'Excellent — A' : r.condition === 'Good' ? 'Very Good — B+' : r.condition === 'Fair' ? 'Fair — C' : 'Poor — D'}</span>
+    </div>
+  </div>
+  {r.condition_notes && (
+    <div class="ga-check-list">
+      {r.condition_notes.split(/[.—–]/).filter((s: string) => s.trim().length > 8).map((note: string) => (
+        <div class="ga-check-item">
+          <span class={`ga-check-icon${note.toLowerCase().includes('chip') || note.toLowerCase().includes('crack') || note.toLowerCase().includes('scratch') || note.toLowerCase().includes('wear') || note.toLowerCase().includes('repair') || note.toLowerCase().includes('minor') ? ' warn' : ''}`}>
+            {note.toLowerCase().includes('chip') || note.toLowerCase().includes('crack') || note.toLowerCase().includes('scratch') || note.toLowerCase().includes('wear') || note.toLowerCase().includes('repair') || note.toLowerCase().includes('minor') ? '~' : '✓'}
+          </span>
+          <span class="ga-check-text">{note.trim()}</span>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
