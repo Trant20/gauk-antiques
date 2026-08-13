@@ -178,15 +178,14 @@ export const POST: APIRoute = async ({ request }) => {
       .single()
     const creditCost = parseInt(costSetting?.value ?? '5', 10)
 
-    // Deduct credits before AI call — reject if insufficient
-    for (let i = 0; i < creditCost; i++) {
-      const { data: ok } = await supabase.rpc('deduct_identification_credit', {
-        p_user_id: user.id,
-        p_site_id: ANTIQUES_SITE_ID,
-        p_identification_id: identification_id || null
-      })
-      if (!ok) return json({ error: 'Insufficient credits' }, 402)
-    }
+    // Deduct credits before AI call — single RPC call with p_amount
+    const { data: ok } = await supabase.rpc('deduct_identification_credit', {
+      p_user_id: user.id,
+      p_site_id: ANTIQUES_SITE_ID,
+      p_identification_id: identification_id || null,
+      p_amount: creditCost
+    })
+    if (!ok) return json({ error: 'Insufficient credits' }, 402)
 
     // Fetch eBay sold data — non-blocking, enrich proceeds even if Trawl fails
     const bucket = (env as unknown as CloudflareEnv).gauk_antiques_images
