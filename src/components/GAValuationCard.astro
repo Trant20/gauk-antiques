@@ -29,6 +29,8 @@ const confOffset = confCircumference - (confCircumference * confidenceScore / 10
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 const userValue = item.user_value ?? null
 const userValueDisplay = userValue ? formatSingleValue(userValue) : null
+const ebaySold: any[] = item.ebay_sold || []
+const ebayCount = ebaySold.length
 ---
 
 <style is:global>
@@ -550,9 +552,9 @@ const userValueDisplay = userValue ? formatSingleValue(userValue) : null
       </>
     ) : (
       <>
-        <div class="ga-value-cap" id="ga-value-cap">Estimated Value</div>
+        <div class="ga-value-cap" id="ga-value-cap">{ebayCount > 0 ? 'Market Value' : 'Estimated Value'}</div>
         <div class="ga-value-number" id="ga-value-display">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
-        <div class="ga-value-sub" id="ga-value-sub">AI appraisal estimate · not a formal valuation</div>
+        <div class="ga-value-sub" id="ga-value-sub">{ebayCount > 0 ? `Based on ${ebayCount} eBay sold listings · price range` : 'AI appraisal estimate · not a formal valuation'}</div>
         <div class="ga-value-strip" id="ga-ai-strip">
           <div class="ga-value-strip-cell">
             <div class="ga-value-strip-label">Low estimate</div>
@@ -620,7 +622,7 @@ const userValueDisplay = userValue ? formatSingleValue(userValue) : null
   <!-- ENRICHMENT -->
   <div id="enrichment-container">
     {enrichment ? (
-      <GAEnrichmentSections enrichment={enrichment} r={r} />
+      <GAEnrichmentSections enrichment={enrichment} r={r} item={item} />
     ) : (
       <GAEnrichGate item={item} r={r} creditCostEnrich={creditCostEnrich} />
     )}
@@ -630,7 +632,7 @@ const userValueDisplay = userValue ? formatSingleValue(userValue) : null
   <div class="ga-footer">
     <div>
       <div class="ga-footer-brand">GAUK Antiques</div>
-      <div class="ga-ai-disclaimer">AI appraisal · estimates only · not a formal valuation · {date}</div>
+      <div class="ga-ai-disclaimer">{ebayCount > 0 ? `eBay sold data · ${ebayCount} listings · ${date}` : `AI appraisal · estimates only · not a formal valuation · ${date}`}</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
       <div style="text-align:right;">
