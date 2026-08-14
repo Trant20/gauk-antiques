@@ -59,7 +59,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     const limit = Math.min(parseInt(body.limit || '20', 10), 240)
     const page = Math.max(parseInt(body.page || '1', 10), 1)
-    const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query.trim())}&site=EBAY_GB&limit=${limit}&page=${page}`
+    const validSites = new Set(['EBAY_GB', 'EBAY_US'])
+    const site = validSites.has(body.site) ? body.site : 'EBAY_GB'
+    const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query.trim())}&site=${site}&limit=${limit}&page=${page}`
     const trawlRes = await fetch(url, { headers: { 'x-api-key': trawlKey } })
     if (!trawlRes.ok) return json({ error: 'Search failed — please try again' }, 503)
 
@@ -113,6 +115,7 @@ export const POST: APIRoute = async ({ request }) => {
       credit_cost: creditCost,
       search_id: searchId,
       page,
+      site,
       has_more: results.length >= limit
     })
 

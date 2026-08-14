@@ -83,6 +83,8 @@ if (identificationId) {
   .search-box-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .search-credit-note { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); margin-top: 8px; }
   .search-credit-note strong { color: var(--ga-gold-hi); }
+  .search-site-select { height: 48px; padding: 0 14px; background: var(--surface); border: 1px solid var(--border-hi); font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); appearance: none; -webkit-appearance: none; cursor: pointer; flex-shrink: 0; }
+  .search-site-select:focus { outline: none; border-color: var(--ga-gold); }
 
   /* ── HERO ── */
   .search-hero { margin-bottom: 32px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
@@ -97,8 +99,7 @@ if (identificationId) {
   .search-save-all-btn:hover { opacity: 0.85; }
 
   /* ── RESULT CARDS ── */
-  .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-  @media (max-width: 600px) { .search-grid { grid-template-columns: 1fr; } }
+  .search-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 16px; margin-bottom: 24px; }
 
   .search-card { background: var(--surface); border: 1px solid var(--border-hi); border-left: 3px solid var(--ga-gold); display: flex; flex-direction: column; overflow: hidden; position: relative; }
   .search-card.selected { border-color: var(--ga-gold-hi); background: var(--surface-hi); }
@@ -182,6 +183,10 @@ if (identificationId) {
             placeholder="e.g. Clarice Cliff teapot Bizarre"
             value={suggestedQuery}
           />
+          <select class="search-site-select" id="search-site">
+            <option value="EBAY_GB">eBay UK</option>
+            <option value="EBAY_US">eBay US</option>
+          </select>
           <button class="search-box-btn" id="search-btn">Search</button>
         </div>
         <div class="search-credit-note">
@@ -248,6 +253,7 @@ if (identificationId) {
 
   const searchInput = document.getElementById('search-input') as HTMLInputElement
   const searchBtn = document.getElementById('search-btn') as HTMLButtonElement
+  const searchSite = document.getElementById('search-site') as HTMLSelectElement
   const searchLoading = document.getElementById('search-loading')!
   const searchResultsWrap = document.getElementById('search-results-wrap')!
   const searchGrid = document.getElementById('search-grid')!
@@ -357,7 +363,7 @@ if (identificationId) {
       const res = await fetch('/api/ebay-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ query, identification_id: identificationId || null, limit: 20, page: 1 })
+        body: JSON.stringify({ query, identification_id: identificationId || null, limit: 20, page: 1, site: searchSite?.value || 'EBAY_GB' })
       })
       const data = await res.json()
 
@@ -396,7 +402,7 @@ if (identificationId) {
       const res = await fetch('/api/ebay-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ query: currentQuery, identification_id: identificationId || null, limit: 20, page: currentPage })
+        body: JSON.stringify({ query: currentQuery, identification_id: identificationId || null, limit: 20, page: currentPage, site: searchSite?.value || 'EBAY_GB' })
       })
       const data = await res.json()
 
