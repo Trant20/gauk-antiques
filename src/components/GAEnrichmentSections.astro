@@ -257,21 +257,19 @@ const ebaySold: any[] = item.ebay_sold || []
   }
 </style>
 
-<script define:vars={{ itemId: '' }}>
-  // Bind delete buttons on eBay sold cards
+<script>
+  import { supabase } from '../lib/supabase-browser'
+
+  const { data: { session } } = await supabase.auth.getSession()
+
   document.querySelectorAll('[data-del-item]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault()
       e.stopPropagation()
-      const itemId = (btn as HTMLElement).dataset.delItem!
-      const identificationId = (window as any).__val?.itemId
-      if (!identificationId) return
+      const itemId = btn.dataset.delItem
+      const identificationId = window.__val?.itemId
+      if (!identificationId || !itemId || !session) return
 
-      const { supabase } = await import('../lib/supabase-browser')
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      // Read current ebay_sold, filter out this item_id
       const { data: item } = await supabase
         .from('identifications')
         .select('ebay_sold')
@@ -280,7 +278,7 @@ const ebaySold: any[] = item.ebay_sold || []
 
       if (!item?.ebay_sold) return
 
-      const updated = item.ebay_sold.filter((s: any) => s.item_id !== itemId)
+      const updated = item.ebay_sold.filter(s => s.item_id !== itemId)
 
       const { error } = await supabase
         .from('identifications')
@@ -289,7 +287,6 @@ const ebaySold: any[] = item.ebay_sold || []
         .eq('user_id', session.user.id)
 
       if (!error) {
-        // Remove card from DOM
         const card = document.querySelector(`[data-item-id="${itemId}"]`)
         card?.remove()
       }
