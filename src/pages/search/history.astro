@@ -130,10 +130,11 @@ import { R2_CDN } from '../../lib/constants'
 </script>
 
 <script>
-  import { supabase } from '../../lib/supabase-browser'
+  // data fetched via /api/saved-searches
 
   const { R2_CDN } = window.__historyPage
 
+  import { supabase } from '../../lib/supabase-browser'
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
     window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/search/history'
@@ -225,12 +226,12 @@ import { R2_CDN } from '../../lib/constants'
         e.preventDefault()
         const id = (btn as HTMLElement).dataset.delete!
         if (!session) return
-        const { error } = await supabase
-          .from('saved_searches')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', session.user.id)
-        if (!error) {
+        const res = await fetch(`/api/saved-searches?id=${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        })
+        const data = await res.json()
+        if (data.deleted) {
           const section = sectionsEl.querySelector(`[data-id="${id}"]`)
           section?.remove()
           allSearches = allSearches.filter(s => s.id !== id)
@@ -246,27 +247,30 @@ import { R2_CDN } from '../../lib/constants'
     if (fetching || allFetched || !session) return
     fetching = true
 
-    const { data, error } = await supabase
-      .from('saved_searches')
-      .select('id, query, results, created_at')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + BATCH - 1)
-
-    if (error || !data || data.length === 0) {
-      allFetched = true
-      if (allSearches.length === 0) {
-        emptyEl.classList.remove('hidden')
-      }
-    } else {
-      allSearches = [...allSearches, ...data]
-      offset += data.length
-      if (data.length < BATCH) allFetched = true
-      data.forEach(search => {
-        sectionsEl.insertAdjacentHTML('beforeend', renderSection(search))
+    try {
+      const res = await fetch(`/api/saved-searches?offset=${offset}&limit=${BATCH}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
       })
-      bindDeleteButtons()
-      applyFilter()
+      const data = await res.json()
+
+      if (data.error || !data.searches || data.searches.length === 0) {
+        allFetched = true
+        if (allSearches.length === 0) {
+          emptyEl.classList.remove('hidden')
+        }
+      } else {
+        allSearches = [...allSearches, ...data.searches]
+        offset += data.searches.length
+        if (data.searches.length < BATCH) allFetched = true
+        data.searches.forEach((search: any) => {
+          sectionsEl.insertAdjacentHTML('beforeend', renderSection(search))
+        })
+        bindDeleteButtons()
+        applyFilter()
+      }
+    } catch {
+      allFetched = true
+      if (allSearches.length === 0) emptyEl.classList.remove('hidden')
     }
 
     fetching = false
