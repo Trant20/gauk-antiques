@@ -130,6 +130,7 @@ const ebaySold: any[] = item.ebay_sold || []
     text-decoration: none;
     color: inherit;
     transition: border-color 0.15s;
+    position: relative;
   }
   .ga-sold-card:hover { border-color: var(--ga-gold-hi); }
   .ga-sold-thumb {
@@ -211,6 +212,27 @@ const ebaySold: any[] = item.ebay_sold || []
     border-top: 1px solid var(--border);
     font-style: italic;
   }
+  .ga-sold-card-del {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: var(--text-mute);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    z-index: 2;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .ga-sold-card:hover .ga-sold-card-del { opacity: 1; }
+  .ga-sold-card-del:hover { color: #c46028; }
   .ga-sold-search-cta {
     display: flex;
     align-items: center;
@@ -235,6 +257,46 @@ const ebaySold: any[] = item.ebay_sold || []
   }
 </style>
 
+<script define:vars={{ itemId: '' }}>
+  // Bind delete buttons on eBay sold cards
+  document.querySelectorAll('[data-del-item]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const itemId = (btn as HTMLElement).dataset.delItem!
+      const identificationId = (window as any).__val?.itemId
+      if (!identificationId) return
+
+      const { supabase } = await import('../lib/supabase-browser')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      // Read current ebay_sold, filter out this item_id
+      const { data: item } = await supabase
+        .from('identifications')
+        .select('ebay_sold')
+        .eq('id', identificationId)
+        .single()
+
+      if (!item?.ebay_sold) return
+
+      const updated = item.ebay_sold.filter((s: any) => s.item_id !== itemId)
+
+      const { error } = await supabase
+        .from('identifications')
+        .update({ ebay_sold: updated })
+        .eq('id', identificationId)
+        .eq('user_id', session.user.id)
+
+      if (!error) {
+        // Remove card from DOM
+        const card = document.querySelector(`[data-item-id="${itemId}"]`)
+        card?.remove()
+      }
+    })
+  })
+</script>
+
 <!-- ── EBAY SOLD CARDS — top of enrichment ── -->
 {ebaySold.length > 0 && (
   <div class="ga-section">
@@ -247,7 +309,9 @@ const ebaySold: any[] = item.ebay_sold || []
         const priceDisplay = `£${totalPrice.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
         const bidsText = sale.bids ? ` · ${sale.bids} bids` : ''
         return (
-          <a href={sale.item_link} target="_blank" rel="noopener noreferrer" class="ga-sold-card">
+          <div class="ga-sold-card" data-item-id={sale.item_id}>
+            <button class="ga-sold-card-del" data-del-item={sale.item_id} title="Remove">&#x2715;</button>
+            <a href={sale.item_link} target="_blank" rel="noopener noreferrer" style="display:contents;text-decoration:none;color:inherit;">
             <div class="ga-sold-thumb">
               {imageUrl ? (
                 <img src={imageUrl} alt={sale.title} loading="lazy" />
@@ -264,7 +328,8 @@ const ebaySold: any[] = item.ebay_sold || []
               </div>
               <div class="ga-sold-format">{sale.buying_format}{bidsText}</div>
             </div>
-          </a>
+            </a>
+          </div>
         )
       })}
     </div>
