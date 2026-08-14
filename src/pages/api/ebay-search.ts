@@ -31,7 +31,8 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return json({ error: 'Invalid token' }, 401)
 
-    const { query, identification_id } = await request.json()
+    const body = await request.json()
+    const { query, identification_id } = body
     if (!query || !query.trim()) return json({ error: 'Search query is required' }, 400)
 
     // Read credit cost from site_settings — never hardcoded
@@ -56,7 +57,9 @@ export const POST: APIRoute = async ({ request }) => {
     const trawlKey = (env as unknown as CloudflareEnv).TRAWL_API_KEY as string
     if (!trawlKey) return json({ error: 'Search unavailable' }, 503)
 
-    const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query.trim())}&site=EBAY_GB&limit=10`
+    const limit = Math.min(parseInt(body.limit || '20', 10), 240)
+    const page = Math.max(parseInt(body.page || '1', 10), 1)
+    const url = `https://api.trawl.dev/ebay/v1/sold?query=${encodeURIComponent(query.trim())}&site=EBAY_GB&limit=${limit}&page=${page}`
     const trawlRes = await fetch(url, { headers: { 'x-api-key': trawlKey } })
     if (!trawlRes.ok) return json({ error: 'Search failed — please try again' }, 503)
 
@@ -108,7 +111,9 @@ export const POST: APIRoute = async ({ request }) => {
       results: results.filter(Boolean),
       query: query.trim(),
       credit_cost: creditCost,
-      search_id: searchId
+      search_id: searchId,
+      page,
+      has_more: results.length >= limit
     })
 
   } catch (err: any) {

@@ -226,11 +226,10 @@ if (identificationId) {
         <div class="search-state-sub">Try a broader search. Use maker name and item type only, without qualifiers.</div>
       </div>
 
-      <!-- INITIAL STATE -->
-      <div class="search-state" id="search-initial">
-        <div class="search-state-title">Search sold listings</div>
-        <div class="search-state-sub">Enter a maker, item type and style to find real sold prices from eBay. Each search costs 1 credit.</div>
-      </div>
+      <!-- initial state removed — hero section covers this -->
+
+      <!-- Infinite scroll sentinel -->
+      <div id="search-sentinel" style="height:1px;margin-top:20px;"></div>
 
     </div>
   </div>
@@ -254,7 +253,7 @@ if (identificationId) {
   const searchGrid = document.getElementById('search-grid')!
   const resultsLabel = document.getElementById('results-label')!
   const searchEmpty = document.getElementById('search-empty')!
-  const searchInitial = document.getElementById('search-initial')!
+  // searchInitial removed
   const saveSelectedBtn = document.getElementById('save-selected-btn')!
   const saveConfirm = document.getElementById('save-confirm')!
   const saveConfirmText = document.getElementById('save-confirm-text')!
@@ -266,6 +265,10 @@ if (identificationId) {
 
   let currentResults: any[] = []
   let selectedIds = new Set<string>()
+  let currentQuery = ''
+  let currentPage = 1
+  let hasMore = false
+  let loadingMore = false
 
   function fmtPrice(price: number, shipping: number): string {
     const total = price + (shipping || 0)
@@ -276,43 +279,46 @@ if (identificationId) {
     return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   }
 
-  function renderCards(results: any[]) {
-    searchGrid.innerHTML = results.map(item => {
-      const imageUrl = item.r2_key ? `${R2_CDN}/${item.r2_key}` : null
-      const price = fmtPrice(item.sale_price, item.shipping_price)
-      const date = item.date_sold ? fmtDate(item.date_sold) : ''
-      const bidsText = item.bids ? ` · ${item.bids} bids` : ''
-      const isSelected = selectedIds.has(item.item_id)
+  function buildCard(item: any): string {
+    const imageUrl = item.r2_key ? `${R2_CDN}/${item.r2_key}` : null
+    const price = fmtPrice(item.sale_price, item.shipping_price)
+    const date = item.date_sold ? fmtDate(item.date_sold) : ''
+    const bidsText = item.bids ? ` · ${item.bids} bids` : ''
+    const isSelected = selectedIds.has(item.item_id)
+    const saveLabel = identificationId ? 'Save to valuation' : 'Save to history'
 
-      return `<div class="search-card${isSelected ? ' selected' : ''}" data-id="${item.item_id}">
-        <div class="search-card-thumb">
-          ${imageUrl
-            ? `<img src="${imageUrl}" alt="${item.title}" loading="lazy" />`
-            : `<div class="search-card-thumb-placeholder">£</div>`
-          }
+    return `<div class="search-card${isSelected ? ' selected' : ''}" data-id="${item.item_id}">
+      <div class="search-card-thumb">
+        ${imageUrl
+          ? `<img src="${imageUrl}" alt="${item.title}" loading="lazy" />`
+          : `<div class="search-card-thumb-placeholder">£</div>`
+        }
+      </div>
+      <div class="search-card-body">
+        <div class="search-card-title">${item.title}</div>
+        <div class="search-card-price">${price}</div>
+        <div class="search-card-meta">
+          <span class="search-card-condition">${item.condition_raw || item.condition || ''}</span>
+          <span class="search-card-date">${date}</span>
         </div>
-        <div class="search-card-body">
-          <div class="search-card-title">${item.title}</div>
-          <div class="search-card-price">${price}</div>
-          <div class="search-card-meta">
-            <span class="search-card-condition">${item.condition_raw || item.condition || ''}</span>
-            <span class="search-card-date">${date}</span>
-          </div>
-          <div class="search-card-format">${item.buying_format || ''}${bidsText}</div>
-        </div>
-        <div class="search-card-footer">
-          <label class="search-card-select">
-            <input type="checkbox" data-item-id="${item.item_id}" ${isSelected ? 'checked' : ''} />
-            Save to valuation
-          </label>
-          <a href="${item.item_link}" target="_blank" rel="noopener noreferrer" class="search-card-link">View on eBay</a>
-        </div>
-      </div>`
-    }).join('')
+        <div class="search-card-format">${item.buying_format || ''}${bidsText}</div>
+      </div>
+      <div class="search-card-footer">
+        <label class="search-card-select">
+          <input type="checkbox" data-item-id="${item.item_id}" ${isSelected ? 'checked' : ''} />
+          ${saveLabel}
+        </label>
+        <a href="${item.item_link}" target="_blank" rel="noopener noreferrer" class="search-card-link">View on eBay</a>
+      </div>
+    </div>`
+  }
 
-    // Bind checkboxes
+  function bindCardCheckboxes() {
     searchGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.addEventListener('change', (e) => {
+      // Remove existing listener by cloning
+      const fresh = cb.cloneNode(true) as HTMLInputElement
+      cb.parentNode?.replaceChild(fresh, cb)
+      fresh.addEventListener('change', (e) => {
         const target = e.target as HTMLInputElement
         const itemId = target.dataset.itemId!
         const card = target.closest('.search-card') as HTMLElement
@@ -328,23 +334,30 @@ if (identificationId) {
     })
   }
 
+  function renderCards(results: any[]) {
+    searchGrid.innerHTML = results.map(buildCard).join('')
+    bindCardCheckboxes()
+  }
+
   async function doSearch() {
     const query = searchInput.value.trim()
     if (!query || !session) return
 
     searchBtn.disabled = true
     searchBtn.textContent = 'Searching...'
-    searchInitial.style.display = 'none'
     searchEmpty.style.display = 'none'
     searchResultsWrap.style.display = 'none'
     searchLoading.style.display = 'block'
     selectedIds.clear()
+    currentResults = []
+    currentPage = 1
+    hasMore = false
 
     try {
       const res = await fetch('/api/ebay-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ query, identification_id: identificationId || null })
+        body: JSON.stringify({ query, identification_id: identificationId || null, limit: 20, page: 1 })
       })
       const data = await res.json()
 
@@ -357,6 +370,9 @@ if (identificationId) {
         searchEmpty.style.display = 'flex'
       } else {
         currentResults = data.results
+        currentQuery = query
+        currentPage = 1
+        hasMore = data.has_more
         resultsLabel.textContent = `${data.results.length} results for "${query}"`
         saveSelectedBtn.style.display = 'none'
         searchResultsWrap.style.display = 'block'
@@ -371,10 +387,52 @@ if (identificationId) {
     }
   }
 
+  async function loadMore() {
+    if (loadingMore || !hasMore || !session || !currentQuery) return
+    loadingMore = true
+    currentPage++
+
+    try {
+      const res = await fetch('/api/ebay-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ query: currentQuery, identification_id: identificationId || null, limit: 20, page: currentPage })
+      })
+      const data = await res.json()
+
+      if (!data.error && data.results && data.results.length > 0) {
+        currentResults = [...currentResults, ...data.results]
+        hasMore = data.has_more
+        resultsLabel.textContent = `${currentResults.length} results for "${currentQuery}"`
+        // Append new cards without re-rendering all
+        const grid = document.getElementById('search-grid')!
+        data.results.forEach((item: any) => {
+          grid.insertAdjacentHTML('beforeend', buildCard(item))
+        })
+        bindCardCheckboxes()
+      } else {
+        hasMore = false
+      }
+    } catch {
+      hasMore = false
+    }
+
+    loadingMore = false
+  }
+
   searchBtn.addEventListener('click', doSearch)
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') doSearch()
   })
+
+  // Infinite scroll
+  const searchSentinel = document.getElementById('search-sentinel')
+  if (searchSentinel) {
+    const scrollObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !loadingMore) loadMore()
+    }, { rootMargin: '200px' })
+    scrollObserver.observe(searchSentinel)
+  }
 
   // Save selected — handled in F4
   saveSelectedBtn.addEventListener('click', async () => {
