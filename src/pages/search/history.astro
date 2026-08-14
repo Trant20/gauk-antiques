@@ -1,0 +1,291 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import AppSidebar from '../../components/AppSidebar.astro'
+import AppBottomNav from '../../components/AppBottomNav.astro'
+import { R2_CDN } from '../../lib/constants'
+---
+
+<AppLayout title="Search History — GAUK">
+<style is:global>
+  .history-shell { display: flex; height: 100vh; overflow: hidden; }
+  .history-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  @media (max-width: 768px) { .history-main { margin-left: 0; padding-bottom: 64px; } }
+
+  /* ── TOPBAR ── */
+  .history-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+  .history-search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 320px; background: var(--surface-hi); border: 1px solid var(--border-hi); padding: 0 11px; height: 32px; }
+  .history-search-wrap svg { flex-shrink: 0; opacity: 0.28; }
+  .history-search-input { font-size: 13px; width: 100%; background: transparent; border: none; color: var(--text); outline: none; }
+  .history-search-input::placeholder { color: var(--text-faint); }
+  .history-topbar-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; }
+  .history-topbar-link { display: flex; align-items: center; gap: 6px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; font-weight: 600; transition: color 0.15s; margin-left: auto; }
+  .history-topbar-link:hover { color: var(--ga-gold-hi); }
+
+  /* ── SCROLL ── */
+  .history-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+  @media (max-width: 768px) { .history-scroll { padding: 16px; } }
+
+  /* ── SECTION ── */
+  .history-section { margin-bottom: 32px; }
+  .history-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .history-section-query { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--text); }
+  .history-section-meta { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); text-align: right; }
+  .history-section-date { display: block; margin-bottom: 2px; }
+  .history-section-count { color: var(--ga-gold-hi); font-weight: 600; }
+  .history-delete-btn { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); background: none; border: 1px solid var(--border-hi); padding: 5px 10px; cursor: pointer; transition: border-color 0.15s, color 0.15s; margin-left: 16px; flex-shrink: 0; }
+  .history-delete-btn:hover { border-color: #c46028; color: #c46028; }
+
+  /* ── CARDS ── */
+  .history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .history-grid { grid-template-columns: 1fr; } }
+
+  .history-card { background: var(--surface); border: 1px solid var(--border-hi); border-left: 3px solid var(--ga-gold); display: flex; flex-direction: column; overflow: hidden; text-decoration: none; color: inherit; transition: border-color 0.15s; }
+  .history-card:hover { border-color: var(--ga-gold-hi); }
+  .history-card-thumb { height: 140px; background: var(--surface-hi); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+  .history-card-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+  .history-card-thumb-placeholder { font-family: var(--font-display); font-size: 48px; color: var(--ga-gold); opacity: 0.2; }
+  .history-card-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; }
+  .history-card-title { font-family: var(--font-ui); font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+  .history-card-price { font-family: var(--font-display); font-size: 20px; color: var(--ga-gold-hi); margin-bottom: 6px; }
+  .history-card-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .history-card-condition { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); }
+  .history-card-date { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); }
+  .history-card-ebay { padding: 8px 14px; border-top: 1px solid var(--border); font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); text-align: right; }
+
+  /* ── STATES ── */
+  .history-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 420px; gap: 20px; text-align: center; }
+  .history-state-title { font-family: var(--font-display); font-size: 24px; color: var(--text-mute); font-style: italic; }
+  .history-state-sub { font-family: var(--font-ui); font-size: 13px; color: var(--text-mute); line-height: 1.6; max-width: 320px; }
+  .history-state-btn { padding: 10px 22px; background: var(--ga-gold); color: #fff; font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; display: inline-block; }
+
+  /* ── SHIMMER ── */
+  .shimmer { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hi) 50%, var(--surface) 75%); background-size: 400px 100%; animation: shimmer 1.4s ease-in-out infinite; }
+  .history-shimmer-section { margin-bottom: 32px; }
+  .history-shimmer-head { height: 24px; width: 200px; border-radius: 2px; margin-bottom: 14px; }
+  .history-shimmer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .history-shimmer-card { background: var(--surface); border: 1px solid var(--border-hi); }
+  .history-shimmer-thumb { height: 140px; }
+  .history-shimmer-line { height: 10px; margin: 12px 14px 4px; border-radius: 2px; }
+  .history-shimmer-line-short { height: 10px; width: 55%; margin: 4px 14px 14px; border-radius: 2px; }
+
+  /* ── LOAD MORE ── */
+  .history-sentinel { height: 1px; }
+</style>
+
+<div class="history-shell">
+  <AppSidebar activePage="ebay-search" />
+
+  <div class="history-main">
+    <div class="history-topbar">
+      <div class="history-search-wrap">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M8.2 8.2L11 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input class="history-search-input" id="history-filter" placeholder="Filter searches..." />
+      </div>
+      <span class="history-topbar-title">Search History</span>
+      <a href="/search/ebay" class="history-topbar-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        New Search
+      </a>
+    </div>
+
+    <div class="history-scroll">
+      <!-- Loading shimmer -->
+      <div id="history-loading">
+        {Array(2).fill(0).map(() => (
+          <div class="history-shimmer-section">
+            <div class="history-shimmer-head shimmer"></div>
+            <div class="history-shimmer-grid">
+              {Array(2).fill(0).map(() => (
+                <div class="history-shimmer-card">
+                  <div class="history-shimmer-thumb shimmer"></div>
+                  <div class="history-shimmer-line shimmer"></div>
+                  <div class="history-shimmer-line-short shimmer"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Empty state -->
+      <div id="history-empty" class="history-state hidden">
+        <div class="history-state-title">No saved searches yet</div>
+        <div class="history-state-sub">Search eBay sold listings and save results to build your history.</div>
+        <a href="/search/ebay" class="history-state-btn">Start Searching</a>
+      </div>
+
+      <!-- Sections -->
+      <div id="history-sections"></div>
+
+      <!-- Infinite scroll sentinel -->
+      <div id="history-sentinel" class="history-sentinel"></div>
+    </div>
+  </div>
+</div>
+
+<AppBottomNav activePage="vault" />
+
+<script define:vars={{ R2_CDN }}>
+  window.__historyPage = { R2_CDN }
+</script>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+
+  const { R2_CDN } = window.__historyPage
+
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/search/history'
+  }
+
+  const loadingEl = document.getElementById('history-loading')!
+  const emptyEl = document.getElementById('history-empty')!
+  const sectionsEl = document.getElementById('history-sections')!
+  const filterInput = document.getElementById('history-filter') as HTMLInputElement
+  const sentinel = document.getElementById('history-sentinel')!
+
+  const BATCH = 10
+  let offset = 0
+  let allFetched = false
+  let fetching = false
+  let allSearches: any[] = []
+  let filterQuery = ''
+
+  function fmtPrice(price: number, shipping: number): string {
+    const total = price + (shipping || 0)
+    return '£' + total.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+  }
+
+  function fmtDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  function renderCard(item: any): string {
+    const imageUrl = item.r2_key ? `${R2_CDN}/${item.r2_key}` : null
+    const price = fmtPrice(item.sale_price, item.shipping_price)
+    const date = item.date_sold ? fmtDate(item.date_sold) : ''
+    return `<a href="${item.item_link}" target="_blank" rel="noopener noreferrer" class="history-card">
+      <div class="history-card-thumb">
+        ${imageUrl
+          ? `<img src="${imageUrl}" alt="${item.title}" loading="lazy" />`
+          : `<div class="history-card-thumb-placeholder">£</div>`
+        }
+      </div>
+      <div class="history-card-body">
+        <div class="history-card-title">${item.title}</div>
+        <div class="history-card-price">${price}</div>
+        <div class="history-card-meta">
+          <span class="history-card-condition">${item.condition_raw || item.condition || ''}</span>
+          <span class="history-card-date">${date}</span>
+        </div>
+      </div>
+      <div class="history-card-ebay">View on eBay</div>
+    </a>`
+  }
+
+  function renderSection(search: any): string {
+    const date = fmtDate(search.created_at)
+    const results: any[] = search.results || []
+    const cards = results.map(renderCard).join('')
+    return `<div class="history-section" data-id="${search.id}" data-query="${search.query.toLowerCase()}">
+      <div class="history-section-head">
+        <div class="history-section-query">${search.query}</div>
+        <div style="display:flex;align-items:center;">
+          <div class="history-section-meta">
+            <span class="history-section-date">${date}</span>
+            <span class="history-section-count">${results.length} listing${results.length !== 1 ? 's' : ''} saved</span>
+          </div>
+          <button class="history-delete-btn" data-delete="${search.id}">Delete</button>
+        </div>
+      </div>
+      <div class="history-grid">${cards}</div>
+    </div>`
+  }
+
+  function applyFilter() {
+    const sections = sectionsEl.querySelectorAll('.history-section')
+    let visible = 0
+    sections.forEach(section => {
+      const query = (section as HTMLElement).dataset.query || ''
+      const show = !filterQuery || query.includes(filterQuery)
+      ;(section as HTMLElement).style.display = show ? 'block' : 'none'
+      if (show) visible++
+    })
+    if (visible === 0 && allFetched) {
+      emptyEl.classList.remove('hidden')
+    } else {
+      emptyEl.classList.add('hidden')
+    }
+  }
+
+  function bindDeleteButtons() {
+    sectionsEl.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault()
+        const id = (btn as HTMLElement).dataset.delete!
+        if (!session) return
+        const { error } = await supabase
+          .from('saved_searches')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', session.user.id)
+        if (!error) {
+          const section = sectionsEl.querySelector(`[data-id="${id}"]`)
+          section?.remove()
+          allSearches = allSearches.filter(s => s.id !== id)
+          if (sectionsEl.children.length === 0) {
+            emptyEl.classList.remove('hidden')
+          }
+        }
+      })
+    })
+  }
+
+  async function fetchNextBatch() {
+    if (fetching || allFetched || !session) return
+    fetching = true
+
+    const { data, error } = await supabase
+      .from('saved_searches')
+      .select('id, query, results, created_at')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + BATCH - 1)
+
+    if (error || !data || data.length === 0) {
+      allFetched = true
+      if (allSearches.length === 0) {
+        emptyEl.classList.remove('hidden')
+      }
+    } else {
+      allSearches = [...allSearches, ...data]
+      offset += data.length
+      if (data.length < BATCH) allFetched = true
+      data.forEach(search => {
+        sectionsEl.insertAdjacentHTML('beforeend', renderSection(search))
+      })
+      bindDeleteButtons()
+      applyFilter()
+    }
+
+    fetching = false
+    loadingEl.style.display = 'none'
+  }
+
+  // Filter
+  filterInput.addEventListener('input', () => {
+    filterQuery = filterInput.value.trim().toLowerCase()
+    applyFilter()
+  })
+
+  // Infinite scroll
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !allFetched) fetchNextBatch()
+  }, { rootMargin: '200px' })
+  observer.observe(sentinel)
+
+  // Initial load
+  await fetchNextBatch()
+</script>
+</AppLayout>
