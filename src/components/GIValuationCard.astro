@@ -19,6 +19,11 @@ const userValueDisplay = userValue ? formatGISingleValue(userValue, currency) : 
 const valueLow = formatGISingleValue(r.value_range_low || 0, currency)
 const valueHigh = formatGISingleValue(r.value_range_high || 0, currency)
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+const retailPrices: any[] = item.retail_prices || []
+const hasRetail = retailPrices.length > 0
+const retailLow = hasRetail ? Math.min(...retailPrices.map((r: any) => r.extracted_price).filter((p: any) => p > 0)) : null
+const retailHigh = hasRetail ? Math.max(...retailPrices.map((r: any) => r.extracted_price).filter((p: any) => p > 0)) : null
+const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.source).filter(Boolean))].slice(0, 3) : []
 ---
 
 <style is:global>
@@ -176,6 +181,113 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
     text-transform: uppercase;
     color: var(--text-mute);
     margin-bottom: 8px;
+  }
+
+  /* ── RETAIL PRICES ── */
+  .gi-retail-block {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .gi-retail-cap {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gi-sage);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .gi-retail-range {
+    font-family: var(--font-ui);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--gi-sage);
+    margin-bottom: 4px;
+  }
+  .gi-retail-sources {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-mute);
+    font-style: italic;
+  }
+
+  /* ── ENRICHMENT GATE ── */
+  .gi-enrich-gate {
+    margin-top: 24px;
+    padding: 28px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-left: 3px solid var(--gi-sage);
+    text-align: center;
+  }
+  .gi-enrich-gate-eyebrow {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--gi-sage);
+    margin-bottom: 10px;
+  }
+  .gi-enrich-gate-title {
+    font-family: var(--font-ui);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .gi-enrich-gate-body {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .gi-enrich-gate-cost {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-mute);
+    margin-bottom: 16px;
+  }
+  .gi-enrich-gate-btn {
+    display: inline-block;
+    padding: 14px 32px;
+    background: var(--gi-sage);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    width: 100%;
+    max-width: 320px;
+  }
+  .gi-enrich-gate-btn:hover { opacity: 0.85; }
+  .gi-enrich-gate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .gi-enrich-loading-text {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gi-sage);
+    display: none;
+    margin-top: 12px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .gi-enrich-saved {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--gi-sage);
+    display: none;
+    margin-top: 10px;
   }
   .gi-edit-row { display: flex; gap: 8px; align-items: center; }
   .gi-edit-input {
@@ -602,6 +714,15 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
             <div class="gi-value-strip-val">{valueHigh}</div>
           </div>
         </div>
+        {hasRetail && retailLow && retailHigh && (
+          <div class="gi-retail-block">
+            <div class="gi-retail-cap">Current retail replacement cost</div>
+            <div class="gi-retail-range">${retailLow.toLocaleString()} &ndash; ${retailHigh.toLocaleString()}</div>
+            {retailSources.length > 0 && (
+              <div class="gi-retail-sources">From {retailSources.join(', ')}</div>
+            )}
+          </div>
+        )}
       </>
     )}
     <div class="gi-value-strip" id="gi-ai-strip" style={userValueDisplay ? 'display:none' : ''}></div>
@@ -730,6 +851,19 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       <button id="gi-delete-btn" class="gi-delete-btn">Delete this item</button>
     </div>
   </div>
+
+  <!-- ENRICHMENT GATE -->
+  {!hasRetail && (
+    <div class="gi-enrich-gate" id="gi-enrich-gate">
+      <div class="gi-enrich-gate-eyebrow">Real Replacement Cost</div>
+      <div class="gi-enrich-gate-title">Get the actual retail price</div>
+      <div class="gi-enrich-gate-body">We search Google Shopping in real time to find what this item costs to replace today from real retailers. No estimates. No guesswork.</div>
+      <div class="gi-enrich-gate-cost">2 credits</div>
+      <button class="gi-enrich-gate-btn" id="gi-enrich-btn">Search Retail Prices</button>
+      <div class="gi-enrich-loading-text" id="gi-enrich-loading">Searching retailers...</div>
+      <div class="gi-enrich-saved" id="gi-enrich-saved"></div>
+    </div>
+  )}
 
   <!-- CARD ACTIONS -->
   <div class="gi-card-actions">
@@ -860,6 +994,57 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
       // Keep window.__val in sync
       if ((window as any).__val) (window as any).__val.resultJson = updatedResult
       closeDescEdit()
+    }
+  })
+
+  // ── GI Enrichment ────────────────────────────────────────────────────────
+  document.getElementById('gi-enrich-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('gi-enrich-btn') as HTMLButtonElement
+    const loading = document.getElementById('gi-enrich-loading')
+    const saved = document.getElementById('gi-enrich-saved')
+    const gate = document.getElementById('gi-enrich-gate')
+    if (!btn || !session || !itemId) return
+
+    btn.disabled = true
+    btn.textContent = 'Searching...'
+    if (loading) loading.style.display = 'block'
+
+    try {
+      const res = await fetch('/api/enrich-gi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ identification_id: itemId, result: (window as any).__val?.resultJson || {} })
+      })
+      const data = await res.json()
+
+      if (loading) loading.style.display = 'none'
+
+      if (data.error) {
+        btn.disabled = false
+        btn.textContent = 'Search Retail Prices'
+        if (saved) {
+          saved.textContent = data.error
+          saved.style.display = 'block'
+        }
+      } else if (data.retail_prices && data.retail_prices.length > 0) {
+        if (gate) gate.innerHTML = `
+          <div class="gi-enrich-gate-eyebrow">Real Replacement Cost</div>
+          <div class="gi-retail-range">$${data.price_range?.low?.toLocaleString()} &ndash; $${data.price_range?.high?.toLocaleString()}</div>
+          <div class="gi-retail-sources" style="margin-top:8px;">${[...new Set(data.retail_prices.map((r: any) => r.source).filter(Boolean))].slice(0,3).join(', ')}</div>
+          <div style="font-family:var(--font-ui);font-size:11px;color:var(--text-mute);margin-top:8px;">Reload the page to see all results</div>
+        `
+      } else {
+        btn.disabled = false
+        btn.textContent = 'Search Retail Prices'
+        if (saved) {
+          saved.textContent = 'No retail listings found for this item'
+          saved.style.display = 'block'
+        }
+      }
+    } catch {
+      btn.disabled = false
+      btn.textContent = 'Search Retail Prices'
+      if (loading) loading.style.display = 'none'
     }
   })
 
