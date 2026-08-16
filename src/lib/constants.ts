@@ -24,6 +24,7 @@ export type CloudflareEnv = {
   SUPABASE_SERVICE_ROLE_KEY: string
   ANTHROPIC_API_KEY: string
   TRAWL_API_KEY: string
+  SERPAPI_KEY: string
   STRIPE_SECRET_KEY: string
   STRIPE_WEBHOOK_SECRET: string
   SESSION: KVNamespace
