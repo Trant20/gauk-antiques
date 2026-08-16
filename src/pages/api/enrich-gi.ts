@@ -21,16 +21,33 @@ function json(data: unknown, status = 200) {
 // Build Google Shopping query from GI result
 function buildShoppingQuery(result: any): string {
   const parts: string[] = []
+
+  // Brand first
   if (result.brand && result.brand !== 'Unknown') parts.push(result.brand)
-  if (result.model) parts.push(result.model)
-  else if (result.subcategory) {
-    // Strip generic words — keep product type
+
+  // Model is most precise — use if available
+  if (result.model) {
+    parts.push(result.model)
+    return parts.join(' ').trim()
+  }
+
+  // Subcategory — strip generic words
+  if (result.subcategory) {
     const strip = new Set(['the','a','an','and','or','of','with','for','in','on','from',
       'vintage','antique','old','used','second','hand','refurbished'])
     const words = result.subcategory.toLowerCase().split(/\s+/)
     const meaningful = words.filter((w: string) => w.length > 2 && !strip.has(w))
-    parts.push(meaningful.slice(0, 3).join(' '))
+    if (meaningful.length > 0) {
+      parts.push(meaningful.slice(0, 3).join(' '))
+      return parts.join(' ').trim()
+    }
   }
+
+  // Title fallback — use as-is, it's already a clean product description
+  if (result.title) {
+    return result.title.trim()
+  }
+
   return parts.join(' ').trim()
 }
 
