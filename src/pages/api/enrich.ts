@@ -217,25 +217,33 @@ export const POST: APIRoute = async ({ request }) => {
     const client = new Anthropic({ apiKey: (env as unknown as CloudflareEnv).ANTHROPIC_API_KEY })
     const response = await client.messages.create({
       model: String(promptConfig.model || 'claude-sonnet-4-6'),
-      max_tokens: Number(promptConfig.max_tokens || 4096),
+      max_tokens: 8192,
       system: String(promptConfig.system_prompt),
-      tools: [{ type: 'web_search_20250305' as any, name: 'web_search' }],
+      tools: [{ type: 'web_search_20250305' as any, name: 'web_search', max_uses: 3 }],
       messages: [{
         role: 'user',
-        content: `Generate enrichment content for this antique identification. All prices and values must be in ${userCurrency}. Use the correct currency symbol throughout. Use the web search tool to find real recent auction results for this specific maker, item type and pattern before generating the market_research section.\n\n${JSON.stringify(result, null, 2)}${ebayContext}`
+        content: `You are generating a JSON enrichment report for an antique identification. First, use the web search tool to search for recent auction results for this specific maker, item type and pattern (2023-2026). Run 2-3 searches. Then output ONLY a single valid JSON object with no other text before or after it. All prices must be in ${userCurrency}.\n\nIdentification data:\n${JSON.stringify(result, null, 2)}${ebayContext}`
       }]
     })
 
-    // Extract text from response — may contain tool_use blocks before final text
-    const textBlock = response.content.find((b: any) => b.type === 'text')
-    if (!textBlock || textBlock.type !== 'text') {
+    // Extract text from response — web search adds server_tool_use blocks before final text
+    // Collect all text blocks and join — the JSON will be in the final text block
+    const textBlocks = response.content.filter((b: any) => b.type === 'text')
+    if (textBlocks.length === 0) {
       return json({ error: 'No response from AI' }, 500)
     }
 
+    // Use the last text block — that's where the JSON output will be after web searches
+    const lastText = textBlocks[textBlocks.length - 1] as any
+
     let enrichment: unknown
     try {
-      const raw = textBlock.text
-      const clean = raw.replaceAll('```json', '').replaceAll('```', '').trim()
+      const raw = lastText.text
+      // Find JSON — may have text before/after due to web search context
+      const jsonStart = raw.indexOf('{')
+      const jsonEnd = raw.lastIndexOf('}')
+      if (jsonStart === -1 || jsonEnd === -1) throw new Error('No JSON found')
+      const clean = raw.slice(jsonStart, jsonEnd + 1)
       enrichment = JSON.parse(clean)
     } catch {
       return json({ error: 'AI returned malformed response' }, 500)
