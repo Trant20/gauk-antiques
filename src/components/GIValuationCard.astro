@@ -289,6 +289,35 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
     display: none;
     margin-top: 10px;
   }
+
+  /* ── RETAIL CARDS ── */
+  .gi-retail-section { padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .gi-retail-section-head { margin-bottom: 16px; padding-left: 12px; border-left: 2px solid var(--gi-sage); }
+  .gi-retail-section-title { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.16em; font-weight: 700; color: var(--gi-sage); text-transform: uppercase; }
+  .gi-retail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+  @media (max-width: 480px) { .gi-retail-grid { grid-template-columns: 1fr; } }
+  .gi-retail-card {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-left: 3px solid var(--gi-sage);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+  }
+  .gi-retail-card:hover { border-color: var(--gi-sage); background: var(--surface-hi); }
+  .gi-retail-card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+  .gi-retail-card-source { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gi-sage); font-weight: 600; margin-bottom: 6px; }
+  .gi-retail-card-title { font-family: var(--font-ui); font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 10px; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .gi-retail-card-price { font-family: var(--font-ui); font-size: 22px; font-weight: 600; color: var(--gi-sage); }
+  .gi-retail-card-footer { padding: 8px 14px; border-top: 1px solid var(--border); font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); }
+  .gi-retail-disclaimer { font-family: var(--font-ui); font-size: 10px; color: var(--text-mute); font-style: italic; margin-top: 10px; }
+
+  /* ── ENRICH LOADING ANIMATION ── */
+  .gi-enrich-progress { height: 2px; background: var(--border-hi); margin: 16px 0; overflow: hidden; }
+  .gi-enrich-progress-bar { height: 100%; background: var(--gi-sage); width: 0%; transition: width 0.6s ease; }
   .gi-edit-row { display: flex; gap: 8px; align-items: center; }
   .gi-edit-input {
     flex: 1;
@@ -714,15 +743,7 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
             <div class="gi-value-strip-val">{valueHigh}</div>
           </div>
         </div>
-        {hasRetail && retailLow && retailHigh && (
-          <div class="gi-retail-block">
-            <div class="gi-retail-cap">Current retail replacement cost</div>
-            <div class="gi-retail-range">${retailLow.toLocaleString()} &ndash; ${retailHigh.toLocaleString()}</div>
-            {retailSources.length > 0 && (
-              <div class="gi-retail-sources">From {retailSources.join(', ')}</div>
-            )}
-          </div>
-        )}
+
       </>
     )}
     <div class="gi-value-strip" id="gi-ai-strip" style={userValueDisplay ? 'display:none' : ''}></div>
@@ -852,18 +873,45 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
     </div>
   </div>
 
-  <!-- ENRICHMENT GATE -->
-  {!hasRetail && (
-    <div class="gi-enrich-gate" id="gi-enrich-gate">
-      <div class="gi-enrich-gate-eyebrow">Real Replacement Cost</div>
-      <div class="gi-enrich-gate-title">Get the actual retail price</div>
-      <div class="gi-enrich-gate-body">We search Google Shopping in real time to find what this item costs to replace today from real retailers. No estimates. No guesswork.</div>
-      <div class="gi-enrich-gate-cost">2 credits</div>
-      <button class="gi-enrich-gate-btn" id="gi-enrich-btn">Search Retail Prices</button>
-      <div class="gi-enrich-loading-text" id="gi-enrich-loading">Searching retailers...</div>
-      <div class="gi-enrich-saved" id="gi-enrich-saved"></div>
+  <!-- RETAIL PRICES SECTION -->
+  <div class="gi-retail-section" id="gi-retail-section">
+    <div class="gi-retail-section-head">
+      <div class="gi-retail-section-title">Current Retail Replacement Cost</div>
     </div>
-  )}
+
+    {hasRetail ? (
+      <>
+        <div class="gi-retail-grid" id="gi-retail-grid">
+          {retailPrices.slice(0, 6).map((rp: any) => (
+            <a href={rp.link} target="_blank" rel="noopener noreferrer" class="gi-retail-card">
+              <div class="gi-retail-card-body">
+                <div class="gi-retail-card-source">{rp.source}</div>
+                <div class="gi-retail-card-title">{rp.title}</div>
+                <div class="gi-retail-card-price">{rp.price}</div>
+              </div>
+              <div class="gi-retail-card-footer">View listing</div>
+            </a>
+          ))}
+        </div>
+        <div class="gi-retail-disclaimer">Current retail prices from Google Shopping. Click any card to view the listing.</div>
+      </>
+    ) : (
+      <div id="gi-enrich-gate">
+        <div class="gi-enrich-gate">
+          <div class="gi-enrich-gate-eyebrow">Real Replacement Cost</div>
+          <div class="gi-enrich-gate-title">Get the actual retail price</div>
+          <div class="gi-enrich-gate-body">We search Google Shopping in real time to find what this item costs to replace today from real retailers. No estimates. No guesswork.</div>
+          <div class="gi-enrich-gate-cost">2 credits</div>
+          <button class="gi-enrich-gate-btn" id="gi-enrich-btn">Search Retail Prices</button>
+          <div class="gi-enrich-progress" id="gi-enrich-progress" style="display:none;">
+            <div class="gi-enrich-progress-bar" id="gi-enrich-progress-bar"></div>
+          </div>
+          <div class="gi-enrich-loading-text" id="gi-enrich-loading">Searching retailers...</div>
+          <div class="gi-enrich-saved" id="gi-enrich-saved"></div>
+        </div>
+      </div>
+    )}
+  </div>
 
   <!-- CARD ACTIONS -->
   <div class="gi-card-actions">
@@ -1003,11 +1051,22 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
     const loading = document.getElementById('gi-enrich-loading')
     const saved = document.getElementById('gi-enrich-saved')
     const gate = document.getElementById('gi-enrich-gate')
+    const progress = document.getElementById('gi-enrich-progress')
+    const progressBar = document.getElementById('gi-enrich-progress-bar')
+    const retailSection = document.getElementById('gi-retail-section')
     if (!btn || !session || !itemId) return
 
     btn.disabled = true
-    btn.textContent = 'Searching...'
+    btn.textContent = 'Searching retailers...'
     if (loading) loading.style.display = 'block'
+    if (progress) progress.style.display = 'block'
+
+    // Animate progress bar
+    let pct = 0
+    const progressInterval = setInterval(() => {
+      pct = Math.min(pct + 8, 85)
+      if (progressBar) progressBar.style.width = pct + '%'
+    }, 400)
 
     try {
       const res = await fetch('/api/enrich-gi', {
@@ -1017,9 +1076,12 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
       })
       const data = await res.json()
 
-      if (loading) loading.style.display = 'none'
+      clearInterval(progressInterval)
+      if (progressBar) progressBar.style.width = '100%'
 
       if (data.error) {
+        if (loading) loading.style.display = 'none'
+        if (progress) progress.style.display = 'none'
         btn.disabled = false
         btn.textContent = 'Search Retail Prices'
         if (saved) {
@@ -1027,24 +1089,43 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
           saved.style.display = 'block'
         }
       } else if (data.retail_prices && data.retail_prices.length > 0) {
-        if (gate) gate.innerHTML = `
-          <div class="gi-enrich-gate-eyebrow">Real Replacement Cost</div>
-          <div class="gi-retail-range">$${data.price_range?.low?.toLocaleString()} &ndash; $${data.price_range?.high?.toLocaleString()}</div>
-          <div class="gi-retail-sources" style="margin-top:8px;">${[...new Set(data.retail_prices.map((r: any) => r.source).filter(Boolean))].slice(0,3).join(', ')}</div>
-          <div style="font-family:var(--font-ui);font-size:11px;color:var(--text-mute);margin-top:8px;">Reload the page to see all results</div>
-        `
+        // Render cards in place — no reload
+        const cards = data.retail_prices.slice(0, 6).map((rp: any) => `
+          <a href="${rp.link}" target="_blank" rel="noopener noreferrer" class="gi-retail-card">
+            <div class="gi-retail-card-body">
+              <div class="gi-retail-card-source">${rp.source}</div>
+              <div class="gi-retail-card-title">${rp.title}</div>
+              <div class="gi-retail-card-price">${rp.price}</div>
+            </div>
+            <div class="gi-retail-card-footer">View listing</div>
+          </a>
+        `).join('')
+
+        if (retailSection) {
+          retailSection.innerHTML = `
+            <div class="gi-retail-section-head">
+              <div class="gi-retail-section-title">Current Retail Replacement Cost</div>
+            </div>
+            <div class="gi-retail-grid">${cards}</div>
+            <div class="gi-retail-disclaimer">Current retail prices from Google Shopping. Click any card to view the listing.</div>
+          `
+        }
       } else {
+        if (loading) loading.style.display = 'none'
+        if (progress) progress.style.display = 'none'
         btn.disabled = false
         btn.textContent = 'Search Retail Prices'
         if (saved) {
-          saved.textContent = 'No retail listings found for this item'
+          saved.textContent = 'No retail listings found — try editing the item description and searching again'
           saved.style.display = 'block'
         }
       }
     } catch {
+      clearInterval(progressInterval)
+      if (loading) loading.style.display = 'none'
+      if (progress) progress.style.display = 'none'
       btn.disabled = false
       btn.textContent = 'Search Retail Prices'
-      if (loading) loading.style.display = 'none'
     }
   })
 
