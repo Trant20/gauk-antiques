@@ -361,7 +361,7 @@ const ebaySold: any[] = item.ebay_sold || []
   const peakY = enrichment.price_peak ? toY(enrichment.price_peak.value) : padT
   return (
     <div class="ga-section">
-      <div class="ga-section-head"><div class="ga-section-title">Market Value 2010–2024</div></div>
+      <div class="ga-section-head"><div class="ga-section-title">Historical Market Context</div></div>
       {enrichment.price_context && <p class="ga-expert-para">{enrichment.price_context}</p>}
       <svg width="100%" viewBox={`0 0 ${chartW} ${chartH}`} style="display:block;overflow:visible">
         <defs>
@@ -387,7 +387,7 @@ const ebaySold: any[] = item.ebay_sold || []
           <span style="font-family:var(--font-ui);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute)">Peak {sym}{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})</span>
         </div>
       )}
-      <p style="font-family:var(--font-ui);font-size:10px;color:var(--text-mute);margin-top:12px;font-style:italic">AI-estimated market trend · not verified auction data</p>
+      <p style="font-family:var(--font-ui);font-size:10px;color:var(--text-mute);margin-top:12px;font-style:italic">AI-estimated historical trend. Not verified auction data. See eBay sold listings above for current market prices.</p>
     </div>
   )
 })()}
