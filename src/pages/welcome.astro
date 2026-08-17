@@ -18,7 +18,7 @@ const creditCostIdentify = parseInt(identifyCost?.value ?? '1', 10)
 const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
 ---
 
-<AppLayout title="Welcome — GAUK">
+<AppLayout title="Welcome to GAUK">
 <style is:global>
   .wizard-shell {
     min-height: 100vh;
@@ -232,10 +232,10 @@ const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
       <div class="wizard-credits-badge">
         <div class="wizard-credits-number">{freeCredits}</div>
         <div>
-          <div class="wizard-credits-label">Free Credits — On Us</div>
+          <div class="wizard-credits-label">Free Credits, On Us</div>
           <div class="wizard-credits-detail">
-            {creditCostIdentify} credit to identify a piece — maker, period, condition and estimated value.<br/>
-            {creditCostEnrich} credits to unlock a full valuation report — expert notes, market history and comparable sales.
+            Use {creditCostIdentify} credit to identify a piece. We return the maker, period, condition and estimated value.<br/>
+            Use {creditCostEnrich} credits to unlock a full valuation report with expert notes, market history and comparable sales.
           </div>
         </div>
       </div>
@@ -246,7 +246,7 @@ const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
         Credits never expire and work across the GAUK network. Top up any time from your account page.
       </div>
 
-      <button class="wizard-btn" id="step-1-next">Next — Set Your Currency</button>
+      <button class="wizard-btn" id="step-1-next">Next: Set Your Currency</button>
     </div>
 
     <!-- STEP 2: Currency -->
@@ -260,16 +260,15 @@ const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
       <div class="wizard-detect-note" id="detected-note">Confirm your currency below or select a different one.</div>
 
       <select class="wizard-currency-select" id="currency-select">
-        <option value="GBP">GBP — British Pound £</option>
-        <option value="USD">USD — US Dollar $</option>
-        <option value="NZD">NZD — New Zealand Dollar NZ$</option>
-        <option value="AUD">AUD — Australian Dollar AU$</option>
-        <option value="EUR">EUR — Euro €</option>
+        <option value="GBP">GBP British Pound £</option>
+        <option value="USD">USD US Dollar $</option>
+        <option value="NZD">NZD New Zealand Dollar NZ$</option>
+        <option value="AUD">AUD Australian Dollar AU$</option>
+        <option value="EUR">EUR Euro €</option>
       </select>
       <div class="wizard-currency-note">This sets the display currency for valuations, price estimates and replacement costs across GAUK Antiques and GAUK Insurance.</div>
 
       <button class="wizard-btn" id="step-2-confirm">Confirm and Go to My Collection</button>
-      <button class="wizard-btn-ghost" id="step-2-skip">Skip for now</button>
     </div>
 
   </div>
@@ -347,8 +346,6 @@ const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
   }
 
   document.getElementById('step-2-confirm')?.addEventListener('click', saveAndRedirect)
-  document.getElementById('step-2-skip')?.addEventListener('click', () => {
-    window.location.href = '/library'
-  })
+
 </script>
 </AppLayout>
