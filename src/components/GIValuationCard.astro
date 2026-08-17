@@ -879,7 +879,7 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
   <!-- RETAIL PRICES SECTION -->
   <div class="gi-retail-section" id="gi-retail-section">
     <div class="gi-retail-section-head">
-      <div class="gi-retail-section-title">Current Retail Replacement Cost</div>
+      <div class="gi-retail-section-title">Retail Price Reference</div>
     </div>
 
     {hasRetail ? (
@@ -902,7 +902,7 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
             </a>
           ))}
         </div>
-        <div class="gi-retail-disclaimer">Current retail prices from Google Shopping. Click any card to view the listing.</div>
+        <div class="gi-retail-disclaimer">Google Shopping results. Use as a reference to verify or override the AI estimate. Click any card to view the listing.</div>
       </>
     ) : (
       <div id="gi-enrich-gate">
@@ -1119,10 +1119,10 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
         if (retailSection) {
           retailSection.innerHTML = `
             <div class="gi-retail-section-head">
-              <div class="gi-retail-section-title">Current Retail Replacement Cost</div>
+              <div class="gi-retail-section-title">Retail Price Reference</div>
             </div>
             <div class="gi-retail-grid">${cards}</div>
-            <div class="gi-retail-disclaimer">Current retail prices from Google Shopping. Click any card to view the listing.</div>
+            <div class="gi-retail-disclaimer">Google Shopping results. Use as a reference to verify or override the AI estimate. Click any card to view the listing.</div>
           `
         }
       } else {
