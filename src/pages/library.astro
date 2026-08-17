@@ -697,17 +697,6 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     (delConfirm as HTMLButtonElement).disabled = true
     const { data: { session } } = await supabase.auth.getSession()
 
-  // Fetch user currency for price display
-  window.__userCurrency = 'GBP'
-  if (session) {
-    try {
-      const settingsRes = await fetch('/api/user-settings', {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
-      const settings = await settingsRes.json()
-      if (settings.currency) window.__userCurrency = settings.currency
-    } catch { /* use default GBP */ }
-  }
     if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/library'; return }
     await supabase.from('identifications').delete().eq('id', pendingDeleteId).eq('user_id', session.user.id)
     allItems = allItems.filter(i => i.id !== pendingDeleteId)
@@ -725,6 +714,16 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     elAuthGate.classList.remove('hidden')
   } else {
     userSession = session
+
+    // Fetch user currency — must complete before cards render
+    window.__userCurrency = 'GBP'
+    try {
+      const settingsRes = await fetch('/api/user-settings', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+      const settings = await settingsRes.json()
+      if (settings.currency) window.__userCurrency = settings.currency
+    } catch { /* use default GBP */ }
 
     // Welcome modal — show once for new users
     const welcomed = localStorage.getItem('gauk_welcomed')
