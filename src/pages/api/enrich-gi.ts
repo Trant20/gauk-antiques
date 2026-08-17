@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createClient } from '@supabase/supabase-js'
-import { GI_SITE_ID, R2_CDN } from '../../lib/constants'
+import { GI_SITE_ID } from '../../lib/constants'
 import type { CloudflareEnv } from '../../lib/constants'
 
 function getSupabase() {
