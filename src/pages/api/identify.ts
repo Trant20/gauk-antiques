@@ -7,6 +7,36 @@ import { ANTIQUES_SITE_ID, GI_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE
 import type { CloudflareEnv } from '../../lib/constants'
 
 const GUEST_IDENTIFY_LIMIT = 2
+
+/** Map AI-returned category name to ai_prompts context slug */
+function categoryToContext(category: string): string {
+  const map: Record<string, string> = {
+    'Ceramics': 'ceramics',
+    'Glass': 'glass',
+    'Jewellery': 'jewellery',
+    'Metalware': 'metalware',
+    'Furniture': 'furniture',
+    'Art': 'art',
+    'Clocks & Watches': 'clocks-and-watches',
+    'Textiles': 'textiles',
+    'Books & Literature': 'books-and-literature',
+    'Toys': 'toys',
+    'Militaria': 'militaria',
+    'Associations Mueseums Auctions': 'associations-mueseums-auctions',
+    'Music': 'music',
+    'Film & Media': 'film-and-media',
+    'Guides': 'guides',
+    'Artists Authors Designers': 'artists-authors-designers',
+    'Stamps & Coins': 'stamps-and-coins',
+    'Memorabilia': 'memorabilia',
+    'Collectibles & Decorative Arts': 'collectibles-and-decorative-arts',
+    'Factories Studios & Workshops': 'factories-studios-and-workshops',
+    'Historical Figures & History': 'historical-figures-and-history',
+    'Collections': 'collections',
+    'Antiquities': 'antiquities',
+  }
+  return map[category] || 'general'
+}
 const GUEST_IDENTIFY_TTL = 60 * 60 * 24 // 24 hours in seconds
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -87,14 +117,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    const promptConfig = await getPromptConfig(supabase, site_id, context, 'system_prompt, description_instruction, model, max_tokens, gate_cta_text')
-    if (!promptConfig) return json({ error: 'Prompt configuration not found' }, 500)
-
-    const systemPrompt = promptConfig.system_prompt.replace(
-      '{{DESCRIPTION_INSTRUCTION}}',
-      promptConfig.description_instruction
-    )
-
+    // ── Fetch R2 image — shared by both passes ────────────────────────────────
     const bucket = (env as unknown as CloudflareEnv).gauk_antiques_images
     const object = await bucket.get(key)
     if (!object) return json({ error: 'Image not found in R2' }, 404)
@@ -119,6 +142,68 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const client = new Anthropic({ apiKey: (env as unknown as CloudflareEnv).ANTHROPIC_API_KEY })
+
+    // ── Pass 1: Haiku classify — cheap, fast, category only ───────────────────
+    // Skip for GI — GI uses a single general prompt
+    let resolvedContext = context
+    if (site_id === ANTIQUES_SITE_ID) {
+      const classifyConfig = await getPromptConfig(supabase, site_id, 'classify', 'system_prompt, model, max_tokens')
+      if (classifyConfig?.system_prompt) {
+        try {
+          const classifyResponse = await client.messages.create({
+            model: String(classifyConfig.model || 'claude-haiku-4-5-20251001'),
+            max_tokens: Number(classifyConfig.max_tokens || 64),
+            system: String(classifyConfig.system_prompt),
+            messages: [{
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: { type: 'base64' as const, media_type: contentType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: base64 }
+                },
+                { type: 'text', text: 'Classify this item. Return only the JSON.' }
+              ]
+            }]
+          })
+
+          if (classifyResponse.content[0]?.type === 'text') {
+            const raw = classifyResponse.content[0].text
+            const clean = raw.replaceAll('```json', '').replaceAll('```', '').trim()
+            const classified = JSON.parse(clean)
+            if (classified.category) {
+              resolvedContext = categoryToContext(classified.category)
+            }
+          }
+
+          // Log Haiku token usage
+          await supabase.from('token_usage').insert({
+            site_id,
+            user_id: userId,
+            feature: 'classify',
+            model: String(classifyConfig.model || 'claude-haiku-4-5-20251001'),
+            input_tokens: classifyResponse.usage.input_tokens,
+            output_tokens: classifyResponse.usage.output_tokens,
+            cost_pence: Math.ceil(
+              (classifyResponse.usage.input_tokens * CLAUDE_INPUT_COST_PENCE_PER_TOKEN) +
+              (classifyResponse.usage.output_tokens * CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN)
+            )
+          })
+        } catch {
+          // Classification failed — fall back to general prompt
+          resolvedContext = 'general'
+        }
+      }
+    }
+
+    // ── Pass 2: Sonnet full identification with category prompt ────────────────
+    const promptConfig = await getPromptConfig(supabase, site_id, resolvedContext, 'system_prompt, description_instruction, model, max_tokens, gate_cta_text')
+    if (!promptConfig) return json({ error: 'Prompt configuration not found' }, 500)
+
+    const systemPrompt = (promptConfig.system_prompt as string).replace(
+      '{{DESCRIPTION_INSTRUCTION}}',
+      promptConfig.description_instruction as string
+    )
+
     const response = await client.messages.create({
       model: promptConfig.model,
       max_tokens: promptConfig.max_tokens,
