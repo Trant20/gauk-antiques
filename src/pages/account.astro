@@ -108,6 +108,19 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
         <AccountPlans2 />
 
         <!-- Activity -->
+        <div class="account-section-label" style="margin-top:32px;">Display Currency</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <select id="currency-select" style="flex:1;padding:10px 14px;background:var(--surface);border:1px solid var(--border-hi);font-family:var(--font-ui);font-size:14px;color:var(--text);appearance:none;outline:none;cursor:pointer;">
+            <option value="GBP">GBP — British Pound £</option>
+            <option value="USD">USD — US Dollar $</option>
+            <option value="NZD">NZD — New Zealand Dollar NZ$</option>
+            <option value="AUD">AUD — Australian Dollar AU$</option>
+            <option value="EUR">EUR — Euro €</option>
+          </select>
+          <button id="currency-save-btn" style="padding:10px 20px;background:var(--ga-gold);border:none;font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#fff;cursor:pointer;white-space:nowrap;">Save</button>
+        </div>
+        <div id="currency-saved" style="font-family:var(--font-ui);font-size:11px;color:var(--ga-gold-hi);margin-bottom:24px;display:none;">Currency updated. Reload any valuation page to see the change.</div>
+
         <div class="account-section-label" style="margin-top:32px;">Recent Activity</div>
         <div class="account-tx-list" id="tx-list">
           <div class="account-tx-row"><div class="account-tx-reason" style="color:var(--text-mute);">Loading…</div></div>
@@ -234,6 +247,38 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
         </div>`).join('')
     }
   }
+
+  // ── Currency settings ──────────────────────────────────────────────────────
+  const currencySelect = document.getElementById('currency-select') as HTMLSelectElement
+  const currencySaveBtn = document.getElementById('currency-save-btn')
+  const currencySaved = document.getElementById('currency-saved')
+
+  // Load current currency setting
+  if (session) {
+    fetch('/api/user-settings', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    }).then(r => r.json()).then(data => {
+      if (data.currency && currencySelect) currencySelect.value = data.currency
+    })
+  }
+
+  // Save currency
+  currencySaveBtn?.addEventListener('click', async () => {
+    if (!session || !currencySelect) return
+    const currency = currencySelect.value
+    const localeMap: Record<string, string> = {
+      GBP: 'en-GB', USD: 'en-US', NZD: 'en-NZ', AUD: 'en-AU', EUR: 'en-GB'
+    }
+    await fetch('/api/user-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ currency, locale: localeMap[currency] || 'en-GB' })
+    })
+    if (currencySaved) {
+      currencySaved.style.display = 'block'
+      setTimeout(() => { if (currencySaved) currencySaved.style.display = 'none' }, 4000)
+    }
+  })
 </script>
 
 </AppLayout>

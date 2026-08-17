@@ -1,8 +1,7 @@
 ---
 import { ANTIQUES_SITE_ID } from '../lib/constants'
-import PublicShell from '../layouts/PublicShell.astro'
+import AppLayout from '../layouts/AppLayout.astro'
 import { supabase } from '../lib/supabase'
-
 
 const [
   { data: plan },
@@ -18,47 +17,338 @@ const freeCredits = plan?.credits || 5
 const creditCostIdentify = parseInt(identifyCost?.value ?? '1', 10)
 const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
 ---
-<PublicShell title="Welcome — GAUK Antiques">
-<style>
-  body { background: #EFE7D9; color: #1C1810; }
-  .welcome-wrap {
-    min-height: 100vh; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 40px 24px 80px; text-align: center;
+
+<AppLayout title="Welcome — GAUK">
+<style is:global>
+  .wizard-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px 80px;
+    background: var(--shell);
   }
-  .welcome-icon { width: 64px; height: 64px; border: 1px solid #C4B49E; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; }
-  .welcome-eyebrow { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #7A5C20; margin-bottom: 12px; }
-  .welcome-title { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: clamp(28px, 6vw, 40px); font-weight: 400; font-style: italic; color: #1C1810; line-height: 1.2; margin-bottom: 20px; }
-  .welcome-credits-badge {
-    display: inline-block; background: #E6DCCB; border: 1px solid #C4B49E;
-    padding: 16px 32px; margin: 0 auto 24px;
+
+  .wizard-wrap {
+    width: 100%;
+    max-width: 480px;
   }
-  .welcome-credits-number { font-family: 'Playfair Display', Didot, Georgia, serif; font-size: 48px; font-weight: 400; color: #7A5C20; line-height: 1; }
-  .welcome-credits-label { font-family: 'Prata', Georgia, serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #8A7A66; margin-top: 4px; }
-  .welcome-body { font-family: 'Prata', Georgia, serif; font-size: 16px; color: #5C5040; line-height: 1.9; max-width: 340px; margin: 0 auto 12px; }
-  .welcome-hint { font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; margin-bottom: 36px; }
-  .welcome-divider { width: 60px; height: 1px; background: #C4B49E; margin: 24px auto; }
-  .welcome-btn { display: inline-block; padding: 16px 48px; background: #1C1810; border: none; font-family: 'Prata', Georgia, serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #EFE7D9; text-decoration: none; cursor: pointer; transition: opacity .2s; }
-  .welcome-btn:hover { opacity: .85; }
-  .welcome-sub-link { display: block; margin-top: 16px; font-family: 'Prata', Georgia, serif; font-size: 14px; color: #8A7A66; text-decoration: none; }
-  .welcome-sub-link:hover { color: #7A5C20; }
+
+  /* ── STEP ── */
+  .wizard-step { display: none; }
+  .wizard-step.active { display: block; }
+
+  /* ── HEADER ── */
+  .wizard-eyebrow {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ga-gold-hi);
+    margin-bottom: 10px;
+  }
+  .wizard-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 5vw, 38px);
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .wizard-sub {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  /* ── CREDITS BADGE ── */
+  .wizard-credits-badge {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-left: 3px solid var(--ga-gold);
+    padding: 24px 28px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .wizard-credits-number {
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: 400;
+    color: var(--ga-gold-hi);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .wizard-credits-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+  }
+  .wizard-credits-detail {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ── DIVIDER ── */
+  .wizard-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* ── CURRENCY STEP ── */
+  .wizard-detect-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .wizard-detected {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .wizard-detect-note {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-mute);
+    margin-bottom: 24px;
+  }
+  .wizard-currency-select {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    appearance: none;
+    outline: none;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .wizard-currency-select:focus { border-color: var(--ga-gold); }
+  .wizard-currency-note {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-mute);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* ── BUTTONS ── */
+  .wizard-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: var(--ga-gold);
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #fff;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    margin-bottom: 12px;
+  }
+  .wizard-btn:hover { opacity: 0.85; }
+  .wizard-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .wizard-btn-ghost {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    background: none;
+    border: 1px solid var(--border-hi);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .wizard-btn-ghost:hover { border-color: var(--ga-gold); color: var(--text); }
+
+  /* ── PROGRESS ── */
+  .wizard-progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 36px;
+  }
+  .wizard-progress-dot {
+    height: 2px;
+    flex: 1;
+    background: var(--border-hi);
+    transition: background 0.3s;
+  }
+  .wizard-progress-dot.active { background: var(--ga-gold); }
+
+  /* ── LOGO ── */
+  .wizard-logo {
+    margin-bottom: 36px;
+  }
 </style>
-<div class="welcome-wrap">
-  <div class="welcome-icon">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7A5C20" stroke-width="1">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-    </svg>
+
+<div class="wizard-shell">
+  <div class="wizard-wrap">
+
+    <div class="wizard-logo">
+      <img src="/gauk-logo.png" alt="GAUK" height="28" />
+    </div>
+
+    <div class="wizard-progress">
+      <div class="wizard-progress-dot active" id="dot-1"></div>
+      <div class="wizard-progress-dot" id="dot-2"></div>
+    </div>
+
+    <!-- STEP 1: Welcome + Credits -->
+    <div class="wizard-step active" id="step-1">
+      <div class="wizard-eyebrow">Welcome to GAUK</div>
+      <div class="wizard-title">Your account is ready</div>
+      <div class="wizard-sub">You have {freeCredits} free credits to get started. Here is what you can do with them.</div>
+
+      <div class="wizard-credits-badge">
+        <div class="wizard-credits-number">{freeCredits}</div>
+        <div>
+          <div class="wizard-credits-label">Free Credits — On Us</div>
+          <div class="wizard-credits-detail">
+            {creditCostIdentify} credit to identify a piece — maker, period, condition and estimated value.<br/>
+            {creditCostEnrich} credits to unlock a full valuation report — expert notes, market history and comparable sales.
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-divider"></div>
+
+      <div style="font-family:var(--font-ui);font-size:13px;color:var(--text-mute);line-height:1.7;margin-bottom:28px;">
+        Credits never expire and work across the GAUK network. Top up any time from your account page.
+      </div>
+
+      <button class="wizard-btn" id="step-1-next">Next — Set Your Currency</button>
+    </div>
+
+    <!-- STEP 2: Currency -->
+    <div class="wizard-step" id="step-2">
+      <div class="wizard-eyebrow">Your Currency</div>
+      <div class="wizard-title">Where are you based?</div>
+      <div class="wizard-sub">All valuations across the GAUK network will display in your currency. You can change this later in your account settings.</div>
+
+      <div class="wizard-detect-label">Detected location</div>
+      <div class="wizard-detected" id="detected-location">Detecting...</div>
+      <div class="wizard-detect-note" id="detected-note">Confirm your currency below or select a different one.</div>
+
+      <select class="wizard-currency-select" id="currency-select">
+        <option value="GBP">GBP — British Pound £</option>
+        <option value="USD">USD — US Dollar $</option>
+        <option value="NZD">NZD — New Zealand Dollar NZ$</option>
+        <option value="AUD">AUD — Australian Dollar AU$</option>
+        <option value="EUR">EUR — Euro €</option>
+      </select>
+      <div class="wizard-currency-note">This sets the display currency for valuations, price estimates and replacement costs across GAUK Antiques and GAUK Insurance.</div>
+
+      <button class="wizard-btn" id="step-2-confirm">Confirm and Go to My Collection</button>
+      <button class="wizard-btn-ghost" id="step-2-skip">Skip for now</button>
+    </div>
+
   </div>
-  <div class="welcome-eyebrow">Welcome Aboard</div>
-  <div class="welcome-title">Your account is ready</div>
-  <div class="welcome-credits-badge">
-    <div class="welcome-credits-number">{freeCredits}</div>
-    <div class="welcome-credits-label">Free Credits — On Us</div>
-  </div>
-  <a href="/library" class="welcome-btn">Go to My Collection</a>
-  <a href="/" class="welcome-sub-link">Identify a new piece</a>
-  <div class="welcome-divider"></div>
-  <div class="welcome-body">Use {creditCostIdentify} credit to identify a piece — maker, period, condition and estimated value. Use {creditCostEnrich} credits to unlock the full valuation report — expert notes, market history, comparable sales and your options.</div>
-  <div class="welcome-hint">When you need more, top up any time. Credits never expire.</div>
 </div>
-</PublicShell>
+
+<script>
+  import { supabase } from '../lib/supabase-browser'
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // ── Step navigation ────────────────────────────────────────────────────────
+  document.getElementById('step-1-next')?.addEventListener('click', () => {
+    document.getElementById('step-1')?.classList.remove('active')
+    document.getElementById('step-2')?.classList.add('active')
+    document.getElementById('dot-1')?.classList.remove('active')
+    document.getElementById('dot-2')?.classList.add('active')
+  })
+
+  // ── Location detection ─────────────────────────────────────────────────────
+  const COUNTRY_CURRENCY: Record<string, { currency: string; locale: string; label: string }> = {
+    GB: { currency: 'GBP', locale: 'en-GB', label: 'United Kingdom' },
+    US: { currency: 'USD', locale: 'en-US', label: 'United States' },
+    NZ: { currency: 'NZD', locale: 'en-NZ', label: 'New Zealand' },
+    AU: { currency: 'AUD', locale: 'en-AU', label: 'Australia' },
+    DE: { currency: 'EUR', locale: 'de-DE', label: 'Germany' },
+    FR: { currency: 'EUR', locale: 'fr-FR', label: 'France' },
+  }
+
+  const locationEl = document.getElementById('detected-location')!
+  const noteEl = document.getElementById('detected-note')!
+  const currencySelect = document.getElementById('currency-select') as HTMLSelectElement
+
+  let detectedLocale = 'en-GB'
+
+  try {
+    const res = await fetch('https://ipapi.co/json/')
+    const data = await res.json()
+    const countryCode = data.country_code || 'GB'
+    const match = COUNTRY_CURRENCY[countryCode]
+
+    if (match) {
+      locationEl.textContent = match.label
+      currencySelect.value = match.currency
+      detectedLocale = match.locale
+    } else {
+      locationEl.textContent = data.country_name || 'Unknown'
+      currencySelect.value = 'GBP'
+    }
+    noteEl.textContent = 'We detected your location. Confirm your currency below or select a different one.'
+  } catch {
+    locationEl.textContent = 'Could not detect location'
+    currencySelect.value = 'GBP'
+  }
+
+  // ── Confirm currency ───────────────────────────────────────────────────────
+  async function saveAndRedirect() {
+    const btn = document.getElementById('step-2-confirm') as HTMLButtonElement
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving...' }
+
+    const currency = currencySelect.value
+    const localeMap: Record<string, string> = {
+      GBP: 'en-GB', USD: 'en-US', NZD: 'en-NZ', AUD: 'en-AU', EUR: 'en-GB'
+    }
+    const locale = localeMap[currency] || detectedLocale
+
+    if (session) {
+      await fetch('/api/user-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ currency, locale })
+      })
+    }
+
+    window.location.href = '/library'
+  }
+
+  document.getElementById('step-2-confirm')?.addEventListener('click', saveAndRedirect)
+  document.getElementById('step-2-skip')?.addEventListener('click', () => {
+    window.location.href = '/library'
+  })
+</script>
+</AppLayout>

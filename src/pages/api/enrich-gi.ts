@@ -86,7 +86,10 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return json({ error: 'Invalid token' }, 401)
 
-    const { identification_id, result } = await request.json()
+    const body = await request.json()
+    const { identification_id, result } = body
+    const userLocale = body.locale || 'en-GB'
+    const gl = userLocale.split('-')[1]?.toLowerCase() || 'gb'
     if (!result) return json({ error: 'No identification result provided' }, 400)
 
     // Read credit cost from site_settings
@@ -120,7 +123,7 @@ export const POST: APIRoute = async ({ request }) => {
       q: query,
       api_key: serpApiKey,
       num: '10',
-      gl: 'gb',
+      gl,
       hl: 'en'
     })
 
