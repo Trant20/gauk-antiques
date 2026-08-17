@@ -489,6 +489,67 @@ const ebaySold: any[] = item.ebay_sold || []
   )
 })()}
 
+<!-- ── MARKET RESEARCH ── -->
+{marketResearch && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Market Research</div></div>
+    {marketResearch.summary && <p class="ga-mr-summary">{marketResearch.summary}</p>}
+
+    {mrEvidence.length > 0 && (
+      <table class="ga-mr-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Venue</th>
+            <th>Date</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mrEvidence.map((e: any) => {
+            const badgeClass = e.evidence_type === 'verified_sale' ? 'verified'
+              : e.evidence_type === 'catalogue_estimate' ? 'estimate'
+              : e.evidence_type === 'dealer_asking' ? 'dealer'
+              : 'inference'
+            const badgeLabel = e.evidence_type === 'verified_sale' ? 'Verified Sale'
+              : e.evidence_type === 'catalogue_estimate' ? 'Estimate'
+              : e.evidence_type === 'dealer_asking' ? 'Dealer Asking'
+              : 'Inference'
+            return (
+              <tr>
+                <td>
+                  {e.source_url
+                    ? <a href={e.source_url} target="_blank" rel="noopener noreferrer" class="ga-mr-source-link">{e.description}</a>
+                    : e.description
+                  }
+                </td>
+                <td class="ga-mr-price">{e.price}</td>
+                <td style="color:var(--text-mute)">{e.venue}</td>
+                <td style="color:var(--text-mute);white-space:nowrap">{e.date}</td>
+                <td><span class={`ga-mr-badge ${badgeClass}`}>{badgeLabel}</span></td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    )}
+
+    {marketResearch.venue_recommendation && (
+      <div class="ga-mr-venue">
+        <div class="ga-mr-venue-label">Recommended Selling Venue</div>
+        <div class="ga-mr-venue-text">{marketResearch.venue_recommendation}</div>
+      </div>
+    )}
+
+    {marketResearch.data_limitation && (
+      <div class="ga-mr-limitation">
+        {marketResearch.data_limitation}
+      </div>
+    )}
+  </div>
+)}
+
 <!-- ── DESIRABILITY INDEX ── -->
 {enrichment.desirability_index && enrichment.desirability_index.length > 0 && (
   <div class="ga-section">
@@ -585,66 +646,6 @@ const ebaySold: any[] = item.ebay_sold || []
 )}
 
 <!-- ── YOUR OPTIONS ── -->
-{marketResearch && (
-  <div class="ga-section">
-    <div class="ga-section-head"><div class="ga-section-title">Market Research</div></div>
-    {marketResearch.summary && <p class="ga-mr-summary">{marketResearch.summary}</p>}
-
-    {mrEvidence.length > 0 && (
-      <table class="ga-mr-table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Price</th>
-            <th>Venue</th>
-            <th>Date</th>
-            <th>Evidence</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mrEvidence.map((e: any) => {
-            const badgeClass = e.evidence_type === 'verified_sale' ? 'verified'
-              : e.evidence_type === 'catalogue_estimate' ? 'estimate'
-              : e.evidence_type === 'dealer_asking' ? 'dealer'
-              : 'inference'
-            const badgeLabel = e.evidence_type === 'verified_sale' ? 'Verified Sale'
-              : e.evidence_type === 'catalogue_estimate' ? 'Estimate'
-              : e.evidence_type === 'dealer_asking' ? 'Dealer Asking'
-              : 'Inference'
-            return (
-              <tr>
-                <td>
-                  {e.source_url
-                    ? <a href={e.source_url} target="_blank" rel="noopener noreferrer" class="ga-mr-source-link">{e.description}</a>
-                    : e.description
-                  }
-                </td>
-                <td class="ga-mr-price">{e.price}</td>
-                <td style="color:var(--text-mute)">{e.venue}</td>
-                <td style="color:var(--text-mute);white-space:nowrap">{e.date}</td>
-                <td><span class={`ga-mr-badge ${badgeClass}`}>{badgeLabel}</span></td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    )}
-
-    {marketResearch.venue_recommendation && (
-      <div class="ga-mr-venue">
-        <div class="ga-mr-venue-label">Recommended Selling Venue</div>
-        <div class="ga-mr-venue-text">{marketResearch.venue_recommendation}</div>
-      </div>
-    )}
-
-    {marketResearch.data_limitation && (
-      <div class="ga-mr-limitation">
-        {marketResearch.data_limitation}
-      </div>
-    )}
-  </div>
-)}
-
 {enrichment.your_options && enrichment.your_options.length > 0 && (
   <div class="ga-section">
     <div class="ga-section-head"><div class="ga-section-title">Your Options</div></div>
