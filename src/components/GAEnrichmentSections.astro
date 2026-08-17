@@ -5,9 +5,12 @@ interface Props {
   enrichment: any
   r: any
   item: any
+  currency?: string
 }
 
-const { enrichment, r, item } = Astro.props
+const { enrichment, r, item, currency = 'GBP' } = Astro.props
+const CURRENCY_SYMBOLS: Record<string, string> = { GBP: '£', USD: '$', NZD: 'NZ$', AUD: 'AU$', EUR: '€' }
+const sym = CURRENCY_SYMBOLS[currency] || currency + ' '
 const ebaySold: any[] = item.ebay_sold || []
 ---
 
@@ -303,7 +306,7 @@ const ebaySold: any[] = item.ebay_sold || []
         const imageUrl = sale.r2_key ? `${R2_CDN}/${sale.r2_key}` : null
         const dateSold = sale.date_sold ? new Date(sale.date_sold).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
         const totalPrice = sale.sale_price + (sale.shipping_price || 0)
-        const priceDisplay = `£${totalPrice.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+        const priceDisplay = `${CURRENCY_SYMBOLS[currency] || currency + ' '}${totalPrice.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
         const bidsText = sale.bids ? ` · ${sale.bids} bids` : ''
         return (
           <div class="ga-sold-card" data-item-id={sale.item_id}>
@@ -313,7 +316,7 @@ const ebaySold: any[] = item.ebay_sold || []
               {imageUrl ? (
                 <img src={imageUrl} alt={sale.title} loading="lazy" />
               ) : (
-                <div class="ga-sold-thumb-placeholder">£</div>
+                <div class="ga-sold-thumb-placeholder">{sym}</div>
               )}
             </div>
             <div class="ga-sold-body">
@@ -372,7 +375,7 @@ const ebaySold: any[] = item.ebay_sold || []
         <polyline points={points} fill="none" stroke="var(--ga-gold-hi)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
         {prices.map((p: any, i: number) => <circle cx={toX(i)} cy={toY(p.value)} r="3" fill="var(--ga-gold-hi)"/>)}
         {[minVal, Math.round((minVal+maxVal)/2), maxVal].map((v) => (
-          <text x={padL - 6} y={toY(v) + 4} text-anchor="end" font-family="Inter, sans-serif" font-size="9" fill="var(--text-mute)">£{v >= 1000 ? `${Math.round(v/1000)}k` : v}</text>
+          <text x={padL - 6} y={toY(v) + 4} text-anchor="end" font-family="Inter, sans-serif" font-size="9" fill="var(--text-mute)">{sym}{v >= 1000 ? `${Math.round(v/1000)}k` : v}</text>
         ))}
         {prices.filter((_: any, i: number) => i % 2 === 0).map((p: any, i: number) => (
           <text x={toX(i * 2)} y={chartH - 4} text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="var(--text-mute)">{p.year}</text>
@@ -381,7 +384,7 @@ const ebaySold: any[] = item.ebay_sold || []
       {enrichment.price_peak && (
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
           <div style="width:16px;border-top:1px dashed var(--ga-gold);"></div>
-          <span style="font-family:var(--font-ui);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute)">Peak £{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})</span>
+          <span style="font-family:var(--font-ui);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute)">Peak {sym}{enrichment.price_peak.value.toLocaleString()} ({enrichment.price_peak.year})</span>
         </div>
       )}
       <p style="font-family:var(--font-ui);font-size:10px;color:var(--text-mute);margin-top:12px;font-style:italic">AI-estimated market trend · not verified auction data</p>

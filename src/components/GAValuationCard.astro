@@ -622,7 +622,7 @@ const ebayCount = (item.ebay_sold || []).length
   <!-- ENRICHMENT -->
   <div id="enrichment-container">
     {enrichment ? (
-      <GAEnrichmentSections enrichment={enrichment} r={r} item={item} />
+      <GAEnrichmentSections enrichment={enrichment} r={r} item={item} currency={currency} />
     ) : (
       <GAEnrichGate item={item} r={r} creditCostEnrich={creditCostEnrich} />
     )}
