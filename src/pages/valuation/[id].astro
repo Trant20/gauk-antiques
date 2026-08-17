@@ -19,6 +19,10 @@ if (!item) return Astro.redirect('/')
 
 const isGIItem = item.site_id === GI_SITE_ID
 
+// Currency and locale from middleware — set by user_settings or defaults to GBP/en-GB
+const currency = Astro.locals.currency || 'GBP'
+const locale = Astro.locals.locale || 'en-GB'
+
 const { data: enrichCreditSetting } = await supabase
   .from('site_settings')
   .select('value')
@@ -37,12 +41,12 @@ const title = isGIItem
     <AppSidebar activePage="vault" />
     <div class="app-main val-main">
   {isGIItem
-    ? <GIValuationCard item={item} />
-    : <GAValuationCard item={item} creditCostEnrich={creditCostEnrich} />
+    ? <GIValuationCard item={item} currency={currency} />
+    : <GAValuationCard item={item} creditCostEnrich={creditCostEnrich} currency={currency} />
   }
 
-  <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!item.enrichment_json, itemOwnerId: item.user_id, ANTIQUES_SITE_ID }}>
-    window.__val = { itemId, resultJson, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID }
+  <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!item.enrichment_json, itemOwnerId: item.user_id, ANTIQUES_SITE_ID, currency, locale }}>
+    window.__val = { itemId, resultJson, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID, currency, locale }
   </script>
 
   <script>

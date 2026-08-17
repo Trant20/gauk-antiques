@@ -1,6 +1,6 @@
 ---
 import { R2_CDN, ANTIQUES_SITE_ID } from '../lib/constants'
-import { formatValueRange, formatSingleValue } from '../lib/currency'
+import { formatPriceRange, formatPrice } from '../lib/currency'
 import GAConditionReport from './GAConditionReport.astro'
 import GAEnrichmentSections from './GAEnrichmentSections.astro'
 import GAEnrichGate from './GAEnrichGate.astro'
@@ -8,9 +8,10 @@ import GAEnrichGate from './GAEnrichGate.astro'
 interface Props {
   item: any
   creditCostEnrich: number
+  currency?: string
 }
 
-const { item, creditCostEnrich } = Astro.props
+const { item, creditCostEnrich, currency = 'GBP' } = Astro.props
 const r = item.result_json
 const enrichment = item.enrichment_json || null
 const imageUrl = `${R2_CDN}/${item.image_key}`
@@ -28,7 +29,7 @@ const confCircumference = 2 * Math.PI * 20
 const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 const userValue = item.user_value ?? null
-const userValueDisplay = userValue ? formatSingleValue(userValue) : null
+const userValueDisplay = userValue ? formatPrice(userValue, currency) : null
 const ebayCount = (item.ebay_sold || []).length
 ---
 
@@ -552,16 +553,16 @@ const ebayCount = (item.ebay_sold || []).length
     ) : (
       <>
         <div class="ga-value-cap" id="ga-value-cap">Estimated Value</div>
-        <div class="ga-value-number" id="ga-value-display">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
+        <div class="ga-value-number" id="ga-value-display">{formatPriceRange(r.value_range_low || 0, r.value_range_high || 0, currency)}</div>
         <div class="ga-value-sub" id="ga-value-sub">Specialist auction estimate · not a formal valuation</div>
         <div class="ga-value-strip" id="ga-ai-strip">
           <div class="ga-value-strip-cell">
             <div class="ga-value-strip-label">Low estimate</div>
-            <div class="ga-value-strip-val">{formatSingleValue(r.value_range_low || 0)}</div>
+            <div class="ga-value-strip-val">{formatPrice(r.value_range_low || 0, currency)}</div>
           </div>
           <div class="ga-value-strip-cell">
             <div class="ga-value-strip-label">High estimate</div>
-            <div class="ga-value-strip-val">{formatSingleValue(r.value_range_high || 0)}</div>
+            <div class="ga-value-strip-val">{formatPrice(r.value_range_high || 0, currency)}</div>
           </div>
         </div>
       </>
@@ -730,7 +731,7 @@ const ebayCount = (item.ebay_sold || []).length
       .eq('id', itemId).eq('user_id', session.user.id)
     if (!error) {
       if (capEl) capEl.textContent = 'Your valuation'
-      if (displayEl) displayEl.textContent = '£' + val.toLocaleString('en-GB')
+      if (displayEl) displayEl.textContent = (window.__val?.currency === 'GBP' ? '£' : window.__val?.currency === 'USD' ? '$' : window.__val?.currency === 'NZD' ? 'NZ$' : window.__val?.currency === 'EUR' ? '€' : window.__val?.currency === 'AUD' ? 'AU$' : '£') + val.toLocaleString('en')
       if (subEl) subEl.innerHTML = 'Owner verified &middot; overrides AI estimate'
       if (aiStrip) aiStrip.style.display = 'none'
       input.placeholder = String(val)

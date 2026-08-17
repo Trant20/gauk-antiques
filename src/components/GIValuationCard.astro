@@ -1,23 +1,24 @@
 ---
 import { R2_CDN } from '../lib/constants'
-import { formatGIValueRange, formatGISingleValue } from '../lib/currency'
+import { formatPriceRange, formatPrice } from '../lib/currency'
 
 interface Props {
   item: any
+  currency?: string
 }
 
-const { item } = Astro.props
+const { item, currency = 'GBP' } = Astro.props
 const r = item.result_json || {}
 const imageUrl = item.image_key ? `${R2_CDN}/${item.image_key}` : null
-const currency = r.currency || 'USD'
+// currency comes from user_settings via Astro.locals — passed as prop
 const confidenceScore = r.confidence === 'High' ? 94 : r.confidence === 'Medium' ? 72 : 45
 const confCircumference = 2 * Math.PI * 20
 const confOffset = confCircumference - (confCircumference * confidenceScore / 100)
-const valueDisplay = formatGIValueRange(r.value_range_low || 0, r.value_range_high || 0, currency)
+const valueDisplay = formatPriceRange(r.value_range_low || 0, r.value_range_high || 0, currency)
 const userValue = item.user_value ?? null
-const userValueDisplay = userValue ? formatGISingleValue(userValue, currency) : null
-const valueLow = formatGISingleValue(r.value_range_low || 0, currency)
-const valueHigh = formatGISingleValue(r.value_range_high || 0, currency)
+const userValueDisplay = userValue ? formatPrice(userValue, currency) : null
+const valueLow = formatPrice(r.value_range_low || 0, currency)
+const valueHigh = formatPrice(r.value_range_high || 0, currency)
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 const retailPrices: any[] = item.retail_prices || []
 const hasRetail = retailPrices.length > 0
@@ -844,7 +845,7 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
       {r.antique_value_range_low && r.antique_value_range_high && (
         <div style="padding-top:16px;border-top:1px solid var(--border);margin-top:12px;">
           <div style="font-family:var(--font-ui);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Estimated Antique Value</div>
-          <div class="gi-antique-value">{formatGIValueRange(r.antique_value_range_low, r.antique_value_range_high, currency)}</div>
+          <div class="gi-antique-value">{formatPriceRange(r.antique_value_range_low, r.antique_value_range_high, currency)}</div>
         </div>
       )}
     </div>
@@ -979,7 +980,10 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
     if (!error) {
       // Update display to human verified state
       if (capEl) capEl.textContent = 'Your valuation'
-      if (displayEl) displayEl.textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val)
+      const userCurrency = (window as any).__val?.currency || 'GBP'
+      const symbols: Record<string, string> = { GBP: '£', USD: '$', NZD: 'NZ$', AUD: 'AU$', EUR: '€' }
+      const sym = symbols[userCurrency] || userCurrency + ' '
+      if (displayEl) displayEl.textContent = sym + val.toLocaleString('en', { maximumFractionDigits: 0 })
       if (noteEl) noteEl.innerHTML = 'Human verified &middot; overrides AI estimate'
       if (aiStrip) aiStrip.style.display = 'none'
       input.placeholder = String(val)
