@@ -1,6 +1,9 @@
 ---
-import { R2_CDN } from '../lib/constants'
+import { R2_CDN, ANTIQUES_SITE_ID } from '../lib/constants'
 import { formatPriceRange, formatPrice } from '../lib/currency'
+import GAEnrichGate from './GAEnrichGate.astro'
+import GAEnrichmentSections from './GAEnrichmentSections.astro'
+import { supabase } from '../lib/supabase'
 
 interface Props {
   item: any
@@ -20,6 +23,24 @@ const userValueDisplay = userValue ? formatPrice(userValue, currency) : null
 const valueLow = formatPrice(r.value_range_low || 0, currency)
 const valueHigh = formatPrice(r.value_range_high || 0, currency)
 const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+
+// For is_antique items — fetch GA enrichment cost and enrichment data
+let creditCostEnrich = 5
+let gaEnrichment: any = null
+if (r.is_antique) {
+  const { data: costSetting } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('site_id', ANTIQUES_SITE_ID)
+    .eq('key', 'credit_cost_enrich')
+    .single()
+  creditCostEnrich = parseInt(costSetting?.value ?? '5', 10)
+
+  // Check if this item already has enrichment
+  if (item.enrichment_json) {
+    gaEnrichment = item.enrichment_json
+  }
+}
 const retailPrices: any[] = item.retail_prices || []
 const hasRetail = retailPrices.length > 0
 const retailLow = hasRetail ? Math.min(...retailPrices.map((r: any) => r.extracted_price).filter((p: any) => p > 0)) : null
@@ -851,14 +872,14 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
     </div>
   )}
 
-  <!-- ANTIQUE HANDOFF BANNER -->
+  <!-- ANTIQUE ENRICHMENT — renders GA enrichment gate and sections in place -->
   {r.is_antique && (
-    <div class="gi-antique-banner">
-      <div class="gi-antique-title">This item may be an antique worth specialist assessment.</div>
-      <div class="gi-antique-body">
-        Our AI has flagged this as a potential antique. A specialist deep dive checks our antiques knowledge graph, recent auction results and maker databases to give you a definitive picture &mdash; so you know exactly what you have and what it is worth to insure correctly.
-      </div>
-      <a class="gi-antique-cta" href={`/valuation/${item.id}`}>Get your specialist report</a>
+    <div style="margin-top:24px;">
+      {gaEnrichment ? (
+        <GAEnrichmentSections enrichment={gaEnrichment} r={r} item={item} currency={currency} />
+      ) : (
+        <GAEnrichGate item={item} r={r} creditCostEnrich={creditCostEnrich} />
+      )}
     </div>
   )}
 
