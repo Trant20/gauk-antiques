@@ -1085,7 +1085,7 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
       const res = await fetch('/api/enrich-gi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ identification_id: itemId, result: (window as any).__val?.resultJson || {} })
+        body: JSON.stringify({ identification_id: itemId, result: (window as any).__val?.resultJson || {}, locale: (window as any).__val?.locale || 'en-GB', currency: (window as any).__val?.currency || 'GBP' })
       })
       const data = await res.json()
 
@@ -1114,7 +1114,7 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
             <div class="gi-retail-card-body">
               <div class="gi-retail-card-source">${rp.source}</div>
               <div class="gi-retail-card-title">${rp.title}</div>
-              <div class="gi-retail-card-price">${rp.price}</div>
+              <div class="gi-retail-card-price">${(() => { const sym = { GBP: '£', USD: '$', NZD: 'NZ$', AUD: 'AU$', EUR: '€' }; const c = (window.__val?.currency || 'GBP'); return (sym[c] || c + ' ') + (rp.extracted_price || 0).toLocaleString('en', { maximumFractionDigits: 0 }) })()}</div>
             </div>
             <div class="gi-retail-card-footer">View listing</div>
           </a>

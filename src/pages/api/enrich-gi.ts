@@ -89,6 +89,7 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json()
     const { identification_id, result } = body
     const userLocale = body.locale || 'en-GB'
+    const userCurrency = body.currency || 'GBP'
     const gl = userLocale.split('-')[1]?.toLowerCase() || 'gb'
     if (!result) return json({ error: 'No identification result provided' }, 400)
 

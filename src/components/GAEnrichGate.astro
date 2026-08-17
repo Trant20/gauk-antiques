@@ -242,7 +242,7 @@ const { item, r, creditCostEnrich } = Astro.props
           fetch('/api/enrich', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-            body: JSON.stringify({ identification_id: itemId, result: JSON.parse(enrichCta.dataset.resultJson || '{}') })
+            body: JSON.stringify({ identification_id: itemId, result: JSON.parse(enrichCta.dataset.resultJson || '{}'), currency: (window as any).__val?.currency || 'GBP', locale: (window as any).__val?.locale || 'en-GB' })
           })
           .then(res => res.json())
           .then(data => {

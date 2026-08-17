@@ -166,7 +166,10 @@ export const POST: APIRoute = async ({ request }) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return json({ error: 'Invalid token' }, 401)
 
-    const { identification_id, result } = await request.json()
+    const reqBody = await request.json()
+    const { identification_id, result } = reqBody
+    const userCurrency = reqBody.currency || 'GBP'
+    const userLocale = reqBody.locale || 'en-GB'
     if (!result) return json({ error: 'No identification result provided' }, 400)
 
     // Fetch credit cost from site_settings
@@ -218,7 +221,7 @@ export const POST: APIRoute = async ({ request }) => {
       system: String(promptConfig.system_prompt),
       messages: [{
         role: 'user',
-        content: `Generate enrichment content for this antique identification:\n\n${JSON.stringify(result, null, 2)}${ebayContext}`
+        content: `Generate enrichment content for this antique identification. All prices and values must be in ${userCurrency}. Use the correct currency symbol throughout.\n\n${JSON.stringify(result, null, 2)}${ebayContext}`
       }]
     })
 
