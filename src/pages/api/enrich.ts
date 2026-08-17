@@ -219,29 +219,36 @@ export const POST: APIRoute = async ({ request }) => {
       model: String(promptConfig.model || 'claude-sonnet-4-6'),
       max_tokens: Number(promptConfig.max_tokens || 4096),
       system: String(promptConfig.system_prompt),
+      tools: [{ type: 'web_search_20250305' as any, name: 'web_search' }],
       messages: [{
         role: 'user',
-        content: `Generate enrichment content for this antique identification. All prices and values must be in ${userCurrency}. Use the correct currency symbol throughout.\n\n${JSON.stringify(result, null, 2)}${ebayContext}`
+        content: `Generate enrichment content for this antique identification. All prices and values must be in ${userCurrency}. Use the correct currency symbol throughout. Use the web search tool to find real recent auction results for this specific maker, item type and pattern before generating the market_research section.\n\n${JSON.stringify(result, null, 2)}${ebayContext}`
       }]
     })
 
-    if (!response.content[0] || response.content[0].type !== 'text') {
+    // Extract text from response — may contain tool_use blocks before final text
+    const textBlock = response.content.find((b: any) => b.type === 'text')
+    if (!textBlock || textBlock.type !== 'text') {
       return json({ error: 'No response from AI' }, 500)
     }
 
     let enrichment: unknown
     try {
-      const raw = response.content[0].text
+      const raw = textBlock.text
       const clean = raw.replaceAll('```json', '').replaceAll('```', '').trim()
       enrichment = JSON.parse(clean)
     } catch {
       return json({ error: 'AI returned malformed response' }, 500)
     }
 
+    // Extract market_research from enrichment and save separately
+    const marketResearch = (enrichment as any)?.market_research || null
+
     // Build update payload — price range always from AI, not eBay
     const updatePayload: Record<string, any> = {
       enrichment_json: enrichment,
-      ebay_sold: ebaySold.length > 0 ? ebaySold : null
+      ebay_sold: ebaySold.length > 0 ? ebaySold : null,
+      market_research_json: marketResearch
     }
 
     if (identification_id) {
@@ -266,7 +273,7 @@ export const POST: APIRoute = async ({ request }) => {
       cost_pence: costPence
     })
 
-    return json({ enrichment, ebay_sold: ebaySold })
+    return json({ enrichment, ebay_sold: ebaySold, market_research: marketResearch })
 
   } catch (err: any) {
     return json({ error: err.message }, 500)

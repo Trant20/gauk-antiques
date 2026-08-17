@@ -11,6 +11,8 @@ interface Props {
 const { enrichment, r, item, currency = 'GBP' } = Astro.props
 const CURRENCY_SYMBOLS: Record<string, string> = { GBP: '£', USD: '$', NZD: 'NZ$', AUD: 'AU$', EUR: '€' }
 const sym = CURRENCY_SYMBOLS[currency] || currency + ' '
+const marketResearch = item.market_research_json || null
+const mrEvidence: any[] = marketResearch?.evidence || []
 const ebaySold: any[] = item.ebay_sold || []
 ---
 
@@ -258,6 +260,101 @@ const ebaySold: any[] = item.ebay_sold || []
     background: var(--surface-hi);
     border-color: var(--ga-gold-hi);
   }
+
+  /* ── MARKET RESEARCH ── */
+  .ga-mr-summary {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+  .ga-mr-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+  }
+  .ga-mr-table th {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-hi);
+    background: var(--surface);
+  }
+  .ga-mr-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+  .ga-mr-table tr:last-child td { border-bottom: none; }
+  .ga-mr-price {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: var(--ga-gold-hi);
+    font-style: italic;
+    white-space: nowrap;
+  }
+  .ga-mr-badge {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .ga-mr-badge.verified { background: rgba(74,163,104,0.15); color: #4aa368; }
+  .ga-mr-badge.estimate { background: rgba(var(--ga-gold-rgb,180,140,60),0.15); color: var(--ga-gold-hi); }
+  .ga-mr-badge.dealer { background: rgba(100,120,200,0.15); color: #7a90d4; }
+  .ga-mr-badge.inference { background: var(--surface-hi); color: var(--text-mute); }
+  .ga-mr-source-link {
+    font-size: 10px;
+    color: var(--text-mute);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+  }
+  .ga-mr-source-link:hover { color: var(--ga-gold-hi); }
+  .ga-mr-venue {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-left: 3px solid var(--ga-gold);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .ga-mr-venue-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ga-gold-hi);
+    margin-bottom: 6px;
+  }
+  .ga-mr-venue-text {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .ga-mr-limitation {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-mute);
+    font-style: italic;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    line-height: 1.6;
+  }
 </style>
 
 <script>
@@ -488,6 +585,66 @@ const ebaySold: any[] = item.ebay_sold || []
 )}
 
 <!-- ── YOUR OPTIONS ── -->
+{marketResearch && (
+  <div class="ga-section">
+    <div class="ga-section-head"><div class="ga-section-title">Market Research</div></div>
+    {marketResearch.summary && <p class="ga-mr-summary">{marketResearch.summary}</p>}
+
+    {mrEvidence.length > 0 && (
+      <table class="ga-mr-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Venue</th>
+            <th>Date</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mrEvidence.map((e: any) => {
+            const badgeClass = e.evidence_type === 'verified_sale' ? 'verified'
+              : e.evidence_type === 'catalogue_estimate' ? 'estimate'
+              : e.evidence_type === 'dealer_asking' ? 'dealer'
+              : 'inference'
+            const badgeLabel = e.evidence_type === 'verified_sale' ? 'Verified Sale'
+              : e.evidence_type === 'catalogue_estimate' ? 'Estimate'
+              : e.evidence_type === 'dealer_asking' ? 'Dealer Asking'
+              : 'Inference'
+            return (
+              <tr>
+                <td>
+                  {e.source_url
+                    ? <a href={e.source_url} target="_blank" rel="noopener noreferrer" class="ga-mr-source-link">{e.description}</a>
+                    : e.description
+                  }
+                </td>
+                <td class="ga-mr-price">{e.price}</td>
+                <td style="color:var(--text-mute)">{e.venue}</td>
+                <td style="color:var(--text-mute);white-space:nowrap">{e.date}</td>
+                <td><span class={`ga-mr-badge ${badgeClass}`}>{badgeLabel}</span></td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    )}
+
+    {marketResearch.venue_recommendation && (
+      <div class="ga-mr-venue">
+        <div class="ga-mr-venue-label">Recommended Selling Venue</div>
+        <div class="ga-mr-venue-text">{marketResearch.venue_recommendation}</div>
+      </div>
+    )}
+
+    {marketResearch.data_limitation && (
+      <div class="ga-mr-limitation">
+        {marketResearch.data_limitation}
+      </div>
+    )}
+  </div>
+)}
+
 {enrichment.your_options && enrichment.your_options.length > 0 && (
   <div class="ga-section">
     <div class="ga-section-head"><div class="ga-section-title">Your Options</div></div>
