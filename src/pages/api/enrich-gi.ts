@@ -140,7 +140,7 @@ export const POST: APIRoute = async ({ request }) => {
       price: item.price,
       extracted_price: item.extracted_price,
       source: item.source,
-      link: item.link,
+      link: item.product_link || null,
       currency: item.extracted_price_symbol || '$',
       thumbnail: item.thumbnail || null
     })).filter((item: any) => item.extracted_price > 0)
