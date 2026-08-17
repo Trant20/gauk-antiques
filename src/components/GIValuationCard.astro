@@ -308,6 +308,9 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
     transition: border-color 0.15s;
   }
   .gi-retail-card:hover { border-color: var(--gi-sage); background: var(--surface-hi); }
+  .gi-retail-card-thumb { height: 120px; background: var(--surface-hi); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+  .gi-retail-card-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+  .gi-retail-card-thumb-placeholder { font-family: var(--font-ui); font-size: 32px; color: var(--gi-sage); opacity: 0.2; }
   .gi-retail-card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
   .gi-retail-card-source { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gi-sage); font-weight: 600; margin-bottom: 6px; }
   .gi-retail-card-title { font-family: var(--font-ui); font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 10px; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -884,6 +887,12 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
         <div class="gi-retail-grid" id="gi-retail-grid">
           {retailPrices.slice(0, 6).map((rp: any) => (
             <a href={rp.link} target="_blank" rel="noopener noreferrer" class="gi-retail-card">
+              <div class="gi-retail-card-thumb">
+                {rp.thumbnail
+                  ? <img src={rp.thumbnail} alt={rp.title} loading="lazy" />
+                  : <div class="gi-retail-card-thumb-placeholder">£</div>
+                }
+              </div>
               <div class="gi-retail-card-body">
                 <div class="gi-retail-card-source">{rp.source}</div>
                 <div class="gi-retail-card-title">{rp.title}</div>
@@ -1092,6 +1101,12 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
         // Render cards in place — no reload
         const cards = data.retail_prices.slice(0, 6).map((rp: any) => `
           <a href="${rp.link}" target="_blank" rel="noopener noreferrer" class="gi-retail-card">
+            <div class="gi-retail-card-thumb">
+              ${rp.thumbnail
+                ? `<img src="${rp.thumbnail}" alt="${rp.title}" loading="lazy" />`
+                : `<div class="gi-retail-card-thumb-placeholder">£</div>`
+              }
+            </div>
             <div class="gi-retail-card-body">
               <div class="gi-retail-card-source">${rp.source}</div>
               <div class="gi-retail-card-title">${rp.title}</div>
