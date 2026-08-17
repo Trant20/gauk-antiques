@@ -1,6 +1,6 @@
 ---
 import { ANTIQUES_SITE_ID, R2_CDN } from '../../lib/constants'
-import { formatValueRange } from '../../lib/currency'
+import { formatPriceRange } from '../../lib/currency'
 import PublicShell from '../../layouts/PublicShell.astro'
 import AIHeroWidget from '../../components/AIHeroWidget.astro'
 import IdentificationResult from '../../components/IdentificationResult.astro'
@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 
 
 const { category } = Astro.params
+const currency = Astro.locals.currency || 'GBP'
 if (!category) return Astro.redirect('/explore')
 
 // Normalise slug — decode URI and clean
@@ -377,7 +378,7 @@ const { data: videos } = await supabase
               <div class="id-strip-body">
                 {r.maker && <div class="id-strip-maker">{r.maker}</div>}
                 <div class="id-strip-title">{r.subcategory || 'Antique Item'}</div>
-                <div class="id-strip-value">{formatValueRange(r.value_range_low || 0, r.value_range_high || 0)}</div>
+                <div class="id-strip-value">{formatPriceRange(r.value_range_low || 0, r.value_range_high || 0, currency)}</div>
               </div>
             </div>
           )

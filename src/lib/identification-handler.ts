@@ -1,4 +1,4 @@
-import { formatValueRange } from './currency'
+import { formatPriceRange } from './currency'
 
 /** Wire up identification result card event handlers.
  *  Call once per page after DOM is ready.
@@ -96,7 +96,7 @@ export function wireIdentificationResult(
 
     const valueEl = g('result-value')
     if (valueEl) {
-      valueEl.textContent = formatValueRange(r.value_range_low || 0, r.value_range_high || 0)
+      valueEl.textContent = formatPriceRange(r.value_range_low || 0, r.value_range_high || 0, (window as any).__userCurrency || 'GBP')
     }
 
     if (r.maker) {
