@@ -1,0 +1,339 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import AppSidebar from '../../components/AppSidebar.astro'
+import AppBottomNav from '../../components/AppBottomNav.astro'
+
+const STANDARD_ROOMS = [
+  'Living Room',
+  'Kitchen',
+  'Dining Room',
+  'Hallway',
+  'Master Bedroom',
+  'Bedroom 2',
+  'Bedroom 3',
+  'Bedroom 4',
+  'Bathroom',
+  'Study / Home Office',
+  'Garage',
+  'Garden / Outdoor',
+  'Loft / Storage',
+]
+
+const DEFAULT_SELECTED = [
+  'Living Room',
+  'Kitchen',
+  'Master Bedroom',
+  'Bathroom',
+]
+---
+
+<AppLayout title="Set Up Your Room Audit — GAUK Insurance">
+<style is:global>
+  .setup-shell { display: flex; height: 100vh; overflow: hidden; }
+  .setup-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  @media (max-width: 768px) { .setup-main { margin-left: 0; padding-bottom: 64px; } }
+
+  .setup-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+  .setup-topbar-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); font-weight: 600; }
+
+  .setup-scroll { flex: 1; overflow-y: auto; padding: 32px 24px 80px; max-width: 640px; }
+  @media (max-width: 768px) { .setup-scroll { padding: 20px 16px 80px; } }
+
+  /* ── HEADER ── */
+  .setup-eyebrow { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; color: var(--gi-sage); margin-bottom: 10px; }
+  .setup-title { font-family: var(--font-display); font-size: clamp(24px, 4vw, 32px); font-style: italic; color: var(--text); line-height: 1.2; margin-bottom: 8px; }
+  .setup-sub { font-family: var(--font-ui); font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 32px; }
+
+  /* ── SECTION ── */
+  .setup-section-label { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  /* ── ROOM GRID ── */
+  .setup-rooms { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 28px; }
+  @media (max-width: 480px) { .setup-rooms { grid-template-columns: 1fr; } }
+
+  .setup-room-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-left: 3px solid transparent;
+    font-family: var(--font-ui); font-size: 13px; color: var(--text-dim);
+    cursor: pointer; text-align: left;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .setup-room-btn.selected {
+    border-left-color: var(--gi-sage);
+    color: var(--text);
+    background: var(--surface-hi);
+  }
+  .setup-room-btn svg { flex-shrink: 0; }
+  .setup-room-check {
+    width: 14px; height: 14px; border: 1px solid var(--border-hi);
+    border-radius: 2px; flex-shrink: 0; margin-left: auto;
+    background: transparent; transition: background 0.15s, border-color 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .setup-room-btn.selected .setup-room-check {
+    background: var(--gi-sage); border-color: var(--gi-sage);
+  }
+
+  /* ── CUSTOM ROOM ── */
+  .setup-custom-row { display: flex; gap: 8px; margin-bottom: 28px; }
+  .setup-custom-input {
+    flex: 1; padding: 11px 14px;
+    background: var(--surface); border: 1px solid var(--border-hi);
+    font-family: var(--font-ui); font-size: 13px; color: var(--text);
+    outline: none; transition: border-color 0.15s;
+  }
+  .setup-custom-input:focus { border-color: var(--gi-sage); }
+  .setup-custom-input::placeholder { color: var(--text-faint); }
+  .setup-custom-btn {
+    padding: 11px 18px;
+    background: var(--surface); border: 1px solid var(--border-hi);
+    font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute);
+    cursor: pointer; transition: border-color 0.15s, color 0.15s; flex-shrink: 0;
+  }
+  .setup-custom-btn:hover { border-color: var(--gi-sage); color: var(--gi-sage); }
+
+  .setup-custom-rooms { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .setup-custom-tag {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    background: var(--surface-hi); border: 1px solid var(--gi-sage);
+    font-family: var(--font-ui); font-size: 12px; color: var(--gi-sage);
+  }
+  .setup-custom-tag-remove {
+    background: none; border: none; color: var(--gi-sage);
+    cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+  }
+
+  /* ── POLICY COVER ── */
+  .setup-cover-wrap { margin-bottom: 32px; }
+  .setup-cover-row { display: flex; gap: 0; }
+  .setup-cover-sym {
+    padding: 12px 14px;
+    background: var(--surface-hi); border: 1px solid var(--border-hi); border-right: none;
+    font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--gi-sage);
+    flex-shrink: 0;
+  }
+  .setup-cover-input {
+    flex: 1; padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--border-hi);
+    font-family: var(--font-ui); font-size: 16px; font-weight: 600; color: var(--text);
+    outline: none; transition: border-color 0.15s;
+  }
+  .setup-cover-input:focus { border-color: var(--gi-sage); }
+  .setup-cover-note { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); margin-top: 8px; line-height: 1.6; }
+
+  /* ── CTA ── */
+  .setup-cta {
+    display: block; width: 100%; padding: 16px;
+    background: var(--gi-sage); border: none;
+    font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; color: #fff;
+    cursor: pointer; transition: opacity 0.2s; margin-bottom: 12px;
+  }
+  .setup-cta:hover { opacity: 0.85; }
+  .setup-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+  .setup-skip {
+    display: block; text-align: center;
+    font-family: var(--font-ui); font-size: 12px; color: var(--text-mute);
+    text-decoration: none; padding: 8px;
+  }
+  .setup-skip:hover { color: var(--text); }
+</style>
+
+<div class="setup-shell">
+  <AppSidebar activePage="vault" />
+
+  <div class="setup-main">
+    <div class="setup-topbar">
+      <span class="setup-topbar-title">Room Audit Setup</span>
+    </div>
+
+    <div class="setup-scroll">
+      <div class="setup-eyebrow">GAUK Insurance</div>
+      <div class="setup-title">Set up your room audit</div>
+      <div class="setup-sub">Select the rooms in your home. We will walk you through each one to build your contents inventory. Tick only the rooms that apply to you.</div>
+
+      <!-- STANDARD ROOMS -->
+      <div class="setup-section-label">Your Rooms</div>
+      <div class="setup-rooms" id="setup-rooms">
+        {STANDARD_ROOMS.map(room => (
+          <button
+            class={`setup-room-btn${DEFAULT_SELECTED.includes(room) ? ' selected' : ''}`}
+            data-room={room}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            {room}
+            <span class="setup-room-check">
+              {DEFAULT_SELECTED.includes(room) && (
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              )}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <!-- CUSTOM ROOMS -->
+      <div class="setup-section-label">Custom Rooms</div>
+      <div class="setup-custom-row">
+        <input class="setup-custom-input" id="custom-room-input" type="text" placeholder="e.g. Workshop, Annex, Spare Room" maxlength="40" />
+        <button class="setup-custom-btn" id="custom-room-add">Add</button>
+      </div>
+      <div class="setup-custom-rooms" id="custom-rooms-list"></div>
+
+      <!-- POLICY COVER -->
+      <div class="setup-section-label" style="margin-top:8px;">Contents Cover Amount</div>
+      <div class="setup-cover-wrap">
+        <div class="setup-cover-row">
+          <div class="setup-cover-sym" id="cover-sym">£</div>
+          <input class="setup-cover-input" id="cover-input" type="number" min="0" placeholder="e.g. 50000" />
+        </div>
+        <div class="setup-cover-note">Your current contents insurance cover amount. This is used to calculate your underinsurance gap as you build your inventory.</div>
+      </div>
+
+      <!-- CTA -->
+      <button class="setup-cta" id="setup-confirm">Start My Room Audit</button>
+      <a href="/library" class="setup-skip">Skip for now — go to Vault</a>
+    </div>
+  </div>
+</div>
+
+<AppBottomNav activePage="vault" />
+
+<script define:vars={{ STANDARD_ROOMS }}>
+  window.__auditSetup = { STANDARD_ROOMS }
+</script>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/audit/setup'
+  }
+
+  const roomsContainer = document.getElementById('setup-rooms')!
+  const customInput = document.getElementById('custom-room-input') as HTMLInputElement
+  const customAdd = document.getElementById('custom-room-add')!
+  const customList = document.getElementById('custom-rooms-list')!
+  const coverInput = document.getElementById('cover-input') as HTMLInputElement
+  const coverSym = document.getElementById('cover-sym')!
+  const confirmBtn = document.getElementById('setup-confirm') as HTMLButtonElement
+
+  let customRooms: string[] = []
+
+  // Load existing settings
+  if (session) {
+    const res = await fetch('/api/user-settings', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    })
+    const settings = await res.json()
+
+    if (settings.policy_cover) {
+      coverInput.value = String(settings.policy_cover)
+    }
+
+    if (settings.audit_rooms && settings.audit_rooms.length > 0) {
+      // Pre-select saved rooms
+      const savedRooms: string[] = settings.audit_rooms
+      const STANDARD = (window as any).__auditSetup.STANDARD_ROOMS as string[]
+
+      roomsContainer.querySelectorAll('.setup-room-btn').forEach(btn => {
+        const room = (btn as HTMLElement).dataset.room!
+        if (savedRooms.includes(room)) {
+          btn.classList.add('selected')
+          updateCheck(btn as HTMLElement, true)
+        } else {
+          btn.classList.remove('selected')
+          updateCheck(btn as HTMLElement, false)
+        }
+      })
+
+      // Custom rooms are those not in standard list
+      customRooms = savedRooms.filter(r => !STANDARD.includes(r))
+      renderCustomRooms()
+    }
+
+    // Set currency symbol
+    if (settings.currency) {
+      const symbols: Record<string, string> = { GBP: '£', USD: '$', NZD: 'NZ$', AUD: 'AU$', EUR: '€' }
+      coverSym.textContent = symbols[settings.currency] || '£'
+    }
+  }
+
+  function updateCheck(btn: HTMLElement, checked: boolean) {
+    const check = btn.querySelector('.setup-room-check')
+    if (!check) return
+    if (checked) {
+      check.innerHTML = '<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    } else {
+      check.innerHTML = ''
+    }
+  }
+
+  // Toggle room selection
+  roomsContainer.querySelectorAll('.setup-room-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isSelected = btn.classList.contains('selected')
+      btn.classList.toggle('selected')
+      updateCheck(btn as HTMLElement, !isSelected)
+    })
+  })
+
+  // Custom room add
+  function addCustomRoom(name: string) {
+    name = name.trim()
+    if (!name || customRooms.includes(name)) return
+    customRooms.push(name)
+    renderCustomRooms()
+    customInput.value = ''
+  }
+
+  function renderCustomRooms() {
+    customList.innerHTML = customRooms.map(r => `
+      <div class="setup-custom-tag">
+        ${r}
+        <button class="setup-custom-tag-remove" data-remove="${r}">&#x2715;</button>
+      </div>
+    `).join('')
+
+    customList.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = (btn as HTMLElement).dataset.remove!
+        customRooms = customRooms.filter(r => r !== name)
+        renderCustomRooms()
+      })
+    })
+  }
+
+  customAdd.addEventListener('click', () => addCustomRoom(customInput.value))
+  customInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addCustomRoom(customInput.value)
+  })
+
+  // Confirm — save to user_settings
+  confirmBtn.addEventListener('click', async () => {
+    if (!session) return
+
+    const selectedStandard = Array.from(roomsContainer.querySelectorAll('.setup-room-btn.selected'))
+      .map(btn => (btn as HTMLElement).dataset.room!)
+    const allRooms = [...selectedStandard, ...customRooms]
+
+    const policyCover = parseInt(coverInput.value || '0', 10)
+
+    confirmBtn.disabled = true
+    confirmBtn.textContent = 'Saving...'
+
+    await fetch('/api/user-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ audit_rooms: allRooms, policy_cover: policyCover })
+    })
+
+    window.location.href = '/audit'
+  })
+</script>
+</AppLayout>

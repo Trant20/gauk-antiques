@@ -33,14 +33,16 @@ export const GET: APIRoute = async ({ request }) => {
 
     const { data: settings } = await supabase
       .from('user_settings')
-      .select('currency, locale')
+      .select('currency, locale, audit_rooms, policy_cover')
       .eq('user_id', user.id)
       .single()
 
     // Return defaults if no settings yet
     return json({
       currency: settings?.currency || 'GBP',
-      locale: settings?.locale || 'en-GB'
+      locale: settings?.locale || 'en-GB',
+      audit_rooms: settings?.audit_rooms || [],
+      policy_cover: settings?.policy_cover || 0
     })
 
   } catch (err: any) {
@@ -62,6 +64,8 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json()
     const currency = body.currency
     const locale = body.locale
+    const auditRooms = body.audit_rooms
+    const policyCover = body.policy_cover
 
     if (currency && !VALID_CURRENCIES.has(currency)) {
       return json({ error: 'Invalid currency' }, 400)
@@ -69,10 +73,15 @@ export const POST: APIRoute = async ({ request }) => {
     if (locale && !VALID_LOCALES.has(locale)) {
       return json({ error: 'Invalid locale' }, 400)
     }
+    if (auditRooms !== undefined && !Array.isArray(auditRooms)) {
+      return json({ error: 'Invalid audit_rooms' }, 400)
+    }
 
-    const update: Record<string, string> = { updated_at: new Date().toISOString() }
+    const update: Record<string, any> = { updated_at: new Date().toISOString() }
     if (currency) update.currency = currency
     if (locale) update.locale = locale
+    if (auditRooms !== undefined) update.audit_rooms = auditRooms
+    if (policyCover !== undefined) update.policy_cover = parseInt(String(policyCover), 10) || 0
 
     const { error } = await supabase
       .from('user_settings')
@@ -83,7 +92,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (error) return json({ error: 'Failed to save settings' }, 500)
 
-    return json({ currency: currency || 'GBP', locale: locale || 'en-GB' })
+    return json({ currency: currency || 'GBP', locale: locale || 'en-GB', audit_rooms: auditRooms || [], policy_cover: policyCover || 0 })
 
   } catch (err: any) {
     return json({ error: err.message }, 500)
