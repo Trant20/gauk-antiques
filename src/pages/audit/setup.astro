@@ -291,6 +291,7 @@ const DEFAULT_SELECTED = [
     customRooms.push(name)
     renderCustomRooms()
     customInput.value = ''
+    saveSettings()
   }
 
   function renderCustomRooms() {
@@ -306,6 +307,7 @@ const DEFAULT_SELECTED = [
         const name = (btn as HTMLElement).dataset.remove!
         customRooms = customRooms.filter(r => r !== name)
         renderCustomRooms()
+        saveSettings()
       })
     })
   }
