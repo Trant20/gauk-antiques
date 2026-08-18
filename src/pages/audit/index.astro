@@ -1,0 +1,285 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import AppSidebar from '../../components/AppSidebar.astro'
+import AppBottomNav from '../../components/AppBottomNav.astro'
+import { R2_CDN, GI_SITE_ID } from '../../lib/constants'
+import { formatPrice, formatPriceRange } from '../../lib/currency'
+
+const currency = Astro.locals.currency || 'GBP'
+---
+
+<AppLayout title="Room Audit — GAUK Insurance">
+<style is:global>
+  .audit-shell { display: flex; height: 100vh; overflow: hidden; }
+  .audit-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  @media (max-width: 768px) { .audit-main { margin-left: 0; padding-bottom: 64px; } }
+
+  /* ── TOPBAR ── */
+  .audit-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; justify-content: space-between; }
+  .audit-topbar-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); font-weight: 600; }
+  .audit-setup-link { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; border: 1px solid var(--border-hi); padding: 6px 12px; transition: border-color 0.15s, color 0.15s; }
+  .audit-setup-link:hover { border-color: var(--gi-sage); color: var(--gi-sage); }
+
+  /* ── SCROLL ── */
+  .audit-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+  @media (max-width: 768px) { .audit-scroll { padding: 16px; } }
+
+  /* ── SUMMARY STRIP ── */
+  .audit-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); margin-bottom: 28px; }
+  @media (max-width: 600px) { .audit-summary { grid-template-columns: 1fr; } }
+  .audit-summary-cell { background: var(--surface); padding: 18px 20px; }
+  .audit-summary-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 6px; }
+  .audit-summary-val { font-family: var(--font-display); font-size: 26px; font-style: italic; color: var(--text); line-height: 1; }
+  .audit-summary-val.gap-safe { color: #4aa368; }
+  .audit-summary-val.gap-warn { color: #e07b39; }
+  .audit-summary-val.gap-danger { color: #c44028; }
+  .audit-summary-note { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); margin-top: 4px; }
+
+  /* ── ROOM SECTION ── */
+  .audit-room { margin-bottom: 28px; }
+  .audit-room-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .audit-room-name { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--text); }
+  .audit-room-meta { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); text-align: right; }
+  .audit-room-total { color: var(--gi-sage); font-weight: 600; }
+  .audit-room-add {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--gi-sage); border: 1px solid var(--gi-sage);
+    padding: 6px 12px; text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .audit-room-add:hover { background: var(--gi-sage); color: #fff; }
+
+  /* ── ITEM CARDS ── */
+  .audit-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .audit-item-card {
+    background: var(--surface); border: 1px solid var(--border-hi);
+    border-left: 3px solid var(--gi-sage);
+    display: flex; flex-direction: column; overflow: hidden;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.15s;
+  }
+  .audit-item-card:hover { border-color: var(--gi-sage); background: var(--surface-hi); }
+  .audit-item-thumb { height: 110px; background: var(--surface-hi); overflow: hidden; flex-shrink: 0; }
+  .audit-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .audit-item-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 32px; color: var(--gi-sage); opacity: 0.2; }
+  .audit-item-body { padding: 12px 14px; flex: 1; }
+  .audit-item-title { font-family: var(--font-ui); font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .audit-item-value { font-family: var(--font-display); font-size: 17px; font-style: italic; color: var(--gi-sage); }
+
+  /* ── EMPTY ROOM ── */
+  .audit-room-empty { padding: 20px; background: var(--surface); border: 1px dashed var(--border-hi); text-align: center; }
+  .audit-room-empty-text { font-family: var(--font-ui); font-size: 13px; color: var(--text-mute); margin-bottom: 12px; }
+
+  /* ── EMPTY STATE ── */
+  .audit-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 320px; gap: 16px; text-align: center; }
+  .audit-empty-title { font-family: var(--font-display); font-size: 24px; font-style: italic; color: var(--text-mute); }
+  .audit-empty-sub { font-family: var(--font-ui); font-size: 14px; color: var(--text-mute); max-width: 320px; line-height: 1.6; }
+  .audit-empty-btn { display: inline-block; padding: 12px 28px; background: var(--gi-sage); color: #fff; font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; }
+
+  /* ── LOADING ── */
+  .audit-loading { display: flex; align-items: center; justify-content: center; min-height: 200px; }
+  .audit-loading-text { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gi-sage); animation: pulse 1.5s ease-in-out infinite; }
+</style>
+
+<div class="audit-shell">
+  <AppSidebar activePage="vault" />
+
+  <div class="audit-main">
+    <div class="audit-topbar">
+      <span class="audit-topbar-title">Room Audit</span>
+      <a href="/audit/setup" class="audit-setup-link">Edit Rooms</a>
+    </div>
+
+    <div class="audit-scroll">
+      <!-- Loading state -->
+      <div class="audit-loading" id="audit-loading">
+        <div class="audit-loading-text">Loading your audit...</div>
+      </div>
+
+      <!-- Summary strip -->
+      <div class="audit-summary" id="audit-summary" style="display:none;">
+        <div class="audit-summary-cell">
+          <div class="audit-summary-label">Total Inventory Value</div>
+          <div class="audit-summary-val" id="audit-total-val">—</div>
+          <div class="audit-summary-note" id="audit-item-count"></div>
+        </div>
+        <div class="audit-summary-cell">
+          <div class="audit-summary-label">Contents Cover</div>
+          <div class="audit-summary-val" id="audit-cover-val">—</div>
+          <div class="audit-summary-note"><a href="/audit/setup" style="color:var(--text-mute);text-decoration:none;">Update cover amount</a></div>
+        </div>
+        <div class="audit-summary-cell">
+          <div class="audit-summary-label">Coverage Gap</div>
+          <div class="audit-summary-val" id="audit-gap-val">—</div>
+          <div class="audit-summary-note" id="audit-gap-note"></div>
+        </div>
+      </div>
+
+      <!-- Rooms -->
+      <div id="audit-rooms"></div>
+
+      <!-- Empty state -->
+      <div class="audit-empty" id="audit-empty" style="display:none;">
+        <div class="audit-empty-title">No rooms set up yet</div>
+        <div class="audit-empty-sub">Set up your room audit to start building your contents inventory.</div>
+        <a href="/audit/setup" class="audit-empty-btn">Set Up Room Audit</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<AppBottomNav activePage="vault" />
+
+<script define:vars={{ currency, R2_CDN, GI_SITE_ID }}>
+  window.__audit = { currency, R2_CDN, GI_SITE_ID }
+</script>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+
+  const { currency, R2_CDN, GI_SITE_ID } = window.__audit
+
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/audit'
+  }
+
+  async function initAudit() {
+  const loadingEl = document.getElementById('audit-loading')!
+  const summaryEl = document.getElementById('audit-summary')!
+  const roomsEl = document.getElementById('audit-rooms')!
+  const emptyEl = document.getElementById('audit-empty')!
+
+  const CURRENCY_SYMBOLS: Record<string, string> = { GBP: '£', USD: '$', NZD: 'NZ$', AUD: 'AU$', EUR: '€' }
+  const sym = CURRENCY_SYMBOLS[currency] || currency + ' '
+
+  function fmtPrice(val: number): string {
+    return sym + val.toLocaleString('en', { maximumFractionDigits: 0 })
+  }
+
+  // Fetch user settings and items
+  const [settingsRes, itemsRes] = await Promise.all([
+    fetch('/api/user-settings', { headers: { 'Authorization': `Bearer ${session!.access_token}` } }),
+    supabase
+      .from('identifications')
+      .select('id, image_key, result_json, value_range_low, value_range_high, room, created_at')
+      .eq('user_id', session!.user.id)
+      .eq('site_id', GI_SITE_ID)
+      .not('room', 'is', null)
+      .order('created_at', { ascending: false })
+  ])
+
+  const settings = await settingsRes.json()
+  const auditRooms: string[] = settings.audit_rooms || []
+  const policyCover: number = settings.policy_cover || 0
+  const { data: items } = itemsRes
+
+  loadingEl.style.display = 'none'
+
+  if (auditRooms.length === 0) {
+    emptyEl.style.display = 'flex'
+    return
+  }
+
+
+  // Group items by room
+  const itemsByRoom: Record<string, any[]> = {}
+  auditRooms.forEach(r => { itemsByRoom[r] = [] })
+
+  let totalValue = 0
+  let totalItems = 0
+
+  ;(items || []).forEach(item => {
+    const room = item.room!
+    if (!itemsByRoom[room]) itemsByRoom[room] = []
+    itemsByRoom[room].push(item)
+    const mid = ((item.value_range_low || 0) + (item.value_range_high || 0)) / 2
+    totalValue += mid
+    totalItems++
+  })
+
+  // Summary strip
+  summaryEl.style.display = 'grid'
+  document.getElementById('audit-total-val')!.textContent = fmtPrice(Math.round(totalValue))
+  document.getElementById('audit-item-count')!.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''} in audit`
+
+  const coverEl = document.getElementById('audit-cover-val')!
+  if (policyCover > 0) {
+    coverEl.textContent = fmtPrice(policyCover)
+    const gap = policyCover - totalValue
+    const gapEl = document.getElementById('audit-gap-val')!
+    const gapNote = document.getElementById('audit-gap-note')!
+    if (gap >= 0) {
+      gapEl.textContent = fmtPrice(Math.round(gap))
+      gapEl.className = 'audit-summary-val gap-safe'
+      gapNote.textContent = 'You appear adequately covered'
+    } else {
+      gapEl.textContent = fmtPrice(Math.round(Math.abs(gap)))
+      gapEl.className = 'audit-summary-val gap-danger'
+      gapNote.textContent = 'Potential underinsurance — review your policy'
+    }
+  } else {
+    coverEl.textContent = 'Not set'
+    document.getElementById('audit-gap-val')!.textContent = '—'
+    document.getElementById('audit-gap-note')!.textContent = 'Set your cover to see your gap'
+  }
+
+  // Render rooms
+  auditRooms.forEach(room => {
+    const roomItems = itemsByRoom[room] || []
+    const roomTotal = roomItems.reduce((s, i) => s + ((i.value_range_low || 0) + (i.value_range_high || 0)) / 2, 0)
+
+    const roomEl = document.createElement('div')
+    roomEl.className = 'audit-room'
+
+    const scanUrl = `https://gaukinsurance.com/identify?room=${encodeURIComponent(room)}`
+
+    const itemsHtml = roomItems.length > 0
+      ? `<div class="audit-items">${roomItems.map(item => {
+          const r = item.result_json || {}
+          const title = r.title || r.subcategory || 'Unidentified Item'
+          const mid = ((item.value_range_low || 0) + (item.value_range_high || 0)) / 2
+          const imageUrl = item.image_key ? `${R2_CDN}/${item.image_key}` : null
+          return `<a href="/valuation/${item.id}" class="audit-item-card">
+            <div class="audit-item-thumb">
+              ${imageUrl
+                ? `<img src="${imageUrl}" alt="${title}" loading="lazy" />`
+                : `<div class="audit-item-thumb-placeholder">£</div>`
+              }
+            </div>
+            <div class="audit-item-body">
+              <div class="audit-item-title">${title}</div>
+              <div class="audit-item-value">${fmtPrice(Math.round(mid))}</div>
+            </div>
+          </a>`
+        }).join('')}</div>`
+      : `<div class="audit-room-empty">
+          <div class="audit-room-empty-text">No items in this room yet.</div>
+          <a href="${scanUrl}" class="audit-room-add">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Scan an Item
+          </a>
+        </div>`
+
+    roomEl.innerHTML = `
+      <div class="audit-room-head">
+        <div class="audit-room-name">${room}</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          ${roomTotal > 0 ? `<div class="audit-room-meta"><span class="audit-room-total">${fmtPrice(Math.round(roomTotal))}</span><br/>${roomItems.length} item${roomItems.length !== 1 ? 's' : ''}</div>` : ''}
+          <a href="${scanUrl}" class="audit-room-add">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Item
+          </a>
+        </div>
+      </div>
+      ${itemsHtml}
+    `
+    roomsEl.appendChild(roomEl)
+  })
+  } // end initAudit
+
+  initAudit()
+</script>
+</AppLayout>
