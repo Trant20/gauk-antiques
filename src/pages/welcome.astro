@@ -381,7 +381,16 @@ const isGIUser = false // overridden client-side
         document.getElementById('step-2-audit')?.addEventListener('click', async () => {
           const btn = document.getElementById('step-2-audit') as HTMLButtonElement
           if (btn) { btn.disabled = true; btn.textContent = 'Starting...' }
-          await saveAndRedirect()
+          const currency = (document.getElementById('currency-select') as HTMLSelectElement)?.value || 'GBP'
+          const localeMap: Record<string, string> = { GBP: 'en-GB', USD: 'en-US', NZD: 'en-NZ', AUD: 'en-AU', EUR: 'en-GB' }
+          if (session) {
+            await fetch('/api/user-settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+              body: JSON.stringify({ currency, locale: localeMap[currency] || 'en-GB' })
+            })
+          }
+          window.location.href = '/audit/setup'
         })
 
         // Override confirm to go to library
