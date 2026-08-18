@@ -136,12 +136,6 @@ const DEFAULT_SELECTED = [
   }
   .setup-cta:hover { opacity: 0.85; }
   .setup-cta:disabled { opacity: 0.5; cursor: not-allowed; }
-  .setup-skip {
-    display: block; text-align: center;
-    font-family: var(--font-ui); font-size: 12px; color: var(--text-mute);
-    text-decoration: none; padding: 8px;
-  }
-  .setup-skip:hover { color: var(--text); }
 </style>
 
 <div class="setup-shell">
@@ -196,7 +190,8 @@ const DEFAULT_SELECTED = [
 
       <!-- CTA -->
       <button class="setup-cta" id="setup-confirm">Go to My Room Audit</button>
-      <a href="/library" class="setup-skip">Skip for now — go to Vault</a>
+      <button class="setup-cta" id="setup-vault" style="display:none;margin-top:8px;background:var(--surface);border:1px solid var(--border-hi);color:var(--text-dim);">Go to Vault and Start Adding Items</button>
+
     </div>
   </div>
 </div>
@@ -214,6 +209,27 @@ const DEFAULT_SELECTED = [
   if (!session) {
     window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/audit/setup'
   }
+
+  const vaultBtn = document.getElementById('setup-vault') as HTMLButtonElement
+
+  // Show vault button only if no items are in the audit yet
+  if (session) {
+    const { count } = await supabase
+      .from('identifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', session.user.id)
+      .not('room', 'is', null)
+    if (count === 0 && vaultBtn) {
+      vaultBtn.style.display = 'block'
+    }
+  }
+
+  vaultBtn?.addEventListener('click', async () => {
+    vaultBtn.disabled = true
+    vaultBtn.textContent = 'Saving...'
+    await saveSettings()
+    window.location.href = '/library'
+  })
 
   const roomsContainer = document.getElementById('setup-rooms')!
   const customInput = document.getElementById('custom-room-input') as HTMLInputElement
