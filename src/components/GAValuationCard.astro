@@ -31,6 +31,7 @@ const date = new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numer
 const userValue = item.user_value ?? null
 const userValueDisplay = userValue ? formatPrice(userValue, currency) : null
 const ebayCount = (item.ebay_sold || []).length
+const itemRoom = item.room || ''
 ---
 
 <style is:global>
@@ -390,6 +391,13 @@ const ebayCount = (item.ebay_sold || []).length
     line-height: 1.6;
   }
 
+  /* ── ROOM SELECTOR ── */
+  .ga-room-section { margin: 16px 0; padding: 16px 0; border-top: 1px solid var(--border); }
+  .ga-room-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gi-sage); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .ga-room-select { width: 100%; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border-hi); font-family: var(--font-ui); font-size: 13px; color: var(--text); appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
+  .ga-room-select:focus { border-color: var(--gi-sage); }
+  .ga-room-saved { font-family: var(--font-ui); font-size: 11px; color: var(--gi-sage); margin-top: 6px; display: none; }
+
   /* ── DELETE BUTTON ── */
   .ga-delete-btn {
     font-family: var(--font-ui);
@@ -577,6 +585,32 @@ const ebayCount = (item.ebay_sold || []).length
     </div>
   </div>
 
+  <!-- ROOM SELECTOR — insurance audit -->
+  <div class="ga-room-section">
+    <div class="ga-room-label">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Add to Insurance Audit
+    </div>
+    <select class="ga-room-select" id="ga-room-select">
+      <option value="">Not in audit</option>
+      <option value="Living Room">Living Room</option>
+      <option value="Kitchen">Kitchen</option>
+      <option value="Dining Room">Dining Room</option>
+      <option value="Hallway">Hallway</option>
+      <option value="Master Bedroom">Master Bedroom</option>
+      <option value="Bedroom 2">Bedroom 2</option>
+      <option value="Bedroom 3">Bedroom 3</option>
+      <option value="Bedroom 4">Bedroom 4</option>
+      <option value="Bathroom">Bathroom</option>
+      <option value="Study / Home Office">Study / Home Office</option>
+      <option value="Garage">Garage</option>
+      <option value="Garden / Outdoor">Garden / Outdoor</option>
+      <option value="Loft / Storage">Loft / Storage</option>
+      <option value="Other">Other</option>
+    </select>
+    <div class="ga-room-saved" id="ga-room-saved">Saved to audit</div>
+  </div>
+
   <!-- IDENTIFICATION -->
   <div class="ga-section">
     <div class="ga-section-head"><div class="ga-section-title">Identification</div></div>
@@ -712,6 +746,27 @@ const ebayCount = (item.ebay_sold || []).length
       if (descText) descText.textContent = newDesc
       if ((window as any).__val) (window as any).__val.resultJson = updatedResult
       closeDescEdit()
+    }
+  })
+
+  // ── Room selector (insurance audit) ────────────────────────────────────────
+  const gaRoomSelect = document.getElementById('ga-room-select') as HTMLSelectElement
+  const gaRoomSaved = document.getElementById('ga-room-saved')
+
+  if (gaRoomSelect && (window as any).__val?.itemRoom) {
+    gaRoomSelect.value = (window as any).__val.itemRoom
+  }
+
+  gaRoomSelect?.addEventListener('change', async () => {
+    if (!session || !itemId) return
+    const { error } = await supabase
+      .from('identifications')
+      .update({ room: gaRoomSelect.value || null })
+      .eq('id', itemId)
+      .eq('user_id', session.user.id)
+    if (!error && gaRoomSaved) {
+      gaRoomSaved.style.display = 'block'
+      setTimeout(() => { if (gaRoomSaved) gaRoomSaved.style.display = 'none' }, 2000)
     }
   })
 

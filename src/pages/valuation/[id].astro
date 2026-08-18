@@ -45,8 +45,8 @@ const title = isGIItem
     : <GAValuationCard item={item} creditCostEnrich={creditCostEnrich} currency={currency} />
   }
 
-  <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!item.enrichment_json, itemOwnerId: item.user_id, ANTIQUES_SITE_ID, currency, locale }}>
-    window.__val = { itemId, resultJson, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID, currency, locale }
+  <script define:vars={{ itemId: item.id, resultJson: r, hasEnrichment: !!item.enrichment_json, itemOwnerId: item.user_id, ANTIQUES_SITE_ID, currency, locale, itemRoom: item.room || '' }}>
+    window.__val = { itemId, resultJson, hasEnrichment, itemOwnerId, ANTIQUES_SITE_ID, currency, locale, itemRoom }
   </script>
 
   <script>
