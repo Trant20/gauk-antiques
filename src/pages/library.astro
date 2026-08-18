@@ -35,7 +35,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     .sb-prop-count { font-size: 13px; color: var(--text-mute); font-weight: 500; font-variant-numeric: tabular-nums; }
     .sb-vault-total { padding: 8px 14px 12px; border-bottom: 1px solid var(--border); }
     .sb-vault-total-label { display: block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 4px; }
-    .sb-vault-total-value { font-family: var(--font-ui); font-size: 13px; font-weight: 500; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+    .sb-vault-total-value { font-family: var(--font-ui); font-size: 16px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 
     /* ── MAIN ── */
     .app-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
@@ -391,7 +391,11 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     </div>
   `).join('')
 
-  function fmt(v: number) { return '£' + Math.round(v).toLocaleString('en-GB') }
+  const CURRENCY_SYMBOLS: Record<string, string> = { GBP: '£', USD: '$', NZD: 'NZ$', AUD: 'AU$', EUR: '€' }
+  function fmt(v: number) {
+    const sym = CURRENCY_SYMBOLS[window.__userCurrency || 'GBP'] || (window.__userCurrency + ' ')
+    return sym + Math.round(v).toLocaleString('en', { maximumFractionDigits: 0 })
+  }
 
   function formatValue(r: any, siteId: string) {
     return formatPriceRange(r.value_range_low || 0, r.value_range_high || 0, window.__userCurrency || 'GBP')
