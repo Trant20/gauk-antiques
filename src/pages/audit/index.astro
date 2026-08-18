@@ -29,7 +29,7 @@ const currency = Astro.locals.currency || 'GBP'
   @media (max-width: 600px) { .audit-summary { grid-template-columns: 1fr; } }
   .audit-summary-cell { background: var(--surface); padding: 18px 20px; }
   .audit-summary-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; margin-bottom: 6px; }
-  .audit-summary-val { font-family: var(--font-display); font-size: 26px; font-style: italic; color: var(--text); line-height: 1; }
+  .audit-summary-val { font-family: var(--font-ui); font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
   .audit-summary-val.gap-safe { color: #4aa368; }
   .audit-summary-val.gap-warn { color: #e07b39; }
   .audit-summary-val.gap-danger { color: #c44028; }
@@ -38,7 +38,7 @@ const currency = Astro.locals.currency || 'GBP'
   /* ── ROOM SECTION ── */
   .audit-room { margin-bottom: 28px; }
   .audit-room-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-  .audit-room-name { font-family: var(--font-display); font-size: 20px; font-style: italic; color: var(--text); }
+  .audit-room-name { font-family: var(--font-ui); font-size: 16px; font-weight: 600; color: var(--text); }
   .audit-room-meta { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); text-align: right; }
   .audit-room-total { color: var(--gi-sage); font-weight: 600; }
   .audit-room-add {
@@ -66,7 +66,7 @@ const currency = Astro.locals.currency || 'GBP'
   .audit-item-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 32px; color: var(--gi-sage); opacity: 0.2; }
   .audit-item-body { padding: 12px 14px; flex: 1; }
   .audit-item-title { font-family: var(--font-ui); font-size: 13px; color: var(--text); line-height: 1.4; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .audit-item-value { font-family: var(--font-display); font-size: 17px; font-style: italic; color: var(--gi-sage); }
+  .audit-item-value { font-family: var(--font-ui); font-size: 15px; font-weight: 700; color: var(--gi-sage); }
 
   /* ── EMPTY ROOM ── */
   .audit-room-empty { padding: 20px; background: var(--surface); border: 1px dashed var(--border-hi); text-align: center; }
@@ -74,7 +74,7 @@ const currency = Astro.locals.currency || 'GBP'
 
   /* ── EMPTY STATE ── */
   .audit-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 320px; gap: 16px; text-align: center; }
-  .audit-empty-title { font-family: var(--font-display); font-size: 24px; font-style: italic; color: var(--text-mute); }
+  .audit-empty-title { font-family: var(--font-ui); font-size: 20px; font-weight: 600; color: var(--text-mute); }
   .audit-empty-sub { font-family: var(--font-ui); font-size: 14px; color: var(--text-mute); max-width: 320px; line-height: 1.6; }
   .audit-empty-btn { display: inline-block; padding: 12px 28px; background: var(--gi-sage); color: #fff; font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; }
 
@@ -116,6 +116,9 @@ const currency = Astro.locals.currency || 'GBP'
           <div class="audit-summary-note" id="audit-gap-note"></div>
         </div>
       </div>
+
+      <!-- Room filter -->
+      <div id="audit-room-filter" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:20px;"></div>
 
       <!-- Rooms -->
       <div id="audit-rooms"></div>
@@ -234,7 +237,7 @@ const currency = Astro.locals.currency || 'GBP'
     const roomEl = document.createElement('div')
     roomEl.className = 'audit-room'
 
-    const scanUrl = `https://gaukinsurance.com/identify?room=${encodeURIComponent(room)}`
+    const scanUrl = `/identify/insurance?room=${encodeURIComponent(room)}`
 
     const itemsHtml = roomItems.length > 0
       ? `<div class="audit-items">${roomItems.map(item => {
@@ -257,9 +260,9 @@ const currency = Astro.locals.currency || 'GBP'
         }).join('')}</div>`
       : `<div class="audit-room-empty">
           <div class="audit-room-empty-text">No items in this room yet.</div>
-          <a href="${scanUrl}" class="audit-room-add">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Scan an Item
+          <a href="${scanUrl}" class="audit-room-add" style="margin-right:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Scan New Item
           </a>
         </div>`
 
@@ -269,8 +272,8 @@ const currency = Astro.locals.currency || 'GBP'
         <div style="display:flex;align-items:center;gap:12px;">
           ${roomTotal > 0 ? `<div class="audit-room-meta"><span class="audit-room-total">${fmtPrice(Math.round(roomTotal))}</span><br/>${roomItems.length} item${roomItems.length !== 1 ? 's' : ''}</div>` : ''}
           <a href="${scanUrl}" class="audit-room-add">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Item
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Scan Item
           </a>
         </div>
       </div>
@@ -278,6 +281,22 @@ const currency = Astro.locals.currency || 'GBP'
     `
     roomsEl.appendChild(roomEl)
   })
+
+  // Render room jump filter if more than 3 rooms
+  if (auditRooms.length > 3) {
+    const filterEl = document.getElementById('audit-room-filter')!
+    filterEl.style.display = 'flex'
+    auditRooms.forEach((room, i) => {
+      const btn = document.createElement('button')
+      btn.textContent = room
+      btn.style.cssText = 'font-family:var(--font-ui);font-size:11px;letter-spacing:0.08em;padding:5px 12px;background:var(--surface);border:1px solid var(--border-hi);color:var(--text-mute);cursor:pointer;transition:border-color 0.15s,color 0.15s;'
+      btn.addEventListener('click', () => {
+        const roomEls = roomsEl.querySelectorAll('.audit-room')
+        if (roomEls[i]) roomEls[i].scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+      filterEl.appendChild(btn)
+    })
+  }
   } // end initAudit
 
   initAudit()
