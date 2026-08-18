@@ -4,6 +4,9 @@ export const ANTIQUES_SITE_ID = 'add6d12c-ecd8-4517-b2e5-0f4977603744'
 /** GAUK Insurance site identifier */
 export const GI_SITE_ID = 'd065c030-58b4-4f48-a2df-f14d666d6cfa'
 
+/** GAUK Receipts site identifier */
+export const RECEIPTS_SITE_ID = '30f3c0d1-2694-4db5-82e9-b3805a903643'
+
 /** Cloudflare R2 CDN base URL for antiques images */
 export const R2_CDN = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
 
