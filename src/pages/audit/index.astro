@@ -61,7 +61,7 @@ const currency = Astro.locals.currency || 'GBP'
     transition: border-color 0.15s;
   }
   .audit-item-card:hover { border-color: var(--gi-sage); background: var(--surface-hi); }
-  .audit-item-thumb { height: 110px; background: var(--surface-hi); overflow: hidden; flex-shrink: 0; }
+  .audit-item-thumb { aspect-ratio: 4/3; background: var(--surface-hi); overflow: hidden; flex-shrink: 0; width: 100%; }
   .audit-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .audit-item-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 32px; color: var(--gi-sage); opacity: 0.2; }
   .audit-item-body { padding: 12px 14px; flex: 1; }
@@ -167,9 +167,8 @@ const currency = Astro.locals.currency || 'GBP'
     fetch('/api/user-settings', { headers: { 'Authorization': `Bearer ${session!.access_token}` } }),
     supabase
       .from('identifications')
-      .select('id, image_key, result_json, value_range_low, value_range_high, room, created_at')
+      .select('id, image_key, result_json, value_range_low, value_range_high, room, site_id, created_at')
       .eq('user_id', session!.user.id)
-      .eq('site_id', GI_SITE_ID)
       .not('room', 'is', null)
       .order('created_at', { ascending: false })
   ])

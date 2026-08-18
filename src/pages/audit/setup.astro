@@ -191,11 +191,11 @@ const DEFAULT_SELECTED = [
           <div class="setup-cover-sym" id="cover-sym">£</div>
           <input class="setup-cover-input" id="cover-input" type="number" min="0" placeholder="e.g. 50000" />
         </div>
-        <div class="setup-cover-note">Your current contents insurance cover amount. This is used to calculate your underinsurance gap as you build your inventory.</div>
+        <div class="setup-cover-note">Your selections save automatically. Enter your cover amount and select your rooms, then continue to start your audit.</div>
       </div>
 
       <!-- CTA -->
-      <button class="setup-cta" id="setup-confirm">Start My Room Audit</button>
+      <button class="setup-cta" id="setup-confirm">Go to My Room Audit</button>
       <a href="/library" class="setup-skip">Skip for now — go to Vault</a>
     </div>
   </div>
@@ -274,12 +274,13 @@ const DEFAULT_SELECTED = [
     }
   }
 
-  // Toggle room selection
+  // Toggle room selection — auto-save on each change
   roomsContainer.querySelectorAll('.setup-room-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const isSelected = btn.classList.contains('selected')
       btn.classList.toggle('selected')
       updateCheck(btn as HTMLElement, !isSelected)
+      saveSettings()
     })
   })
 
@@ -314,25 +315,29 @@ const DEFAULT_SELECTED = [
     if (e.key === 'Enter') addCustomRoom(customInput.value)
   })
 
-  // Confirm — save to user_settings
-  confirmBtn.addEventListener('click', async () => {
+  // Auto-save helper
+  async function saveSettings() {
     if (!session) return
-
     const selectedStandard = Array.from(roomsContainer.querySelectorAll('.setup-room-btn.selected'))
       .map(btn => (btn as HTMLElement).dataset.room!)
     const allRooms = [...selectedStandard, ...customRooms]
-
     const policyCover = parseInt(coverInput.value || '0', 10)
-
-    confirmBtn.disabled = true
-    confirmBtn.textContent = 'Saving...'
-
     await fetch('/api/user-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
       body: JSON.stringify({ audit_rooms: allRooms, policy_cover: policyCover })
     })
+  }
 
+  // Auto-save on cover amount change
+  coverInput.addEventListener('change', () => saveSettings())
+
+  // Navigate to audit — save first
+  confirmBtn.addEventListener('click', async () => {
+    if (!session) return
+    confirmBtn.disabled = true
+    confirmBtn.textContent = 'Starting...'
+    await saveSettings()
     window.location.href = '/audit'
   })
 </script>
