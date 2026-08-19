@@ -104,6 +104,12 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   .qv-item-row:last-child { border-bottom: none; }
   .qv-item-desc { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); flex: 1; }
   .qv-item-amount { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0; }
+  .qv-item-meta { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+  .qv-sale-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #c97b2b; background: rgba(201,123,43,0.12); border: 1px solid rgba(201,123,43,0.3); padding: 1px 6px; }
+  .qv-original-price { font-size: 11px; color: var(--text-mute); text-decoration: line-through; }
+  .qv-savings-row { display: flex; justify-content: space-between; padding: 8px 0; font-family: var(--font-ui); font-size: 13px; color: #5a9e68; font-weight: 600; border-top: 1px solid var(--border-hi); margin-top: 4px; }
+  .qv-tax-row { display: flex; justify-content: space-between; padding: 6px 0; font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); }
+  .qv-total-row { display: flex; justify-content: space-between; padding: 10px 0 0; font-family: var(--font-ui); font-size: 15px; font-weight: 700; color: var(--text); border-top: 1px solid var(--border-hi); margin-top: 4px; }
 
   .qv-warranty { background: rgba(122,110,158,0.08); border: 1px solid rgba(122,110,158,0.2); padding: 12px 16px; margin: 20px; }
   .qv-warranty-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gr-violet); font-weight: 600; margin-bottom: 4px; display: block; }
@@ -263,20 +269,62 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   // ── Quick-view drawer ──────────────────────────────────────
   function openDrawer(r: any) {
     const body = document.getElementById('qv-body')!
-    const items = r.line_items || []
+    const items: any[] = r.rj_items && r.rj_items.length ? r.rj_items : r.line_items || []
 
     const imageHtml = r.image_key
       ? `<img class="qv-image" src="${R2_CDN}/${r.image_key}" alt="${r.merchant || 'Receipt'}" />`
       : ''
 
+    // Merchant section
+    const merchantMeta = [
+      r.rj_merchant_branch || '',
+      r.rj_merchant_gst ? 'GST No. ' + r.rj_merchant_gst : '',
+    ].filter(Boolean).join(' — ')
+
+    const dateTime = [formatDate(r.date), r.rj_time || ''].filter(Boolean).join(' ')
+
+    // Items — use rich data if available
     const itemsHtml = items.length
-      ? items.map((i: any) => `
-          <div class="qv-item-row">
-            <span class="qv-item-desc">${i.description}</span>
-            <span class="qv-item-amount">${i.amount ? formatTotal(i.amount, r.currency) : ''}</span>
-          </div>`).join('')
+      ? items.map((i: any) => {
+          const usesRich = 'unit_price' in i
+          const desc = i.description || ''
+          const itemCat = i.category || ''
+          const qty = usesRich ? (i.quantity ?? 1) : 1
+          const price = usesRich ? (i.line_total ?? i.unit_price ?? 0) : (i.amount ?? 0)
+          const origPrice = usesRich ? (i.original_price ?? null) : null
+          const onSale = usesRich ? !!i.is_on_sale : false
+          const saleBadge = onSale ? `<span class="qv-sale-badge">SALE</span>` : ''
+          const origHtml = origPrice ? `<span class="qv-original-price">${formatTotal(origPrice, r.currency)}</span>` : ''
+          const metaItems = [
+            itemCat,
+            qty > 1 ? `Qty ${qty}` : '',
+          ].filter(Boolean).join(' · ')
+          return `
+            <div class="qv-item-row">
+              <div class="qv-item-desc">
+                <div>${desc}</div>
+                ${metaItems ? `<div class="qv-item-meta">${metaItems} ${saleBadge}</div>` : ''}
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <div class="qv-item-amount">${formatTotal(price, r.currency)}</div>
+                ${origHtml}
+              </div>
+            </div>`
+        }).join('')
       : '<p style="font-family:var(--font-ui);font-size:13px;color:var(--text-mute);">No line items recorded.</p>'
 
+    // Totals
+    const taxRow = r.rj_tax_amount
+      ? `<div class="qv-tax-row"><span>${r.rj_tax_label || 'Tax'} included</span><span>${formatTotal(r.rj_tax_amount, r.currency)}</span></div>`
+      : ''
+    const savingsRow = r.rj_savings
+      ? `<div class="qv-savings-row"><span>You saved</span><span>${formatTotal(r.rj_savings, r.currency)}</span></div>`
+      : ''
+    const paymentNote = r.rj_payment && r.rj_payment !== 'unknown'
+      ? `<div style="font-family:var(--font-ui);font-size:11px;color:var(--text-mute);margin-top:8px;text-transform:uppercase;letter-spacing:0.1em;">${r.rj_payment}</div>`
+      : ''
+
+    // Warranty
     const warrantyHtml = r.warranty_expiry
       ? `<div class="qv-warranty">
            <span class="qv-warranty-label">Warranty</span>
@@ -294,27 +342,23 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
         <span class="qv-label">Merchant</span>
         <div class="qv-merchant">${r.merchant || 'Unknown'}</div>
         <div class="qv-meta-row">
-          <span>${formatDate(r.date)}</span>
+          ${merchantMeta ? `<span>${merchantMeta}</span>` : ''}
+        </div>
+        <div class="qv-meta-row" style="margin-top:4px;">
+          <span>${dateTime}</span>
           ${r.category ? `<span>${r.category}</span>` : ''}
           ${r.receipt_number ? `<span>Ref ${r.receipt_number}</span>` : ''}
         </div>
       </div>
       <div class="qv-section">
-        <span class="qv-label">Payment</span>
-        <div class="qv-total-block">
-          <div class="qv-stat">
-            <span class="qv-stat-label">Total Paid</span>
-            <span class="qv-stat-value">${formatTotal(r.total, r.currency)}</span>
-          </div>
-          <div class="qv-stat">
-            <span class="qv-stat-label">Confidence</span>
-            <span class="qv-stat-value neutral">${r.confidence || ''}</span>
-          </div>
-        </div>
-      </div>
-      <div class="qv-section">
-        <span class="qv-label">Items</span>
+        <span class="qv-label">Items (${items.length})</span>
         <div class="qv-items-list">${itemsHtml}</div>
+        <div style="margin-top:8px;">
+          ${taxRow}
+          ${savingsRow}
+          <div class="qv-total-row"><span>Total paid</span><span>${formatTotal(r.total, r.currency)}</span></div>
+          ${paymentNote}
+        </div>
       </div>
       ${warrantyHtml}
       ${notesHtml}
@@ -369,7 +413,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
     const { data, error } = await supabase
       .from('receipts')
-      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, created_at')
+      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, result_json, created_at')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
@@ -396,7 +440,19 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       }
     }
 
-    allReceipts = data.map((r: any) => ({ ...r, line_items: lineItemMap[r.id] || [] }))
+    allReceipts = data.map((r: any) => ({
+      ...r,
+      line_items: lineItemMap[r.id] || [],
+      // Rich item data from result_json
+      rj_items:        r.result_json?.items        || [],
+      rj_tax_amount:   r.result_json?.tax_amount   ?? null,
+      rj_tax_label:    r.result_json?.tax_label     || null,
+      rj_savings:      r.result_json?.savings_total ?? null,
+      rj_merchant_branch: r.result_json?.merchant_branch || null,
+      rj_merchant_gst: r.result_json?.merchant_gst_no   || null,
+      rj_time:         r.result_json?.time          || null,
+      rj_payment:      r.result_json?.payment_method || null,
+    }))
 
     document.getElementById('receipt-count')!.textContent =
       allReceipts.length + ' receipt' + (allReceipts.length !== 1 ? 's' : '')
