@@ -1,39 +1,125 @@
 ---
+
 import AppLayout from '../../layouts/AppLayout.astro'
 import AppSidebar from '../../components/AppSidebar.astro'
 import AppBottomNav from '../../components/AppBottomNav.astro'
 ---
 <AppLayout title="My Receipts — GAUK">
-<style>
+<style is:global>
   .app-shell { display: flex; height: 100vh; overflow: hidden; }
   .app-main  { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-  .page-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; flex-shrink: 0; gap: 16px; }
   @media (max-width: 768px) { .app-main { margin-left: 0; padding-bottom: 64px; } }
 
-  .receipts-body { flex: 1; overflow-y: auto; padding: 24px; }
-  @media (max-width: 768px) { .receipts-body { padding: 16px; } }
+  /* Topbar */
+  .page-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
 
-  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  /* Filter bar */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; padding: 16px 24px 0; }
   .filter-chip { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; padding: 5px 14px; border: 1px solid var(--border-hi); background: none; color: var(--text-mute); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
   .filter-chip:hover { border-color: var(--gr-violet); color: var(--text); }
   .filter-chip.active { border-color: var(--gr-violet); color: var(--gr-violet); }
 
-  .receipt-list { display: flex; flex-direction: column; gap: 2px; }
-  .receipt-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--gr-violet); display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 16px 20px; gap: 16px; cursor: pointer; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
-  .receipt-card:hover { background: var(--surface-hi); border-color: var(--border-hi); }
-  .receipt-merchant { font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .receipt-meta { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .receipt-category { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gr-violet); background: rgba(122,110,158,0.12); padding: 2px 8px; }
-  .receipt-total { font-family: var(--font-ui); font-size: 18px; font-weight: 700; color: var(--gr-violet); text-align: right; white-space: nowrap; }
-  .receipt-currency { font-family: var(--font-ui); font-size: 10px; color: var(--text-mute); text-align: right; margin-top: 2px; }
+  /* Scroll area */
+  .receipts-scroll { flex: 1; overflow-y: auto; padding: 20px 24px 24px; }
+  @media (max-width: 768px) { .receipts-scroll { padding: 16px; } }
 
-  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 16px; }
+  /* Grid */
+  .receipts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+
+  /* Card */
+  .receipt-card {
+    background: var(--surface); border: 1px solid var(--border-hi);
+    cursor: pointer; transition: border-color 0.15s;
+    animation: fadeUp 0.22s ease forwards; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .receipt-card:hover { border-color: #363636; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card-thumb {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    background: var(--surface-hi); border-bottom: 1px solid var(--border); overflow: hidden; position: relative;
+  }
+  .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .card-thumb-placeholder { font-size: 48px; opacity: 0.15; user-select: none; }
+
+  .card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+  .card-badge {
+    display: inline-flex; align-items: center; padding: 2px 7px;
+    font-family: var(--font-ui); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.11em;
+    border: 1px solid rgba(122,110,158,0.3); color: var(--gr-violet); background: rgba(122,110,158,0.07);
+    align-self: flex-start;
+  }
+
+  .card-merchant { font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+
+  .card-meta { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; }
+  .card-date { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); }
+  .card-total { font-family: var(--font-ui); font-size: 18px; font-weight: 700; color: var(--gr-violet); }
+
+  /* Quick-view drawer */
+  .qv-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .qv-overlay.open { display: block; opacity: 1; }
+
+  .qv-drawer {
+    position: fixed; top: 0; right: -480px; width: 480px; max-width: 100vw;
+    height: 100vh; background: var(--surface); border-left: 1px solid var(--border-hi);
+    z-index: 101; display: flex; flex-direction: column;
+    transition: right 0.25s cubic-bezier(0.32, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .qv-drawer.open { right: 0; }
+
+  .qv-header {
+    height: 52px; background: var(--surface-lo); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; flex-shrink: 0;
+  }
+  .qv-title { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--text-mute); }
+  .qv-close { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border-hi); color: var(--text-mute); font-size: 18px; cursor: pointer; transition: color 0.15s; }
+  .qv-close:hover { color: var(--text); }
+
+  .qv-body { flex: 1; overflow-y: auto; }
+
+  .qv-image { width: 100%; max-height: 280px; object-fit: contain; background: var(--surface-hi); border-bottom: 1px solid var(--border); display: block; padding: 16px; box-sizing: border-box; }
+
+  .qv-section { padding: 20px; border-bottom: 1px solid var(--border); }
+  .qv-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gr-violet); font-weight: 600; margin-bottom: 12px; display: block; }
+
+  .qv-merchant { font-family: var(--font-ui); font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .qv-meta-row { display: flex; gap: 16px; font-family: var(--font-ui); font-size: 13px; color: var(--text-mute); flex-wrap: wrap; }
+
+  .qv-total-block { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .qv-stat { display: flex; flex-direction: column; gap: 4px; }
+  .qv-stat-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); }
+  .qv-stat-value { font-family: var(--font-ui); font-size: 22px; font-weight: 700; color: var(--gr-violet); }
+  .qv-stat-value.neutral { color: var(--text); }
+
+  .qv-items-list { display: flex; flex-direction: column; gap: 0; }
+  .qv-item-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-hi); gap: 12px; }
+  .qv-item-row:last-child { border-bottom: none; }
+  .qv-item-desc { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); flex: 1; }
+  .qv-item-amount { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0; }
+
+  .qv-warranty { background: rgba(122,110,158,0.08); border: 1px solid rgba(122,110,158,0.2); padding: 12px 16px; margin: 20px; }
+  .qv-warranty-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gr-violet); font-weight: 600; margin-bottom: 4px; display: block; }
+  .qv-warranty-text { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); }
+
+  .qv-notes { padding: 0 20px 20px; font-family: var(--font-ui); font-size: 13px; color: var(--text-mute); line-height: 1.7; font-style: italic; }
+
+  /* States */
   .loading-state { display: flex; align-items: center; justify-content: center; min-height: 50vh; }
   .loading-dots { display: flex; gap: 6px; }
   .loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--gr-violet); animation: dot-pulse 1.2s ease-in-out infinite; }
   .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
   .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes dot-pulse { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+  @keyframes dot-pulse { 0%,80%,100% { opacity:0.2; transform:scale(0.8); } 40% { opacity:1; transform:scale(1); } }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 16px; }
 </style>
 
 <div class="app-shell">
@@ -46,138 +132,190 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       <a href="/receipts/scan" style="margin-left: auto; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 6px 14px; flex-shrink: 0;">+ Scan Receipt</a>
     </div>
 
-    <div class="receipts-body">
-      <div class="filter-bar" id="filter-bar" style="display: none;"></div>
+    <div id="filter-bar" class="filter-bar" style="display: none;"></div>
+
+    <div class="receipts-scroll">
       <div class="loading-state" id="loading-state"><div class="loading-dots"><span></span><span></span><span></span></div></div>
-      <div class="receipt-list" id="receipt-list" style="display: none;"></div>
+      <div class="receipts-grid" id="receipts-grid" style="display: none;"></div>
       <div class="empty-state" id="empty-state" style="display: none;">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="8" y="4" width="32" height="40" rx="2" stroke="var(--gr-violet)" stroke-width="1.6" fill="none" opacity="0.5"/>
-          <line x1="14" y1="16" x2="34" y2="16" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
-          <line x1="14" y1="22" x2="34" y2="22" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
-          <line x1="14" y1="28" x2="28" y2="28" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
-        </svg>
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="4" width="32" height="40" rx="2" stroke="var(--gr-violet)" stroke-width="1.6" fill="none" opacity="0.5"/><line x1="14" y1="16" x2="34" y2="16" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/><line x1="14" y1="22" x2="34" y2="22" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/><line x1="14" y1="28" x2="28" y2="28" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/></svg>
         <p style="font-family: var(--font-ui); font-size: 14px; color: var(--text-mute); text-align: center; max-width: 280px; line-height: 1.7;">No receipts yet. Scan your first receipt to start building your proof of purchase vault.</p>
-        <a href="/receipts/scan" style="font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 10px 24px; margin-top: 8px;">Scan a Receipt</a>
+        <a href="/receipts/scan" style="font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 10px 24px;">Scan a Receipt</a>
       </div>
     </div>
 
   </div>
 </div>
 <AppBottomNav activePage="receipts" />
+
+<!-- Quick-view overlay + drawer -->
+<div class="qv-overlay" id="qv-overlay"></div>
+<div class="qv-drawer" id="qv-drawer">
+  <div class="qv-header">
+    <span class="qv-title">Receipt</span>
+    <button class="qv-close" id="qv-close">&#x2715;</button>
+  </div>
+  <div class="qv-body" id="qv-body"></div>
+</div>
+
 </AppLayout>
 
 <script>
   import { supabase } from '../../lib/supabase-browser'
 
+  const R2_CDN = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
   let allReceipts: any[] = []
   let activeCategory = 'all'
 
-  function formatDate(dateStr: string) {
-    if (!dateStr) return ''
-    try { return new Date(dateStr).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' }) }
-    catch (e) { return dateStr }
+  function formatDate(d: string) {
+    if (!d) return ''
+    try { return new Date(d).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' }) }
+    catch { return d }
   }
 
   function formatTotal(total: number, currency: string) {
     if (!total) return ''
-    const symbol: Record<string, string> = { NZD: 'NZ$', AUD: 'A$', GBP: '£', USD: '$', EUR: '€' }
-    return (symbol[currency] || (currency ? currency + ' ' : '$')) + Number(total).toFixed(2)
+    const sym: Record<string,string> = { NZD: 'NZ$', AUD: 'A$', GBP: '£', USD: '$', EUR: '€' }
+    return (sym[currency] || (currency ? currency + ' ' : '$')) + Number(total).toFixed(2)
+  }
+
+  function buildCard(r: any) {
+    const card = document.createElement('div')
+    card.className = 'receipt-card'
+    card.dataset.id = r.id
+
+    const thumbHtml = r.image_key
+      ? `<div class="card-thumb"><img src="${R2_CDN}/${r.image_key}" alt="${r.merchant || 'Receipt'}" loading="lazy" /></div>`
+      : `<div class="card-thumb"><span class="card-thumb-placeholder">🧾</span></div>`
+
+    const badge = r.category ? `<span class="card-badge">${r.category}</span>` : ''
+
+    card.innerHTML = `
+      ${thumbHtml}
+      <div class="card-body">
+        ${badge}
+        <div class="card-merchant">${r.merchant || 'Unknown merchant'}</div>
+        <div class="card-meta">
+          <span class="card-date">${formatDate(r.date)}</span>
+          <span class="card-total">${formatTotal(r.total, r.currency)}</span>
+        </div>
+      </div>
+    `
+    card.addEventListener('click', () => openDrawer(r))
+    return card
   }
 
   function renderReceipts(receipts: any[]) {
-    const list = document.getElementById('receipt-list')!
-    list.innerHTML = ''
+    const grid = document.getElementById('receipts-grid')!
+    grid.innerHTML = ''
 
     if (!receipts.length) {
-      list.style.display = 'none'
+      grid.style.display = 'none'
       document.getElementById('empty-state')!.style.display = 'flex'
       return
     }
 
     document.getElementById('empty-state')!.style.display = 'none'
-    list.style.display = 'flex'
-
-    receipts.forEach((r: any) => {
-      const card = document.createElement('a')
-      card.href = '/receipts/' + r.id
-      card.className = 'receipt-card'
-
-      const left = document.createElement('div')
-
-      const merchant = document.createElement('div')
-      merchant.className = 'receipt-merchant'
-      merchant.textContent = r.merchant || 'Unknown merchant'
-
-      const meta = document.createElement('div')
-      meta.className = 'receipt-meta'
-
-      if (r.date) {
-        const d = document.createElement('span')
-        d.textContent = formatDate(r.date)
-        meta.appendChild(d)
-      }
-
-      if (r.category) {
-        const cat = document.createElement('span')
-        cat.className = 'receipt-category'
-        cat.textContent = r.category
-        meta.appendChild(cat)
-      }
-
-      if (r.warranty_expiry) {
-        const w = document.createElement('span')
-        w.style.cssText = 'color: var(--gr-violet-hi); font-size: 11px;'
-        w.textContent = 'Warranty to ' + formatDate(r.warranty_expiry)
-        meta.appendChild(w)
-      }
-
-      left.appendChild(merchant)
-      left.appendChild(meta)
-
-      const right = document.createElement('div')
-      const total = document.createElement('div')
-      total.className = 'receipt-total'
-      total.textContent = formatTotal(r.total, r.currency)
-      const curr = document.createElement('div')
-      curr.className = 'receipt-currency'
-      curr.textContent = r.currency || ''
-      right.appendChild(total)
-      right.appendChild(curr)
-
-      card.appendChild(left)
-      card.appendChild(right)
-      list.appendChild(card)
-    })
+    grid.style.display = 'grid'
+    receipts.forEach((r: any) => grid.appendChild(buildCard(r)))
   }
 
   function buildFilters(receipts: any[]) {
-    const categories: string[] = ['all']
-    receipts.forEach((r: any) => {
-      if (r.category && !categories.includes(r.category)) categories.push(r.category)
-    })
-    if (categories.length <= 2) return
+    const cats: string[] = ['all']
+    receipts.forEach((r: any) => { if (r.category && !cats.includes(r.category)) cats.push(r.category) })
+    if (cats.length <= 2) return
 
     const bar = document.getElementById('filter-bar')!
     bar.innerHTML = ''
     bar.style.display = 'flex'
 
-    categories.forEach((cat: string) => {
+    cats.forEach((cat: string) => {
       const chip = document.createElement('button')
       chip.className = 'filter-chip' + (cat === 'all' ? ' active' : '')
-      chip.dataset.cat = cat
       chip.textContent = cat === 'all' ? 'All' : cat
       chip.addEventListener('click', () => {
         activeCategory = cat
         document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'))
         chip.classList.add('active')
-        const filtered = cat === 'all' ? allReceipts : allReceipts.filter((r: any) => r.category === cat)
-        renderReceipts(filtered)
+        renderReceipts(cat === 'all' ? allReceipts : allReceipts.filter((r: any) => r.category === cat))
       })
       bar.appendChild(chip)
     })
   }
 
+  // ── Quick-view drawer ──────────────────────────────────────
+  function openDrawer(r: any) {
+    const body = document.getElementById('qv-body')!
+    const items = r.line_items || []
+
+    const imageHtml = r.image_key
+      ? `<img class="qv-image" src="${R2_CDN}/${r.image_key}" alt="${r.merchant || 'Receipt'}" />`
+      : ''
+
+    const itemsHtml = items.length
+      ? items.map((i: any) => `
+          <div class="qv-item-row">
+            <span class="qv-item-desc">${i.description}</span>
+            <span class="qv-item-amount">${i.amount ? formatTotal(i.amount, r.currency) : ''}</span>
+          </div>`).join('')
+      : '<p style="font-family:var(--font-ui);font-size:13px;color:var(--text-mute);">No line items recorded.</p>'
+
+    const warrantyHtml = r.warranty_expiry
+      ? `<div class="qv-warranty">
+           <span class="qv-warranty-label">Warranty</span>
+           <span class="qv-warranty-text">${r.warranty_years ? r.warranty_years + ' year warranty' : ''} — expires ${formatDate(r.warranty_expiry)}</span>
+         </div>`
+      : ''
+
+    const notesHtml = r.notes
+      ? `<div class="qv-notes">${r.notes}</div>`
+      : ''
+
+    body.innerHTML = `
+      ${imageHtml}
+      <div class="qv-section">
+        <span class="qv-label">Merchant</span>
+        <div class="qv-merchant">${r.merchant || 'Unknown'}</div>
+        <div class="qv-meta-row">
+          <span>${formatDate(r.date)}</span>
+          ${r.category ? `<span>${r.category}</span>` : ''}
+          ${r.receipt_number ? `<span>Ref ${r.receipt_number}</span>` : ''}
+        </div>
+      </div>
+      <div class="qv-section">
+        <span class="qv-label">Payment</span>
+        <div class="qv-total-block">
+          <div class="qv-stat">
+            <span class="qv-stat-label">Total Paid</span>
+            <span class="qv-stat-value">${formatTotal(r.total, r.currency)}</span>
+          </div>
+          <div class="qv-stat">
+            <span class="qv-stat-label">Confidence</span>
+            <span class="qv-stat-value neutral">${r.confidence || ''}</span>
+          </div>
+        </div>
+      </div>
+      <div class="qv-section">
+        <span class="qv-label">Items</span>
+        <div class="qv-items-list">${itemsHtml}</div>
+      </div>
+      ${warrantyHtml}
+      ${notesHtml}
+    `
+
+    document.getElementById('qv-overlay')!.classList.add('open')
+    document.getElementById('qv-drawer')!.classList.add('open')
+  }
+
+  function closeDrawer() {
+    document.getElementById('qv-overlay')!.classList.remove('open')
+    document.getElementById('qv-drawer')!.classList.remove('open')
+  }
+
+  document.getElementById('qv-close')!.addEventListener('click', closeDrawer)
+  document.getElementById('qv-overlay')!.addEventListener('click', closeDrawer)
+
+  // ── Load receipts ─────────────────────────────────────────
   async function init() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -187,7 +325,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
     const { data, error } = await supabase
       .from('receipts')
-      .select('id, merchant, date, total, currency, category, warranty_expiry, confidence, created_at')
+      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, created_at')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
@@ -198,10 +336,26 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       return
     }
 
-    allReceipts = data
+    // Fetch line items for all receipts in one query
+    const ids = data.map((r: any) => r.id)
+    let lineItemMap: Record<string, any[]> = {}
+    if (ids.length) {
+      const { data: lines } = await supabase
+        .from('receipt_line_items')
+        .select('receipt_id, description, amount')
+        .in('receipt_id', ids)
+      if (lines) {
+        lines.forEach((l: any) => {
+          if (!lineItemMap[l.receipt_id]) lineItemMap[l.receipt_id] = []
+          lineItemMap[l.receipt_id].push(l)
+        })
+      }
+    }
 
-    const countEl = document.getElementById('receipt-count')!
-    countEl.textContent = allReceipts.length + ' receipt' + (allReceipts.length !== 1 ? 's' : '')
+    allReceipts = data.map((r: any) => ({ ...r, line_items: lineItemMap[r.id] || [] }))
+
+    document.getElementById('receipt-count')!.textContent =
+      allReceipts.length + ' receipt' + (allReceipts.length !== 1 ? 's' : '')
 
     buildFilters(allReceipts)
     renderReceipts(allReceipts)
