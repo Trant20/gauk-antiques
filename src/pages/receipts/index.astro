@@ -657,5 +657,11 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     renderReceipts(allReceipts)
   }
 
-  init()
+  init().then(() => {
+    const urlReceipt = new URLSearchParams(window.location.search).get('receipt')
+    if (urlReceipt) {
+      const target = allReceipts.find((r: any) => r.id === urlReceipt)
+      if (target) openDrawer(target)
+    }
+  })
 </script>

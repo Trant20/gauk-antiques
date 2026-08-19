@@ -557,6 +557,8 @@ import AppBottomNav from '../components/AppBottomNav.astro'
         if (receipts && receipts.length) {
           const r = receipts[0]
           drawerReceiptRow.style.display = 'flex'
+          const drawerReceiptLink = document.getElementById('drawer-receipt-link') as HTMLAnchorElement
+          if (drawerReceiptLink) drawerReceiptLink.href = '/receipts?receipt=' + r.id
         }
       })
     drawerViewBtn.style.background = gi ? 'var(--gi-sage)' : 'var(--ga-gold)'
