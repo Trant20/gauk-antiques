@@ -182,6 +182,8 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     .drawer-footer { padding: 16px 22px; border-top: 1px solid var(--border); flex-shrink: 0; }
     .drawer-view-btn { display: block; width: 100%; padding: 13px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; text-align: center; text-decoration: none; transition: opacity 0.15s; }
     .drawer-view-btn:hover { opacity: 0.85; }
+    .drawer-attach-receipt-btn { display: block; padding: 11px; border: 1px solid var(--gr-violet); color: var(--gr-violet); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.15s; }
+    .drawer-attach-receipt-btn:hover { background: rgba(122,110,158,0.08); }
     .drawer-delete-btn { width: 100%; padding: 11px; background: none; border: 1px solid var(--border-hi); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); transition: border-color 0.2s, color 0.2s; }
     .drawer-delete-btn:hover { border-color: #c46028; color: #c46028; }
 
@@ -328,6 +330,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
   </div>
   <div class="drawer-footer" style="display:flex; flex-direction:column; gap:8px;">
     <a href="#" class="drawer-view-btn" id="drawer-view-btn">View full report</a>
+    <a href="#" class="drawer-attach-receipt-btn" id="drawer-attach-receipt-btn">Attach a receipt</a>
     <button class="drawer-delete-btn" id="drawer-delete-btn">Delete item</button>
   </div>
 </div>
@@ -542,6 +545,8 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     drawerNotes.value = item.notes || ''
     drawerNotesHint.textContent = ''
     drawerViewBtn.href = `/valuation/${item.id}`
+    const drawerAttachBtn = document.getElementById('drawer-attach-receipt-btn') as HTMLAnchorElement
+    if (drawerAttachBtn) drawerAttachBtn.href = `/receipts/scan?identification_id=${item.id}`
     drawerViewBtn.style.background = gi ? 'var(--gi-sage)' : 'var(--ga-gold)'
     drawerViewBtn.style.color = '#fff'
 

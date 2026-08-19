@@ -49,6 +49,12 @@ const creditCostIdentify = Number(creditSetting?.value ?? 1)
   <div class="scanner-body">
     <div class="scanner-widget-wrap">
       <GRHeroWidget site_id={RECEIPTS_SITE_ID} credit_cost={creditCostIdentify} />
+      <script is:inline>
+        // Read identification_id from URL and store for widget to use
+        var _urlParams = new URLSearchParams(window.location.search)
+        var _identId = _urlParams.get('identification_id')
+        if (_identId) window.__gauk_identification_id = _identId
+      </script>
     </div>
   </div>
 

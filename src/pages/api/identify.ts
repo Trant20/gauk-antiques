@@ -66,7 +66,7 @@ function json(data: unknown, status = 200) {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { key, secondary_key, context = 'general', site_id: requestedSiteId } = await request.json()
+    const { key, secondary_key, context = 'general', site_id: requestedSiteId, identification_id: linkedIdentId } = await request.json()
 
     if (!key) return json({ error: 'No image key provided' }, 400)
 
@@ -264,7 +264,8 @@ export const POST: APIRoute = async ({ request }) => {
           confidence:      r.confidence      || null,
           notes:           r.notes           || null,
           result_json:     result,
-          credits_used:    1
+          credits_used:    1,
+          identification_id: linkedIdentId || null
         })
         .select()
         .single()
