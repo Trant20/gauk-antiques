@@ -130,6 +130,14 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   .lb-overlay.open { display: flex; }
   .lb-img { max-width: 96vw; max-height: 92vh; object-fit: contain; box-shadow: 0 8px 48px rgba(0,0,0,0.6); }
   .lb-close { position: fixed; top: 16px; right: 20px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 20px; cursor: pointer; z-index: 201; }
+  .lb-nav { position: fixed; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 20px; cursor: pointer; z-index: 201; }
+  .lb-prev { left: 16px; }
+  .lb-next { right: 64px; }
+  .qv-item-image { width: 100%; max-height: 200px; object-fit: contain; background: var(--surface-hi); border-bottom: 1px solid var(--border); display: block; padding: 12px; box-sizing: border-box; cursor: zoom-in; }
+  .qv-add-photo { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  .qv-add-photo:hover { background: var(--surface-hi); }
+  .qv-add-photo-label { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); }
+  .qv-add-photo-sub { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); margin-top: 2px; }
 
   /* States */
   .loading-state { display: flex; align-items: center; justify-content: center; min-height: 50vh; }
@@ -228,8 +236,11 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 <!-- Lightbox -->
 <div class="lb-overlay" id="lb-overlay">
   <button class="lb-close" id="lb-close">&#x2715;</button>
+  <button class="lb-nav lb-prev" id="lb-prev" style="display:none;">&#x2039;</button>
+  <button class="lb-nav lb-next" id="lb-next" style="display:none;">&#x203a;</button>
   <img class="lb-img" id="lb-img" src="" alt="Receipt" />
 </div>
+<input type="file" id="item-photo-input" accept="image/*" style="display:none;" />
 
 <AppBottomNav activePage="receipts" />
 
@@ -423,6 +434,9 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     const imageHtml = r.image_key
       ? `<img class="qv-image" src="${R2_CDN}/${r.image_key}" alt="${r.merchant || 'Receipt'}" />`
       : ''
+    const itemImgHtml = r.item_image_key
+      ? `<img class="qv-item-image" id="qv-item-img" src="${R2_CDN}/${r.item_image_key}" alt="Item photo" />`
+      : `<div class="qv-add-photo" id="qv-add-photo-btn"><div><div class="qv-add-photo-label">Add item photo</div><div class="qv-add-photo-sub">Photograph the item this receipt covers</div></div></div>`
 
     // Merchant section
     const merchantMeta = [
@@ -488,6 +502,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     const confHtml = '<div class="qv-confidence-wrap">' + confGauge(confScore(r.confidence || 'High')) + '<span class="qv-conf-text">' + confNote(r.confidence || 'High') + '</span></div>'
     body.innerHTML = `
       ${imageHtml}
+      ${itemImgHtml}
       <div class="qv-section">
         <span class="qv-label">Merchant</span>
         <div class="qv-merchant">${r.merchant || 'Unknown'}</div>
@@ -523,15 +538,45 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     document.getElementById('qv-overlay')!.classList.add('open')
     document.getElementById('qv-drawer')!.classList.add('open')
 
-    // Wire lightbox to receipt image
-    if (r.image_key) {
-      const qvImg = document.querySelector('.qv-image') as HTMLImageElement | null
-      if (qvImg) {
-        qvImg.style.cursor = 'zoom-in'
-        qvImg.addEventListener('click', () => {
-          if ((window as any).__lbOpen) (window as any).__lbOpen(qvImg.src)
-        })
-      }
+    // Wire lightbox — receipt image and item photo
+    const lbImages: string[] = []
+    if (r.image_key) lbImages.push(R2_CDN + '/' + r.image_key)
+    if (r.item_image_key) lbImages.push(R2_CDN + '/' + r.item_image_key)
+
+    const qvImg = document.querySelector('.qv-image') as HTMLImageElement | null
+    if (qvImg) qvImg.addEventListener('click', () => { if ((window as any).__lbOpenSet) (window as any).__lbOpenSet(lbImages, 0) })
+
+    const qvItemImg = document.getElementById('qv-item-img') as HTMLImageElement | null
+    if (qvItemImg) qvItemImg.addEventListener('click', () => { if ((window as any).__lbOpenSet) (window as any).__lbOpenSet(lbImages, lbImages.length > 1 ? 1 : 0) })
+
+    // Wire add photo button
+    const addPhotoBtn = document.getElementById('qv-add-photo-btn')
+    if (addPhotoBtn) {
+      addPhotoBtn.addEventListener('click', () => {
+        const input = document.getElementById('item-photo-input') as HTMLInputElement
+        input.onchange = async () => {
+          const file = input.files?.[0]
+          if (!file || !currentReceiptId) return
+          addPhotoBtn.innerHTML = '<div style="font-family:var(--font-ui);font-size:12px;color:var(--text-mute);">Uploading...</div>'
+          try {
+            const stripped = await stripExif(file)
+            const fd = new FormData()
+            fd.append('file', stripped)
+            const up = await fetch('/api/upload-url', { method: 'POST', body: fd })
+            const upData = await up.json()
+            if (upData.error) throw new Error(upData.error)
+            await supabase.from('receipts').update({ item_image_key: upData.key }).eq('id', currentReceiptId)
+            const idx = allReceipts.findIndex((r: any) => r.id === currentReceiptId)
+            if (idx > -1) allReceipts[idx].item_image_key = upData.key
+            const updated = allReceipts.find((r: any) => r.id === currentReceiptId)
+            if (updated) openDrawer(updated)
+          } catch (err) {
+            console.error(err)
+            addPhotoBtn.innerHTML = '<div style="font-family:var(--font-ui);font-size:12px;color:#c46028;">Upload failed. Try again.</div>'
+          }
+        }
+        input.click()
+      })
     }
   }
 
@@ -583,12 +628,38 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   })
 
   // Lightbox
+  let lbImages: string[] = []
+  let lbIndex = 0
+
   function openLightbox(src: string) {
-    const lb = document.getElementById('lb-overlay')!
+    lbImages = [src]; lbIndex = 0
     const img = document.getElementById('lb-img') as HTMLImageElement
     img.src = src
-    lb.classList.add('open')
+    document.getElementById('lb-prev')!.style.display = 'none'
+    document.getElementById('lb-next')!.style.display = 'none'
+    document.getElementById('lb-overlay')!.classList.add('open')
   }
+
+  function openLightboxSet(images: string[], index: number) {
+    lbImages = images; lbIndex = index
+    const img = document.getElementById('lb-img') as HTMLImageElement
+    img.src = images[index]
+    const showNav = images.length > 1
+    document.getElementById('lb-prev')!.style.display = showNav ? 'flex' : 'none'
+    document.getElementById('lb-next')!.style.display = showNav ? 'flex' : 'none'
+    document.getElementById('lb-overlay')!.classList.add('open')
+  }
+
+  document.getElementById('lb-prev')!.addEventListener('click', (e) => {
+    e.stopPropagation()
+    lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length
+    ;(document.getElementById('lb-img') as HTMLImageElement).src = lbImages[lbIndex]
+  })
+  document.getElementById('lb-next')!.addEventListener('click', (e) => {
+    e.stopPropagation()
+    lbIndex = (lbIndex + 1) % lbImages.length
+    ;(document.getElementById('lb-img') as HTMLImageElement).src = lbImages[lbIndex]
+  })
   function closeLightbox() {
     document.getElementById('lb-overlay')!.classList.remove('open')
   }
@@ -597,8 +668,30 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
   // Expose so openDrawer can wire it up
   ;(window as any).__lbOpen = openLightbox
+  ;(window as any).__lbOpenSet = openLightboxSet
 
   // ── Load receipts ─────────────────────────────────────────
+  function stripExif(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.naturalWidth; canvas.height = img.naturalHeight
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { reject(new Error('Canvas unavailable')); return }
+        ctx.drawImage(img, 0, 0)
+        canvas.toBlob(blob => {
+          URL.revokeObjectURL(url)
+          if (!blob) { reject(new Error('toBlob failed')); return }
+          resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }))
+        }, 'image/jpeg', 0.92)
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
+      img.src = url
+    })
+  }
+
   async function init() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -608,7 +701,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
     const { data, error } = await supabase
       .from('receipts')
-      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, result_json, identification_id, created_at')
+      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, item_image_key, result_json, identification_id, created_at')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
@@ -648,6 +741,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       rj_time:         r.result_json?.time          || null,
       rj_payment:      r.result_json?.payment_method || null,
       identification_id: r.identification_id || null,
+      item_image_key: r.item_image_key || null,
     }))
 
     document.getElementById('receipt-count')!.textContent =
