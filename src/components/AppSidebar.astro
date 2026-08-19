@@ -1,6 +1,6 @@
 ---
 interface Props {
-  activePage?: 'vault' | 'identify' | 'audit' | 'ebay-search' | 'search-history' | 'videos' | 'articles' | 'account'
+  activePage?: 'vault' | 'identify' | 'audit' | 'receipts' | 'ebay-search' | 'search-history' | 'videos' | 'articles' | 'account'
 }
 const { activePage = 'vault' } = Astro.props
 import { ANTIQUES_SITE_ID } from '../lib/constants'
@@ -26,6 +26,10 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     <a href="/audit" class={`sb-link${activePage === 'audit' ? ' active' : ''}`}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Room Audit</span>
+    </a>
+    <a href="/receipts" class={`sb-link${activePage === 'receipts' ? ' active' : ''}`}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+      Receipts
     </a>
     <a href="/search/ebay" class={`sb-link${activePage === 'ebay-search' ? ' active' : ''}`}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>

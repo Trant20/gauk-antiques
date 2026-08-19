@@ -18,7 +18,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
   .launcher-header-title { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
   .launcher-header-sub { font-size: 13px; color: var(--text-mute); line-height: 1.6; }
 
-  .launcher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 640px; }
+  .launcher-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 960px; }
   @media (max-width: 600px) { .launcher-grid { grid-template-columns: 1fr; } }
 
   .scanner-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border-hi); padding: 28px 24px; text-decoration: none; color: inherit; transition: border-color 0.15s, background 0.15s; cursor: pointer; }
@@ -27,6 +27,10 @@ import AppBottomNav from '../components/AppBottomNav.astro'
   .scanner-card-ga:hover { border-color: var(--ga-gold-hi); border-left-color: var(--ga-gold-hi); }
   .scanner-card-gi { border-left: 3px solid var(--gi-sage); }
   .scanner-card-gi:hover { border-color: #8aa896; border-left-color: #8aa896; }
+  .scanner-card-gr { border-left: 3px solid var(--gr-violet); }
+  .scanner-card-gr:hover { border-color: var(--gr-violet-hi); border-left-color: var(--gr-violet-hi); }
+  .scanner-card-gr .scanner-card-icon { color: var(--gr-violet); }
+  .scanner-card-gr .scanner-card-action { color: var(--gr-violet); }
 
   .scanner-card-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
   .scanner-card-ga .scanner-card-icon { color: var(--ga-gold-hi); }
@@ -74,12 +78,21 @@ import AppBottomNav from '../components/AppBottomNav.astro'
           <div class="scanner-card-desc">Audit your home contents for insurance. Room by room walkthrough, replacement cost estimates and coverage gap analysis.</div>
           <div class="scanner-card-action">Start scanning →</div>
         </a>
+        <!-- GR Receipts Scanner -->
+        <a href="/receipts/scan" class="scanner-card scanner-card-gr">
+          <div class="scanner-card-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+          </div>
+          <div class="scanner-card-name">Receipt Scanner</div>
+          <div class="scanner-card-desc">Photograph any receipt. We extract every item, price and date into a searchable encrypted vault — proof of purchase, always ready.</div>
+          <div class="scanner-card-action">Start scanning →</div>
+        </a>
       </div>
     </div>
   </div>
 </div>
 
-<AppBottomNav activePage="identify" />
+<AppBottomNav activePage="scan" />
 
 <script>
   import { supabase } from '../lib/supabase-browser'
