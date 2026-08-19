@@ -3,7 +3,7 @@ import { env } from 'cloudflare:workers'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { getPromptConfig } from '../../lib/ai'
-import { ANTIQUES_SITE_ID, GI_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
+import { ANTIQUES_SITE_ID, GI_SITE_ID, RECEIPTS_SITE_ID, CLAUDE_INPUT_COST_PENCE_PER_TOKEN, CLAUDE_OUTPUT_COST_PENCE_PER_TOKEN } from '../../lib/constants'
 import type { CloudflareEnv } from '../../lib/constants'
 
 const GUEST_IDENTIFY_LIMIT = 2
@@ -71,7 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!key) return json({ error: 'No image key provided' }, 400)
 
     // Validate site_id — only known properties accepted, default to GA
-    const VALID_SITE_IDS = new Set([ANTIQUES_SITE_ID, GI_SITE_ID])
+    const VALID_SITE_IDS = new Set([ANTIQUES_SITE_ID, GI_SITE_ID, RECEIPTS_SITE_ID])
     const site_id = requestedSiteId && VALID_SITE_IDS.has(requestedSiteId) ? requestedSiteId : ANTIQUES_SITE_ID
 
     const supabase = getSupabase()
@@ -89,7 +89,7 @@ export const POST: APIRoute = async ({ request }) => {
       const { data: costSetting } = await supabase
         .from('site_settings')
         .select('value')
-        .eq('site_id', ANTIQUES_SITE_ID)
+        .eq('site_id', site_id)
         .eq('key', 'credit_cost_identify')
         .single()
       const creditCost = parseInt(costSetting?.value ?? '1', 10)
@@ -242,25 +242,71 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ error: 'AI returned malformed response' }, 500)
     }
 
-    const { data: record, error: dbError } = await supabase
-      .from('identifications')
-      .insert({
-        site_id: site_id,
-        user_id: userId,
-        image_key: key,
-        secondary_image_key: secondary_key || null,
-        result_json: result,
-        category: (result as any).category,
-        maker: (result as any).maker,
-        period: (result as any).period,
-        value_range_low: (result as any).value_range_low,
-        value_range_high: (result as any).value_range_high,
-        confidence: (result as any).confidence
-      })
-      .select()
-      .single()
+    let record: { id: string } | null = null
 
-    if (dbError) console.error('DB write error:', dbError)
+    if (site_id === RECEIPTS_SITE_ID) {
+      // ── Receipts: write to receipts + receipt_line_items ──────────────────
+      const r = result as any
+      const { data: receiptRecord, error: receiptError } = await supabase
+        .from('receipts')
+        .insert({
+          site_id,
+          user_id: userId,
+          image_key: key,
+          merchant:        r.merchant        || null,
+          date:            r.date            || null,
+          total:           r.total           ?? null,
+          currency:        r.currency        || null,
+          category:        r.category        || null,
+          receipt_number:  r.receipt_number  || null,
+          warranty_years:  r.warranty_years  ?? null,
+          warranty_expiry: r.warranty_expiry || null,
+          confidence:      r.confidence      || null,
+          notes:           r.notes           || null,
+          result_json:     result,
+          credits_used:    1
+        })
+        .select()
+        .single()
+
+      if (receiptError) {
+        console.error('Receipt DB write error:', receiptError)
+      } else if (receiptRecord && r.items?.length) {
+        const lineItems = r.items.map((item: any) => ({
+          receipt_id:  receiptRecord.id,
+          description: item.description,
+          amount:      item.amount ?? null
+        }))
+        const { error: lineError } = await supabase
+          .from('receipt_line_items')
+          .insert(lineItems)
+        if (lineError) console.error('Receipt line items write error:', lineError)
+      }
+
+      record = receiptRecord
+    } else {
+      // ── GA / GI: write to identifications ─────────────────────────────────
+      const { data: idRecord, error: dbError } = await supabase
+        .from('identifications')
+        .insert({
+          site_id,
+          user_id: userId,
+          image_key: key,
+          secondary_image_key: secondary_key || null,
+          result_json: result,
+          category: (result as any).category,
+          maker:    (result as any).maker,
+          period:   (result as any).period,
+          value_range_low:  (result as any).value_range_low,
+          value_range_high: (result as any).value_range_high,
+          confidence: (result as any).confidence
+        })
+        .select()
+        .single()
+
+      if (dbError) console.error('DB write error:', dbError)
+      record = idRecord
+    }
 
     // Log token usage
     const inputTokens = response.usage.input_tokens
