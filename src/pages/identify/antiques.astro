@@ -1,6 +1,7 @@
 ---
 import { ANTIQUES_SITE_ID } from '../../lib/constants'
 import AppLayout from '../../layouts/AppLayout.astro'
+import AppBottomNav from '../../components/AppBottomNav.astro'
 import AIHeroWidget from '../../components/AIHeroWidget.astro'
 import { supabase } from '../../lib/supabase'
 
@@ -27,7 +28,7 @@ const creditCostIdentify = Number(creditSetting?.value ?? 1)
   .scanner-vault-icon { color: var(--ga-gold-hi); }
 
   .scanner-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 32px 24px 48px; }
-  @media (max-width: 768px) { .scanner-body { padding: 20px 16px 40px; } }
+  @media (max-width: 768px) { .scanner-body { padding: 20px 16px 80px; } }
 
   .scanner-widget-wrap { width: 100%; max-width: 560px; }
 
@@ -212,4 +213,5 @@ const creditCostIdentify = Number(creditSetting?.value ?? 1)
   })
 </script>
 
+<AppBottomNav activePage="scan" />
 </AppLayout>
