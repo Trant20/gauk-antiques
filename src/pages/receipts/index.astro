@@ -6,28 +6,60 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 <AppLayout title="My Receipts — GAUK">
 <style>
   .app-shell { display: flex; height: 100vh; overflow: hidden; }
-  .app-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-  .page-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; flex-shrink: 0; }
+  .app-main  { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .page-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; flex-shrink: 0; gap: 16px; }
   @media (max-width: 768px) { .app-main { margin-left: 0; padding-bottom: 64px; } }
+
+  .receipts-body { flex: 1; overflow-y: auto; padding: 24px; }
+  @media (max-width: 768px) { .receipts-body { padding: 16px; } }
+
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .filter-chip { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; padding: 5px 14px; border: 1px solid var(--border-hi); background: none; color: var(--text-mute); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .filter-chip:hover { border-color: var(--gr-violet); color: var(--text); }
+  .filter-chip.active { border-color: var(--gr-violet); color: var(--gr-violet); }
+
+  .receipt-list { display: flex; flex-direction: column; gap: 2px; }
+  .receipt-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--gr-violet); display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 16px 20px; gap: 16px; cursor: pointer; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+  .receipt-card:hover { background: var(--surface-hi); border-color: var(--border-hi); }
+  .receipt-merchant { font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .receipt-meta { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .receipt-category { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gr-violet); background: rgba(122,110,158,0.12); padding: 2px 8px; }
+  .receipt-total { font-family: var(--font-ui); font-size: 18px; font-weight: 700; color: var(--gr-violet); text-align: right; white-space: nowrap; }
+  .receipt-currency { font-family: var(--font-ui); font-size: 10px; color: var(--text-mute); text-align: right; margin-top: 2px; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 16px; }
+  .loading-state { display: flex; align-items: center; justify-content: center; min-height: 50vh; }
+  .loading-dots { display: flex; gap: 6px; }
+  .loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--gr-violet); animation: dot-pulse 1.2s ease-in-out infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot-pulse { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
 </style>
+
 <div class="app-shell">
   <AppSidebar activePage="receipts" />
   <div class="app-main">
 
     <div class="page-topbar">
       <span style="font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute);">My Receipts</span>
-      <a href="/receipts/scan" style="margin-left: auto; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 6px 14px;">+ Scan Receipt</a>
+      <span id="receipt-count" style="font-family: var(--font-ui); font-size: 12px; color: var(--text-faint);"></span>
+      <a href="/receipts/scan" style="margin-left: auto; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 6px 14px; flex-shrink: 0;">+ Scan Receipt</a>
     </div>
 
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; padding: 48px 24px;">
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="8" y="4" width="32" height="40" rx="2" stroke="var(--gr-violet)" stroke-width="1.6" fill="none" opacity="0.5"/>
-        <line x1="14" y1="16" x2="34" y2="16" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
-        <line x1="14" y1="22" x2="34" y2="22" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
-        <line x1="14" y1="28" x2="28" y2="28" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
-      </svg>
-      <p style="font-family: var(--font-ui); font-size: 14px; color: var(--text-mute); text-align: center; max-width: 280px; line-height: 1.7;">No receipts yet. Scan your first receipt to start building your proof of purchase vault.</p>
-      <a href="/receipts/scan" style="font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 10px 24px; margin-top: 8px;">Scan a Receipt</a>
+    <div class="receipts-body">
+      <div class="filter-bar" id="filter-bar" style="display: none;"></div>
+      <div class="loading-state" id="loading-state"><div class="loading-dots"><span></span><span></span><span></span></div></div>
+      <div class="receipt-list" id="receipt-list" style="display: none;"></div>
+      <div class="empty-state" id="empty-state" style="display: none;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="4" width="32" height="40" rx="2" stroke="var(--gr-violet)" stroke-width="1.6" fill="none" opacity="0.5"/>
+          <line x1="14" y1="16" x2="34" y2="16" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
+          <line x1="14" y1="22" x2="34" y2="22" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
+          <line x1="14" y1="28" x2="28" y2="28" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
+        </svg>
+        <p style="font-family: var(--font-ui); font-size: 14px; color: var(--text-mute); text-align: center; max-width: 280px; line-height: 1.7;">No receipts yet. Scan your first receipt to start building your proof of purchase vault.</p>
+        <a href="/receipts/scan" style="font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 10px 24px; margin-top: 8px;">Scan a Receipt</a>
+      </div>
     </div>
 
   </div>
@@ -37,6 +69,143 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
 <script>
   import { supabase } from '../../lib/supabase-browser'
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/receipts' }
+
+  let allReceipts: any[] = []
+  let activeCategory = 'all'
+
+  function formatDate(dateStr: string) {
+    if (!dateStr) return ''
+    try { return new Date(dateStr).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' }) }
+    catch (e) { return dateStr }
+  }
+
+  function formatTotal(total: number, currency: string) {
+    if (!total) return ''
+    const symbol: Record<string, string> = { NZD: 'NZ$', AUD: 'A$', GBP: '£', USD: '$', EUR: '€' }
+    return (symbol[currency] || (currency ? currency + ' ' : '$')) + Number(total).toFixed(2)
+  }
+
+  function renderReceipts(receipts: any[]) {
+    const list = document.getElementById('receipt-list')!
+    list.innerHTML = ''
+
+    if (!receipts.length) {
+      list.style.display = 'none'
+      document.getElementById('empty-state')!.style.display = 'flex'
+      return
+    }
+
+    document.getElementById('empty-state')!.style.display = 'none'
+    list.style.display = 'flex'
+
+    receipts.forEach((r: any) => {
+      const card = document.createElement('a')
+      card.href = '/receipts/' + r.id
+      card.className = 'receipt-card'
+
+      const left = document.createElement('div')
+
+      const merchant = document.createElement('div')
+      merchant.className = 'receipt-merchant'
+      merchant.textContent = r.merchant || 'Unknown merchant'
+
+      const meta = document.createElement('div')
+      meta.className = 'receipt-meta'
+
+      if (r.date) {
+        const d = document.createElement('span')
+        d.textContent = formatDate(r.date)
+        meta.appendChild(d)
+      }
+
+      if (r.category) {
+        const cat = document.createElement('span')
+        cat.className = 'receipt-category'
+        cat.textContent = r.category
+        meta.appendChild(cat)
+      }
+
+      if (r.warranty_expiry) {
+        const w = document.createElement('span')
+        w.style.cssText = 'color: var(--gr-violet-hi); font-size: 11px;'
+        w.textContent = 'Warranty to ' + formatDate(r.warranty_expiry)
+        meta.appendChild(w)
+      }
+
+      left.appendChild(merchant)
+      left.appendChild(meta)
+
+      const right = document.createElement('div')
+      const total = document.createElement('div')
+      total.className = 'receipt-total'
+      total.textContent = formatTotal(r.total, r.currency)
+      const curr = document.createElement('div')
+      curr.className = 'receipt-currency'
+      curr.textContent = r.currency || ''
+      right.appendChild(total)
+      right.appendChild(curr)
+
+      card.appendChild(left)
+      card.appendChild(right)
+      list.appendChild(card)
+    })
+  }
+
+  function buildFilters(receipts: any[]) {
+    const categories: string[] = ['all']
+    receipts.forEach((r: any) => {
+      if (r.category && !categories.includes(r.category)) categories.push(r.category)
+    })
+    if (categories.length <= 2) return
+
+    const bar = document.getElementById('filter-bar')!
+    bar.innerHTML = ''
+    bar.style.display = 'flex'
+
+    categories.forEach((cat: string) => {
+      const chip = document.createElement('button')
+      chip.className = 'filter-chip' + (cat === 'all' ? ' active' : '')
+      chip.dataset.cat = cat
+      chip.textContent = cat === 'all' ? 'All' : cat
+      chip.addEventListener('click', () => {
+        activeCategory = cat
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'))
+        chip.classList.add('active')
+        const filtered = cat === 'all' ? allReceipts : allReceipts.filter((r: any) => r.category === cat)
+        renderReceipts(filtered)
+      })
+      bar.appendChild(chip)
+    })
+  }
+
+  async function init() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/receipts'
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('receipts')
+      .select('id, merchant, date, total, currency, category, warranty_expiry, confidence, created_at')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+
+    document.getElementById('loading-state')!.style.display = 'none'
+
+    if (error || !data) {
+      document.getElementById('empty-state')!.style.display = 'flex'
+      return
+    }
+
+    allReceipts = data
+
+    const countEl = document.getElementById('receipt-count')!
+    countEl.textContent = allReceipts.length + ' receipt' + (allReceipts.length !== 1 ? 's' : '')
+
+    buildFilters(allReceipts)
+    renderReceipts(allReceipts)
+  }
+
+  init()
 </script>
