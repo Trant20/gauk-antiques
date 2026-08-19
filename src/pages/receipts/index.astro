@@ -4,6 +4,12 @@ import AppSidebar from '../../components/AppSidebar.astro'
 import AppBottomNav from '../../components/AppBottomNav.astro'
 ---
 <AppLayout title="My Receipts — GAUK">
+<style>
+  .app-shell { display: flex; height: 100vh; overflow: hidden; }
+  .app-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .page-topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; flex-shrink: 0; }
+  @media (max-width: 768px) { .app-main { margin-left: 0; padding-bottom: 64px; } }
+</style>
 <div class="app-shell">
   <AppSidebar activePage="receipts" />
   <div class="app-main">
