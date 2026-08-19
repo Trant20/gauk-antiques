@@ -13,7 +13,7 @@ const { site_id, credit_cost = 1 } = Astro.props
 
     <!-- Scan overlay -->
     <div id="gr-scan-overlay" style="display: none; position: absolute; inset: 0; z-index: 10; pointer-events: none; overflow: hidden;">
-      <div id="gr-scan-line" style="position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, var(--gr-violet), transparent); box-shadow: 0 0 12px 2px rgba(122,110,158,0.6); animation: grScanLine 1.8s ease-in-out infinite;"></div>
+      <div id="gr-scan-line" style="position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, var(--gr-violet), transparent); box-shadow: 0 0 12px 2px var(--gr-violet-a60); animation: grScanLine 1.8s ease-in-out infinite;"></div>
       <div style="position: absolute; inset: 0;">
         <span style="position: absolute; top: 12px; left: 12px; width: 24px; height: 24px; border-top: 1px solid var(--gr-violet); border-left: 1px solid var(--gr-violet);"></span>
         <span style="position: absolute; bottom: 12px; right: 12px; width: 24px; height: 24px; border-bottom: 1px solid var(--gr-violet); border-right: 1px solid var(--gr-violet);"></span>
@@ -25,12 +25,12 @@ const { site_id, credit_cost = 1 } = Astro.props
 
     <!-- Placeholder -->
     <div id="gr-upload-placeholder" style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
-      <svg width="48" height="44" viewBox="0 0 48 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="6" width="40" height="32" rx="2" stroke="rgba(122,110,158,0.6)" stroke-width="1.6" fill="none"/>
-        <line x1="4" y1="14" x2="44" y2="14" stroke="rgba(122,110,158,0.6)" stroke-width="1.6"/>
-        <line x1="12" y1="21" x2="36" y2="21" stroke="rgba(122,110,158,0.4)" stroke-width="1.2"/>
-        <line x1="12" y1="26" x2="30" y2="26" stroke="rgba(122,110,158,0.4)" stroke-width="1.2"/>
-        <line x1="12" y1="31" x2="26" y2="31" stroke="rgba(122,110,158,0.4)" stroke-width="1.2"/>
+      <svg width="48" height="44" viewBox="0 0 48 44" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--gr-violet);">
+        <rect x="4" y="6" width="40" height="32" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" opacity="0.6"/>
+        <line x1="4" y1="14" x2="44" y2="14" stroke="currentColor" stroke-width="1.6" opacity="0.6"/>
+        <line x1="12" y1="21" x2="36" y2="21" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
+        <line x1="12" y1="26" x2="30" y2="26" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
+        <line x1="12" y1="31" x2="26" y2="31" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
       </svg>
       <p style="font-family: var(--font-ui); font-size: clamp(13px,1.3vw,15px); color: var(--text-mute); letter-spacing: 0.02em;">Tap to photograph or upload a receipt</p>
     </div>
@@ -249,7 +249,7 @@ const { site_id, credit_cost = 1 } = Astro.props
       var identifyData = await identifyRes.json();
 
       if (identifyData.error === 'Insufficient credits') {
-        statusEl.innerHTML = 'You\'ve used your scans. <a href="/account" style="color:var(--gr-violet);text-decoration:none;border-bottom:1px solid rgba(122,110,158,.4);">Top up in your account</a> to keep scanning.';
+        statusEl.innerHTML = 'You\'ve used your scans. <a href="/account" style="color:var(--gr-violet);text-decoration:none;border-bottom:1px solid var(--gr-violet-a40);">Top up in your account</a> to keep scanning.';
         statusEl.style.display = 'block';
         setScanActive(false);
         return;
