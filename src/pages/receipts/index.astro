@@ -134,10 +134,13 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   .lb-prev { left: 16px; }
   .lb-next { right: 64px; }
   .qv-item-image { width: 100%; max-height: 200px; object-fit: contain; background: var(--surface-hi); border-bottom: 1px solid var(--border); display: block; padding: 12px; box-sizing: border-box; cursor: zoom-in; }
-  .qv-add-photo { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
-  .qv-add-photo:hover { background: var(--surface-hi); }
-  .qv-add-photo-label { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); }
-  .qv-add-photo-sub { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+  .qv-photo-strip { display: flex; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); overflow-x: auto; flex-wrap: nowrap; }
+  .qv-photo-thumb { position: relative; flex-shrink: 0; width: 80px; height: 80px; cursor: zoom-in; }
+  .qv-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .qv-photo-delete { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: rgba(0,0,0,0.7); color: white; border: none; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .qv-photo-add { flex-shrink: 0; width: 80px; height: 80px; border: 1px dashed var(--border-hi); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; transition: border-color 0.15s; color: var(--text-mute); }
+  .qv-photo-add:hover { border-color: var(--gr-violet); color: var(--gr-violet); }
+  .qv-photo-add-label { font-family: var(--font-ui); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 
   /* States */
   .loading-state { display: flex; align-items: center; justify-content: center; min-height: 50vh; }
@@ -434,9 +437,19 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     const imageHtml = r.image_key
       ? `<img class="qv-image" src="${R2_CDN}/${r.image_key}" alt="${r.merchant || 'Receipt'}" />`
       : ''
-    const itemImgHtml = r.item_image_key
-      ? `<img class="qv-item-image" id="qv-item-img" src="${R2_CDN}/${r.item_image_key}" alt="Item photo" />`
-      : `<div class="qv-add-photo" id="qv-add-photo-btn"><div><div class="qv-add-photo-label">Add item photo</div><div class="qv-add-photo-sub">Photograph the item this receipt covers</div></div></div>`
+    const photos: any[] = r.receipt_images || []
+    const photoThumbsHtml = photos.map((img: any, idx: number) =>
+      `<div class="qv-photo-thumb" data-key="${img.image_key}" data-id="${img.id}" data-idx="${idx}">`
+      + `<img src="${R2_CDN}/${img.image_key}" alt="Item photo ${idx + 1}" />`
+      + `<button class="qv-photo-delete" data-img-id="${img.id}" title="Remove">&times;</button>`
+      + `</div>`
+    ).join('')
+    const itemImgHtml = `<div class="qv-photo-strip" id="qv-photo-strip">`
+      + photoThumbsHtml
+      + `<div class="qv-photo-add" id="qv-add-photo-btn">`
+      + `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`
+      + `<span class="qv-photo-add-label">Add photo</span>`
+      + `</div></div>`
 
     // Merchant section
     const merchantMeta = [
@@ -538,16 +551,34 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     document.getElementById('qv-overlay')!.classList.add('open')
     document.getElementById('qv-drawer')!.classList.add('open')
 
-    // Wire lightbox — receipt image and item photo
+    // Wire lightbox — receipt scan + all item photos
     const lbImages: string[] = []
     if (r.image_key) lbImages.push(R2_CDN + '/' + r.image_key)
-    if (r.item_image_key) lbImages.push(R2_CDN + '/' + r.item_image_key)
+    photos.forEach((img: any) => lbImages.push(R2_CDN + '/' + img.image_key))
 
     const qvImg = document.querySelector('.qv-image') as HTMLImageElement | null
     if (qvImg) qvImg.addEventListener('click', () => { if ((window as any).__lbOpenSet) (window as any).__lbOpenSet(lbImages, 0) })
 
-    const qvItemImg = document.getElementById('qv-item-img') as HTMLImageElement | null
-    if (qvItemImg) qvItemImg.addEventListener('click', () => { if ((window as any).__lbOpenSet) (window as any).__lbOpenSet(lbImages, lbImages.length > 1 ? 1 : 0) })
+    // Wire photo thumbnails — open lightbox at correct index
+    const strip = document.getElementById('qv-photo-strip')
+    if (strip) {
+      strip.querySelectorAll('.qv-photo-thumb').forEach((thumb: Element) => {
+        const idx = parseInt((thumb as HTMLElement).dataset.idx || '0')
+        thumb.querySelector('img')?.addEventListener('click', () => {
+          if ((window as any).__lbOpenSet) (window as any).__lbOpenSet(lbImages, idx + (r.image_key ? 1 : 0))
+        })
+        thumb.querySelector('.qv-photo-delete')?.addEventListener('click', async (e: Event) => {
+          e.stopPropagation()
+          const imgId = (e.currentTarget as HTMLElement).dataset.imgId
+          if (!imgId) return
+          await supabase.from('receipt_images').delete().eq('id', imgId)
+          const ri = allReceipts.findIndex((r: any) => r.id === currentReceiptId)
+          if (ri > -1) allReceipts[ri].receipt_images = allReceipts[ri].receipt_images.filter((img: any) => img.id !== imgId)
+          const updated = allReceipts.find((r: any) => r.id === currentReceiptId)
+          if (updated) openDrawer(updated)
+        })
+      })
+    }
 
     // Wire add photo button
     const addPhotoBtn = document.getElementById('qv-add-photo-btn')
@@ -557,7 +588,6 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
         input.onchange = async () => {
           const file = input.files?.[0]
           if (!file || !currentReceiptId) return
-          addPhotoBtn.innerHTML = '<div style="font-family:var(--font-ui);font-size:12px;color:var(--text-mute);">Uploading...</div>'
           try {
             const stripped = await stripExif(file)
             const fd = new FormData()
@@ -565,15 +595,20 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
             const up = await fetch('/api/upload-url', { method: 'POST', body: fd })
             const upData = await up.json()
             if (upData.error) throw new Error(upData.error)
-            await supabase.from('receipts').update({ item_image_key: upData.key }).eq('id', currentReceiptId)
-            const idx = allReceipts.findIndex((r: any) => r.id === currentReceiptId)
-            if (idx > -1) allReceipts[idx].item_image_key = upData.key
-            const updated = allReceipts.find((r: any) => r.id === currentReceiptId)
-            if (updated) openDrawer(updated)
+            const sortOrder = (allReceipts.find((r: any) => r.id === currentReceiptId)?.receipt_images?.length || 0)
+            const { data: newImg } = await supabase.from('receipt_images')
+              .insert({ receipt_id: currentReceiptId, image_key: upData.key, sort_order: sortOrder })
+              .select().single()
+            if (newImg) {
+              const ri = allReceipts.findIndex((r: any) => r.id === currentReceiptId)
+              if (ri > -1) allReceipts[ri].receipt_images = [...(allReceipts[ri].receipt_images || []), newImg]
+              const updated = allReceipts.find((r: any) => r.id === currentReceiptId)
+              if (updated) openDrawer(updated)
+            }
           } catch (err) {
-            console.error(err)
-            addPhotoBtn.innerHTML = '<div style="font-family:var(--font-ui);font-size:12px;color:#c46028;">Upload failed. Try again.</div>'
+            console.error('Upload failed:', err)
           }
+          input.value = ''
         }
         input.click()
       })
@@ -701,7 +736,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
     const { data, error } = await supabase
       .from('receipts')
-      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, item_image_key, result_json, identification_id, created_at')
+      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, result_json, identification_id, created_at')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
@@ -728,6 +763,22 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       }
     }
 
+    // Fetch item photos for all receipts
+    let receiptImagesMap: Record<string, any[]> = {}
+    if (ids.length) {
+      const { data: rimgs } = await supabase
+        .from('receipt_images')
+        .select('receipt_id, id, image_key, sort_order')
+        .in('receipt_id', ids)
+        .order('sort_order', { ascending: true })
+      if (rimgs) {
+        rimgs.forEach((img: any) => {
+          if (!receiptImagesMap[img.receipt_id]) receiptImagesMap[img.receipt_id] = []
+          receiptImagesMap[img.receipt_id].push(img)
+        })
+      }
+    }
+
     allReceipts = data.map((r: any) => ({
       ...r,
       line_items: lineItemMap[r.id] || [],
@@ -741,7 +792,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       rj_time:         r.result_json?.time          || null,
       rj_payment:      r.result_json?.payment_method || null,
       identification_id: r.identification_id || null,
-      item_image_key: r.item_image_key || null,
+      receipt_images: receiptImagesMap[r.id] || [],
     }))
 
     document.getElementById('receipt-count')!.textContent =
