@@ -1,0 +1,65 @@
+---
+import { RECEIPTS_SITE_ID } from '../../lib/constants'
+import AppLayout from '../../layouts/AppLayout.astro'
+import GRHeroWidget from '../../components/GRHeroWidget.astro'
+import { supabase } from '../../lib/supabase'
+
+const { data: creditSetting } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('site_id', RECEIPTS_SITE_ID)
+  .eq('key', 'credit_cost_identify')
+  .single()
+const creditCostIdentify = Number(creditSetting?.value ?? 1)
+---
+<AppLayout title="Receipt Scanner — GAUK">
+<style is:global>
+  .scanner-shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  .scanner-header { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+  .scanner-back { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; font-weight: 600; transition: color 0.15s; }
+  .scanner-back:hover { color: var(--text); }
+  .scanner-back-icon { color: var(--gr-violet); }
+  .scanner-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); font-weight: 600; }
+  .scanner-vault-link { display: flex; align-items: center; gap: 6px; color: var(--text-mute); text-decoration: none; transition: color 0.15s; }
+  .scanner-vault-link:hover { color: var(--text); }
+  .scanner-vault-icon { color: var(--gr-violet); }
+
+  .scanner-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 32px 24px 48px; }
+  @media (max-width: 768px) { .scanner-body { padding: 20px 16px 40px; } }
+
+  .scanner-widget-wrap { width: 100%; max-width: 560px; }
+</style>
+
+<div class="scanner-shell">
+
+  <div class="scanner-header">
+    <a href="/receipts" class="scanner-back">
+      <svg class="scanner-back-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      My Receipts
+    </a>
+    <span class="scanner-title">Receipt Scanner</span>
+    <a href="/receipts" class="scanner-vault-link" title="My Receipts">
+      <svg class="scanner-vault-icon" width="16" height="16" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" fill="currentColor"/><rect x="8" y="1" width="5" height="5" fill="currentColor"/><rect x="1" y="8" width="5" height="5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" fill="currentColor" opacity="0.28"/></svg>
+    </a>
+  </div>
+
+  <div class="scanner-body">
+    <div class="scanner-widget-wrap">
+      <GRHeroWidget site_id={RECEIPTS_SITE_ID} credit_cost={creditCostIdentify} />
+    </div>
+  </div>
+
+</div>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/receipts/scan' }
+  if (session) {
+    window.__gauk_user_id = session.user.id
+    window.__gauk_token = session.access_token
+  }
+</script>
+
+</AppLayout>

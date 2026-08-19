@@ -1,0 +1,292 @@
+---
+interface Props {
+  site_id: string
+  credit_cost?: number
+}
+const { site_id, credit_cost = 1 } = Astro.props
+---
+
+<div id="gr-upload-widget" data-site-id={site_id} data-credit-cost={credit_cost}>
+
+  <!-- Upload Zone -->
+  <div id="gr-upload-zone" style="width: 100%; max-width: 560px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border-hi); padding: clamp(36px,6.5vh,72px) 32px; display: flex; flex-direction: column; align-items: center; gap: 20px; cursor: pointer; position: relative; overflow: hidden; transition: border-color 0.2s;">
+
+    <!-- Scan overlay -->
+    <div id="gr-scan-overlay" style="display: none; position: absolute; inset: 0; z-index: 10; pointer-events: none; overflow: hidden;">
+      <div id="gr-scan-line" style="position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, var(--gr-violet), transparent); box-shadow: 0 0 12px 2px rgba(122,110,158,0.6); animation: grScanLine 1.8s ease-in-out infinite;"></div>
+      <div style="position: absolute; inset: 0;">
+        <span style="position: absolute; top: 12px; left: 12px; width: 24px; height: 24px; border-top: 1px solid var(--gr-violet); border-left: 1px solid var(--gr-violet);"></span>
+        <span style="position: absolute; bottom: 12px; right: 12px; width: 24px; height: 24px; border-bottom: 1px solid var(--gr-violet); border-right: 1px solid var(--gr-violet);"></span>
+      </div>
+    </div>
+
+    <!-- Preview image -->
+    <img id="gr-upload-preview" src="" alt="" style="display: none; width: 100%; max-height: 320px; object-fit: contain;" />
+
+    <!-- Placeholder -->
+    <div id="gr-upload-placeholder" style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+      <svg width="48" height="44" viewBox="0 0 48 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="6" width="40" height="32" rx="2" stroke="rgba(122,110,158,0.6)" stroke-width="1.6" fill="none"/>
+        <line x1="4" y1="14" x2="44" y2="14" stroke="rgba(122,110,158,0.6)" stroke-width="1.6"/>
+        <line x1="12" y1="21" x2="36" y2="21" stroke="rgba(122,110,158,0.4)" stroke-width="1.2"/>
+        <line x1="12" y1="26" x2="30" y2="26" stroke="rgba(122,110,158,0.4)" stroke-width="1.2"/>
+        <line x1="12" y1="31" x2="26" y2="31" stroke="rgba(122,110,158,0.4)" stroke-width="1.2"/>
+      </svg>
+      <p style="font-family: var(--font-ui); font-size: clamp(13px,1.3vw,15px); color: var(--text-mute); letter-spacing: 0.02em;">Tap to photograph or upload a receipt</p>
+    </div>
+
+    <!-- Status text -->
+    <p id="gr-upload-status" style="display: none; font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gr-violet); text-align: center;"></p>
+
+    <!-- Hidden file input -->
+    <input id="gr-file-input" type="file" accept="image/*" style="display: none;" />
+  </div>
+
+  <!-- Result card -->
+  <div id="gr-result-panel" style="display: none; width: 100%; max-width: 560px; margin: 24px auto 0;">
+    <div id="gr-result-card" style="background: var(--surface); border: 1px solid var(--border-hi); border-left: 3px solid var(--gr-violet); display: flex; flex-direction: column; gap: 0;">
+
+      <!-- Merchant + Date -->
+      <div style="padding: 20px 20px 0;">
+        <span id="gr-result-category" style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gr-violet);"></span>
+        <h3 id="gr-result-merchant" style="font-family: var(--font-ui); font-size: clamp(18px,3vw,22px); font-weight: 600; color: var(--text); line-height: 1.2; margin: 6px 0 4px;"></h3>
+        <p id="gr-result-date" style="font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); margin: 0 0 20px;"></p>
+      </div>
+
+      <!-- Total + Confidence -->
+      <div style="background: var(--surface-hi); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-mute);">Total Paid</span>
+          <span id="gr-result-total" style="font-family: var(--font-ui); font-size: clamp(20px,3vw,28px); font-weight: 700; color: var(--gr-violet);"></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-mute);">Confidence</span>
+          <span id="gr-result-confidence" style="font-family: var(--font-ui); font-size: clamp(20px,3vw,28px); font-weight: 700; color: var(--text);"></span>
+        </div>
+      </div>
+
+      <!-- Line items -->
+      <div id="gr-result-items" style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px;"></div>
+
+      <!-- Warranty -->
+      <div id="gr-result-warranty" style="display: none; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface-hi);">
+        <span style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gr-violet); display: block; margin-bottom: 6px;">Warranty</span>
+        <span id="gr-result-warranty-text" style="font-family: var(--font-ui); font-size: 14px; color: var(--text-dim);"></span>
+      </div>
+
+      <!-- Notes -->
+      <div id="gr-result-notes" style="display: none; padding: 14px 20px; border-bottom: 1px solid var(--border);">
+        <p id="gr-result-notes-text" style="font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); line-height: 1.7; margin: 0; font-style: italic;"></p>
+      </div>
+
+      <!-- Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
+        <span style="font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gr-violet);">GAUK Receipts</span>
+        <span id="gr-result-ref" style="font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; color: var(--text-mute);"></span>
+      </div>
+      <div id="gr-save-note" style="display: none; padding: 0 20px 14px; font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gr-violet);">Saved to your vault</div>
+
+    </div>
+
+    <!-- Scan again -->
+    <button id="gr-scan-again" style="margin-top: 16px; width: 100%; padding: 14px; background: none; border: 1px solid var(--border-hi); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); cursor: pointer; transition: border-color 0.15s, color 0.15s;">Scan Another Receipt</button>
+
+  </div>
+
+</div>
+
+<style>
+  @keyframes grScanLine {
+    0% { top: 0%; }
+    100% { top: 100%; }
+  }
+  #gr-upload-zone:hover { border-color: var(--gr-violet); }
+</style>
+
+<script is:inline>
+(function () {
+  var widget      = document.getElementById('gr-upload-widget');
+  var zone        = document.getElementById('gr-upload-zone');
+  var fileInput   = document.getElementById('gr-file-input');
+  var placeholder = document.getElementById('gr-upload-placeholder');
+  var preview     = document.getElementById('gr-upload-preview');
+  var statusEl    = document.getElementById('gr-upload-status');
+  var scanOverlay = document.getElementById('gr-scan-overlay');
+  var resultPanel = document.getElementById('gr-result-panel');
+  var scanAgain   = document.getElementById('gr-scan-again');
+
+  var siteId = widget.dataset.siteId;
+
+  function setStatus(msg) {
+    if (msg) { statusEl.textContent = msg; statusEl.style.display = 'block'; }
+    else { statusEl.style.display = 'none'; }
+  }
+
+  function setScanActive(active) {
+    scanOverlay.style.display = active ? 'block' : 'none';
+  }
+
+  function formatCurrency(amount, currency) {
+    if (!amount) return 'Unknown';
+    var symbol = { NZD: 'NZ$', AUD: 'A$', GBP: '£', USD: '$', EUR: '€' }[currency] || (currency ? currency + ' ' : '$');
+    return symbol + Number(amount).toFixed(2);
+  }
+
+  function showResult(data) {
+    var r = data.result || data;
+
+    document.getElementById('gr-result-category').textContent = r.category || '';
+    document.getElementById('gr-result-merchant').textContent  = r.merchant || 'Receipt';
+    document.getElementById('gr-result-date').textContent      = r.date ? new Date(r.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    document.getElementById('gr-result-total').textContent     = formatCurrency(r.total, r.currency);
+    document.getElementById('gr-result-confidence').textContent = r.confidence || '';
+
+    // Line items
+    var itemsEl = document.getElementById('gr-result-items');
+    itemsEl.innerHTML = '';
+    if (r.items && r.items.length) {
+      r.items.forEach(function (item) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--border-hi);';
+        var desc = document.createElement('span');
+        desc.style.cssText = 'font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); flex: 1; padding-right: 12px;';
+        desc.textContent = item.description;
+        var amt = document.createElement('span');
+        amt.style.cssText = 'font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0;';
+        amt.textContent = item.amount ? formatCurrency(item.amount, r.currency) : '';
+        row.appendChild(desc);
+        row.appendChild(amt);
+        itemsEl.appendChild(row);
+      });
+    }
+
+    // Warranty
+    if (r.warranty_expiry || r.warranty_years) {
+      var warrantyEl = document.getElementById('gr-result-warranty');
+      var warrantyText = document.getElementById('gr-result-warranty-text');
+      var text = r.warranty_years ? r.warranty_years + ' year warranty' : '';
+      if (r.warranty_expiry) text += (text ? ' — expires ' : 'Expires ') + new Date(r.warranty_expiry).toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' });
+      warrantyText.textContent = text;
+      warrantyEl.style.display = 'block';
+    }
+
+    // Notes
+    if (r.notes) {
+      document.getElementById('gr-result-notes-text').textContent = r.notes;
+      document.getElementById('gr-result-notes').style.display = 'block';
+    }
+
+    if (data.id) {
+      document.getElementById('gr-result-ref').textContent = 'REF ' + data.id.slice(0,8).toUpperCase();
+      document.getElementById('gr-save-note').style.display = 'block';
+    }
+
+    resultPanel.style.display = 'block';
+    resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetWidget() {
+    preview.style.display = 'none';
+    preview.src = '';
+    placeholder.style.display = 'flex';
+    resultPanel.style.display = 'none';
+    setScanActive(false);
+    setStatus('');
+    document.getElementById('gr-result-warranty').style.display = 'none';
+    document.getElementById('gr-result-notes').style.display = 'none';
+    document.getElementById('gr-save-note').style.display = 'none';
+    document.getElementById('gr-result-items').innerHTML = '';
+  }
+
+  zone.addEventListener('click', function () { fileInput.click(); });
+  zone.addEventListener('dragover', function (e) { e.preventDefault(); zone.style.borderColor = 'var(--gr-violet)'; });
+  zone.addEventListener('dragleave', function () { zone.style.borderColor = ''; });
+  zone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    zone.style.borderColor = '';
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener('change', function () {
+    var file = fileInput.files && fileInput.files[0];
+    if (file) handleFile(file);
+  });
+  scanAgain.addEventListener('click', function () {
+    resetWidget();
+    fileInput.value = '';
+  });
+
+  async function handleFile(file) {
+    placeholder.style.display = 'none';
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    setScanActive(true);
+    setStatus('Stripping metadata...');
+
+    try {
+      var stripped = await stripExif(file);
+      setStatus('Uploading...');
+
+      var formData = new FormData();
+      formData.append('file', stripped);
+      var uploadRes = await fetch('/api/upload-url', { method: 'POST', body: formData });
+      var uploadData = await uploadRes.json();
+      if (uploadData.error) throw new Error(uploadData.error);
+
+      setStatus('Reading receipt...');
+
+      var token = window.__gauk_token || '';
+      var headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      var identifyRes = await fetch('/api/identify', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ key: uploadData.key, context: 'general', site_id: siteId })
+      });
+      var identifyData = await identifyRes.json();
+
+      if (identifyData.error === 'Insufficient credits') {
+        statusEl.innerHTML = 'You\'ve used your scans. <a href="/account" style="color:var(--gr-violet);text-decoration:none;border-bottom:1px solid rgba(122,110,158,.4);">Top up in your account</a> to keep scanning.';
+        statusEl.style.display = 'block';
+        setScanActive(false);
+        return;
+      }
+      if (identifyData.error) throw new Error(identifyData.error);
+
+      setScanActive(false);
+      setStatus('');
+      showResult(identifyData);
+
+    } catch (err) {
+      setScanActive(false);
+      setStatus('Something went wrong. Please try again.');
+      console.error(err);
+    }
+  }
+
+  function stripExif(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () {
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width  = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          var ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Canvas unavailable');
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(function (blob) {
+            URL.revokeObjectURL(url);
+            if (!blob) { reject(new Error('toBlob failed')); return; }
+            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+          }, 'image/jpeg', 0.92);
+        } catch (e) { URL.revokeObjectURL(url); reject(e); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+      img.src = url;
+    });
+  }
+})();
+</script>

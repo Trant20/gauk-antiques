@@ -1,0 +1,36 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import AppSidebar from '../../components/AppSidebar.astro'
+import AppBottomNav from '../../components/AppBottomNav.astro'
+---
+<AppLayout title="My Receipts — GAUK">
+<div class="app-shell">
+  <AppSidebar activePage="receipts" />
+  <div class="app-main">
+
+    <div class="page-topbar">
+      <span style="font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute);">My Receipts</span>
+      <a href="/receipts/scan" style="margin-left: auto; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 6px 14px;">+ Scan Receipt</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; padding: 48px 24px;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="4" width="32" height="40" rx="2" stroke="var(--gr-violet)" stroke-width="1.6" fill="none" opacity="0.5"/>
+        <line x1="14" y1="16" x2="34" y2="16" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
+        <line x1="14" y1="22" x2="34" y2="22" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
+        <line x1="14" y1="28" x2="28" y2="28" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/>
+      </svg>
+      <p style="font-family: var(--font-ui); font-size: 14px; color: var(--text-mute); text-align: center; max-width: 280px; line-height: 1.7;">No receipts yet. Scan your first receipt to start building your proof of purchase vault.</p>
+      <a href="/receipts/scan" style="font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 10px 24px; margin-top: 8px;">Scan a Receipt</a>
+    </div>
+
+  </div>
+</div>
+<AppBottomNav activePage="receipts" />
+</AppLayout>
+
+<script>
+  import { supabase } from '../../lib/supabase-browser'
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { window.location.href = 'https://gaukauth.com?from=gaukantiques.com&next=/receipts' }
+</script>
