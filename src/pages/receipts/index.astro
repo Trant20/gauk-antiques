@@ -137,6 +137,42 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   @keyframes dot-pulse { 0%,80%,100% { opacity:0.2; transform:scale(0.8); } 40% { opacity:1; transform:scale(1); } }
 
   .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 16px; }
+
+  /* Search + controls */
+  .search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 280px; background: var(--surface-hi); border: 1px solid var(--border-hi); padding: 0 10px; height: 32px; }
+  .search-wrap svg { flex-shrink: 0; opacity: 0.3; }
+  .search-input { font-family: var(--font-ui); font-size: 13px; background: none; border: none; outline: none; color: var(--text); width: 100%; }
+  .search-input::placeholder { color: var(--text-faint); }
+  .date-filter { height: 32px; padding: 0 10px; border: 1px solid var(--border-hi); background: var(--surface-hi); color: var(--text-mute); font-family: var(--font-ui); font-size: 12px; appearance: none; -webkit-appearance: none; cursor: pointer; }
+  .date-filter option { background: var(--surface); color: var(--text-dim); }
+  .view-toggle { display: flex; border: 1px solid var(--border-hi); overflow: hidden; flex-shrink: 0; }
+  .view-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text-faint); transition: background 0.1s, color 0.1s; border: none; cursor: pointer; }
+  .view-btn.active { background: rgba(255,255,255,0.06); color: var(--gr-violet); }
+
+  /* List view */
+  .receipts-list { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+  .receipt-list-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s, padding-left 0.1s; }
+  .receipt-list-row:hover { background: var(--surface-hi); padding-left: 8px; }
+  .receipt-list-merchant { font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .receipt-list-date { font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); flex-shrink: 0; }
+  .receipt-list-cat { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gr-violet); background: rgba(122,110,158,0.1); padding: 2px 8px; flex-shrink: 0; }
+  .receipt-list-total { font-family: var(--font-ui); font-size: 14px; font-weight: 700; color: var(--gr-violet); flex-shrink: 0; }
+  @media (max-width: 480px) { .receipt-list-cat { display: none; } }
+
+  /* Confidence gauge */
+  .qv-confidence-wrap { display: flex; align-items: center; gap: 14px; padding: 20px; border-bottom: 1px solid var(--border); }
+  .qv-conf-text { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); line-height: 1.6; flex: 1; }
+
+  /* Delete */
+  .qv-delete-zone { padding: 20px; border-top: 1px solid var(--border); }
+  .qv-delete-btn { width: 100%; padding: 10px; background: none; border: 1px solid rgba(196,96,40,0.3); color: #c46028; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .qv-delete-btn:hover { background: rgba(196,96,40,0.08); }
+  .qv-delete-confirm { display: none; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .qv-delete-confirm.visible { display: flex; }
+  .qv-delete-confirm p { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); margin: 0; }
+  .qv-delete-actions { display: flex; gap: 8px; }
+  .qv-delete-yes { flex: 1; padding: 10px; background: rgba(196,96,40,0.12); border: 1px solid rgba(196,96,40,0.4); color: #c46028; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; cursor: pointer; }
+  .qv-delete-no { flex: 1; padding: 10px; background: none; border: 1px solid var(--border-hi); color: var(--text-mute); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; cursor: pointer; }
 </style>
 
 <div class="app-shell">
@@ -144,9 +180,26 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   <div class="app-main">
 
     <div class="page-topbar">
-      <span style="font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute);">My Receipts</span>
-      <span id="receipt-count" style="font-family: var(--font-ui); font-size: 12px; color: var(--text-faint);"></span>
-      <a href="/receipts/scan" style="margin-left: auto; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 6px 14px; flex-shrink: 0;">+ Scan Receipt</a>
+      <span style="font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); flex-shrink:0;">My Receipts</span>
+      <div class="search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="receipt-search" type="text" placeholder="Search merchant or item..." autocomplete="off" />
+      </div>
+      <select class="date-filter" id="date-filter">
+        <option value="0">All time</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 3 months</option>
+        <option value="365">Last year</option>
+      </select>
+      <div class="view-toggle" style="margin-left:auto;">
+        <button class="view-btn active" id="btn-grid" title="Grid">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" fill="currentColor"/><rect x="8" y="1" width="5" height="5" fill="currentColor"/><rect x="1" y="8" width="5" height="5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" fill="currentColor" opacity="0.4"/></svg>
+        </button>
+        <button class="view-btn" id="btn-list" title="List">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="1" y1="3" x2="13" y2="3" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="11" x2="13" y2="11" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+      </div>
+      <a href="/receipts/scan" style="font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--gr-violet); text-decoration: none; border: 1px solid var(--gr-violet); padding: 6px 14px; flex-shrink: 0;">+ Scan</a>
     </div>
 
     <div id="filter-bar" class="filter-bar" style="display: none;"></div>
@@ -154,6 +207,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     <div class="receipts-scroll">
       <div class="loading-state" id="loading-state"><div class="loading-dots"><span></span><span></span><span></span></div></div>
       <div class="receipts-grid" id="receipts-grid" style="display: none;"></div>
+      <div class="receipts-list" id="receipts-list" style="display: none;"></div>
       <div class="empty-state" id="empty-state" style="display: none;">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="4" width="32" height="40" rx="2" stroke="var(--gr-violet)" stroke-width="1.6" fill="none" opacity="0.5"/><line x1="14" y1="16" x2="34" y2="16" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/><line x1="14" y1="22" x2="34" y2="22" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/><line x1="14" y1="28" x2="28" y2="28" stroke="var(--gr-violet)" stroke-width="1.2" opacity="0.5"/></svg>
         <p style="font-family: var(--font-ui); font-size: 14px; color: var(--text-mute); text-align: center; max-width: 280px; line-height: 1.7;">No receipts yet. Scan your first receipt to start building your proof of purchase vault.</p>
@@ -179,6 +233,16 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     <button class="qv-close" id="qv-close">&#x2715;</button>
   </div>
   <div class="qv-body" id="qv-body"></div>
+  <div class="qv-delete-zone" id="qv-delete-zone" style="display:none;">
+    <button class="qv-delete-btn" id="qv-delete-btn">Delete this receipt</button>
+    <div class="qv-delete-confirm" id="qv-delete-confirm">
+      <p>This will permanently remove this receipt from your vault.</p>
+      <div class="qv-delete-actions">
+        <button class="qv-delete-yes" id="qv-delete-yes">Delete</button>
+        <button class="qv-delete-no" id="qv-delete-no">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 </AppLayout>
@@ -189,6 +253,9 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   const R2_CDN = 'https://pub-c3f96dd742f540188b92599aeed807c7.r2.dev'
   let allReceipts: any[] = []
   let activeCategory = 'all'
+  let activeView: 'grid' | 'list' = 'grid'
+  let currentReceiptId: string | null = null
+
 
   function formatDate(d: string) {
     if (!d) return ''
@@ -200,6 +267,58 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     if (!total) return ''
     const sym: Record<string,string> = { NZD: 'NZ$', AUD: 'A$', GBP: '£', USD: '$', EUR: '€' }
     return (sym[currency] || (currency ? currency + ' ' : '$')) + Number(total).toFixed(2)
+  }
+
+  function matchesSearch(r: any, q: string): boolean {
+    if (!q) return true
+    const s = q.toLowerCase()
+    if (r.merchant?.toLowerCase().includes(s)) return true
+    if (r.category?.toLowerCase().includes(s)) return true
+    if (r.notes?.toLowerCase().includes(s)) return true
+    return r.rj_items?.some((i: any) => i.description?.toLowerCase().includes(s))
+  }
+
+  function matchesDate(r: any, days: number): boolean {
+    if (!days) return true
+    if (!r.date) return false
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    return new Date(r.date) >= cutoff
+  }
+
+  function getFiltered(): any[] {
+    const q = (document.getElementById('receipt-search') as HTMLInputElement)?.value || ''
+    const days = parseInt((document.getElementById('date-filter') as HTMLSelectElement)?.value || '0')
+    return allReceipts.filter(r =>
+      matchesSearch(r, q) &&
+      matchesDate(r, days) &&
+      (activeCategory === 'all' || r.category === activeCategory)
+    )
+  }
+
+  function applyFilters() { renderReceipts(getFiltered()) }
+
+  function confScore(c: string): number {
+    return c === 'High' ? 94 : c === 'Medium' ? 72 : 45
+  }
+
+  function confGauge(score: number): string {
+    const r = 20, circ = 2 * Math.PI * r
+    const offset = circ - (circ * score / 100)
+    return '<svg width="44" height="44" viewBox="0 0 44 44" style="flex-shrink:0;transform:rotate(-90deg)">'
+      + '<circle cx="22" cy="22" r="' + r + '" fill="none" stroke="var(--border-hi)" stroke-width="3"/>'
+      + '<circle cx="22" cy="22" r="' + r + '" fill="none" stroke="var(--gr-violet)" stroke-width="3"'
+      + ' stroke-dasharray="' + circ.toFixed(2) + '" stroke-dashoffset="' + offset.toFixed(2) + '"'
+      + ' stroke-linecap="round"/>'
+      + '<text x="22" y="27" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="600"'
+      + ' fill="var(--text)" transform="rotate(90,22,22)">' + score + '%</text>'
+      + '</svg>'
+  }
+
+  function confNote(c: string): string {
+    if (c === 'High') return 'Strong match — the AI is highly confident in this receipt extraction.'
+    if (c === 'Medium') return 'Good match — most data extracted accurately. Review line items for any errors.'
+    return 'Low confidence — the receipt may be unclear. Verify the details manually.'
   }
 
   function buildCard(r: any) {
@@ -230,17 +349,38 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
   function renderReceipts(receipts: any[]) {
     const grid = document.getElementById('receipts-grid')!
+    const list = document.getElementById('receipts-list')!
     grid.innerHTML = ''
+    list.innerHTML = ''
 
     if (!receipts.length) {
       grid.style.display = 'none'
+      list.style.display = 'none'
       document.getElementById('empty-state')!.style.display = 'flex'
       return
     }
 
     document.getElementById('empty-state')!.style.display = 'none'
-    grid.style.display = 'grid'
-    receipts.forEach((r: any) => grid.appendChild(buildCard(r)))
+
+    if (activeView === 'grid') {
+      grid.style.display = 'grid'
+      list.style.display = 'none'
+      receipts.forEach((r: any) => grid.appendChild(buildCard(r)))
+    } else {
+      grid.style.display = 'none'
+      list.style.display = 'flex'
+      receipts.forEach((r: any) => {
+        const row = document.createElement('div')
+        row.className = 'receipt-list-row'
+        const catHtml = r.category ? '<span class="receipt-list-cat">' + r.category + '</span>' : ''
+        row.innerHTML = '<div class="receipt-list-merchant">' + (r.merchant || 'Unknown') + '</div>'
+          + '<span class="receipt-list-date">' + formatDate(r.date) + '</span>'
+          + catHtml
+          + '<span class="receipt-list-total">' + formatTotal(r.total, r.currency) + '</span>'
+        row.addEventListener('click', () => openDrawer(r))
+        list.appendChild(row)
+      })
+    }
   }
 
   function buildFilters(receipts: any[]) {
@@ -336,6 +476,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       ? `<div class="qv-notes">${r.notes}</div>`
       : ''
 
+    const confHtml = '<div class="qv-confidence-wrap">' + confGauge(confScore(r.confidence || 'High')) + '<span class="qv-conf-text">' + confNote(r.confidence || 'High') + '</span></div>'
     body.innerHTML = `
       ${imageHtml}
       <div class="qv-section">
@@ -360,10 +501,15 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
           ${paymentNote}
         </div>
       </div>
+      ${confHtml}
       ${warrantyHtml}
       ${notesHtml}
     `
 
+    currentReceiptId = r.id
+    document.getElementById('qv-delete-zone')!.style.display = 'block'
+    document.getElementById('qv-delete-btn')!.style.display = 'block'
+    document.getElementById('qv-delete-confirm')!.classList.remove('visible')
     document.getElementById('qv-overlay')!.classList.add('open')
     document.getElementById('qv-drawer')!.classList.add('open')
 
@@ -386,6 +532,45 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
   document.getElementById('qv-close')!.addEventListener('click', closeDrawer)
   document.getElementById('qv-overlay')!.addEventListener('click', closeDrawer)
+
+  // Delete
+  document.getElementById('qv-delete-btn')!.addEventListener('click', () => {
+    document.getElementById('qv-delete-btn')!.style.display = 'none'
+    document.getElementById('qv-delete-confirm')!.classList.add('visible')
+  })
+  document.getElementById('qv-delete-no')!.addEventListener('click', () => {
+    document.getElementById('qv-delete-btn')!.style.display = 'block'
+    document.getElementById('qv-delete-confirm')!.classList.remove('visible')
+  })
+  document.getElementById('qv-delete-yes')!.addEventListener('click', async () => {
+    if (!currentReceiptId) return
+    const { error } = await supabase.from('receipts').delete().eq('id', currentReceiptId)
+    if (!error) {
+      allReceipts = allReceipts.filter(r => r.id !== currentReceiptId)
+      document.getElementById('receipt-count')!.textContent =
+        allReceipts.length + ' receipt' + (allReceipts.length !== 1 ? 's' : '')
+      closeDrawer()
+      applyFilters()
+    }
+  })
+
+  // Search + date filter
+  document.getElementById('receipt-search')!.addEventListener('input', applyFilters)
+  document.getElementById('date-filter')!.addEventListener('change', applyFilters)
+
+  // View toggle
+  document.getElementById('btn-grid')!.addEventListener('click', () => {
+    activeView = 'grid'
+    document.getElementById('btn-grid')!.classList.add('active')
+    document.getElementById('btn-list')!.classList.remove('active')
+    applyFilters()
+  })
+  document.getElementById('btn-list')!.addEventListener('click', () => {
+    activeView = 'list'
+    document.getElementById('btn-list')!.classList.add('active')
+    document.getElementById('btn-grid')!.classList.remove('active')
+    applyFilters()
+  })
 
   // Lightbox
   function openLightbox(src: string) {
