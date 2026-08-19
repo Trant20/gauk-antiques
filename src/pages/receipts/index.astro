@@ -108,7 +108,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   .qv-item-desc { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); flex: 1; }
   .qv-item-amount { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0; }
   .qv-item-meta { font-family: var(--font-ui); font-size: 11px; color: var(--text-mute); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
-  .qv-sale-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #c97b2b; background: rgba(201,123,43,0.12); border: 1px solid rgba(201,123,43,0.3); padding: 1px 6px; }
+  .qv-sale-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gr-sale); background: var(--gr-sale-a12); border: 1px solid var(--gr-sale-a30); padding: 1px 6px; }
   .qv-original-price { font-size: 11px; color: var(--text-mute); text-decoration: line-through; }
   .qv-savings-row { display: flex; justify-content: space-between; padding: 8px 0; font-family: var(--font-ui); font-size: 13px; color: #5a9e68; font-weight: 600; border-top: 1px solid var(--border-hi); margin-top: 4px; }
   .qv-tax-row { display: flex; justify-content: space-between; padding: 6px 0; font-family: var(--font-ui); font-size: 12px; color: var(--text-mute); }
@@ -179,13 +179,13 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
   /* Delete */
   .qv-delete-zone { padding: 20px; border-top: 1px solid var(--border); }
-  .qv-delete-btn { width: 100%; padding: 10px; background: none; border: 1px solid rgba(196,96,40,0.3); color: #c46028; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: background 0.15s; }
-  .qv-delete-btn:hover { background: rgba(196,96,40,0.08); }
+  .qv-delete-btn { width: 100%; padding: 10px; background: none; border: 1px solid var(--ga-warn-a30); color: var(--ga-warn); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .qv-delete-btn:hover { background: var(--ga-warn-a08); }
   .qv-delete-confirm { display: none; flex-direction: column; gap: 10px; margin-top: 10px; }
   .qv-delete-confirm.visible { display: flex; }
   .qv-delete-confirm p { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); margin: 0; }
   .qv-delete-actions { display: flex; gap: 8px; }
-  .qv-delete-yes { flex: 1; padding: 10px; background: rgba(196,96,40,0.12); border: 1px solid rgba(196,96,40,0.4); color: #c46028; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; cursor: pointer; }
+  .qv-delete-yes { flex: 1; padding: 10px; background: var(--ga-warn-a12); border: 1px solid var(--ga-warn-a40); color: var(--ga-warn); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; cursor: pointer; }
   .qv-delete-no { flex: 1; padding: 10px; background: none; border: 1px solid var(--border-hi); color: var(--text-mute); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; cursor: pointer; }
 </style>
 
