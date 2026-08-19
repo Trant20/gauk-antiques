@@ -111,6 +111,17 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
   .qv-notes { padding: 0 20px 20px; font-family: var(--font-ui); font-size: 13px; color: var(--text-mute); line-height: 1.7; font-style: italic; }
 
+  /* Lightbox */
+  .qv-image { cursor: zoom-in; }
+  .lb-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    z-index: 200; align-items: center; justify-content: center;
+    cursor: zoom-out;
+  }
+  .lb-overlay.open { display: flex; }
+  .lb-img { max-width: 96vw; max-height: 92vh; object-fit: contain; box-shadow: 0 8px 48px rgba(0,0,0,0.6); }
+  .lb-close { position: fixed; top: 16px; right: 20px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 20px; cursor: pointer; z-index: 201; }
+
   /* States */
   .loading-state { display: flex; align-items: center; justify-content: center; min-height: 50vh; }
   .loading-dots { display: flex; gap: 6px; }
@@ -146,6 +157,12 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
   </div>
 </div>
+<!-- Lightbox -->
+<div class="lb-overlay" id="lb-overlay">
+  <button class="lb-close" id="lb-close">&#x2715;</button>
+  <img class="lb-img" id="lb-img" src="" alt="Receipt" />
+</div>
+
 <AppBottomNav activePage="receipts" />
 
 <!-- Quick-view overlay + drawer -->
@@ -305,6 +322,17 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
     document.getElementById('qv-overlay')!.classList.add('open')
     document.getElementById('qv-drawer')!.classList.add('open')
+
+    // Wire lightbox to receipt image
+    if (r.image_key) {
+      const qvImg = document.querySelector('.qv-image') as HTMLImageElement | null
+      if (qvImg) {
+        qvImg.style.cursor = 'zoom-in'
+        qvImg.addEventListener('click', () => {
+          if ((window as any).__lbOpen) (window as any).__lbOpen(qvImg.src)
+        })
+      }
+    }
   }
 
   function closeDrawer() {
@@ -314,6 +342,22 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
   document.getElementById('qv-close')!.addEventListener('click', closeDrawer)
   document.getElementById('qv-overlay')!.addEventListener('click', closeDrawer)
+
+  // Lightbox
+  function openLightbox(src: string) {
+    const lb = document.getElementById('lb-overlay')!
+    const img = document.getElementById('lb-img') as HTMLImageElement
+    img.src = src
+    lb.classList.add('open')
+  }
+  function closeLightbox() {
+    document.getElementById('lb-overlay')!.classList.remove('open')
+  }
+  document.getElementById('lb-overlay')!.addEventListener('click', closeLightbox)
+  document.getElementById('lb-close')!.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); })
+
+  // Expose so openDrawer can wire it up
+  ;(window as any).__lbOpen = openLightbox
 
   // ── Load receipts ─────────────────────────────────────────
   async function init() {
