@@ -339,11 +339,12 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       : `<div class="card-thumb"><span class="card-thumb-placeholder">🧾</span></div>`
 
     const badge = r.category ? `<span class="card-badge">${r.category}</span>` : ''
+    const vaultBadge = r.identification_id ? `<span class="card-badge" style="border-color:rgba(124,144,130,0.3);color:var(--gi-sage);background:rgba(124,144,130,0.07);">Vault item</span>` : ''
 
     card.innerHTML = `
       ${thumbHtml}
       <div class="card-body">
-        ${badge}
+        ${badge}${vaultBadge}
         <div class="card-merchant">${r.merchant || 'Unknown merchant'}</div>
         <div class="card-meta">
           <span class="card-date">${formatDate(r.date)}</span>
@@ -497,6 +498,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
           <span>${dateTime}</span>
           ${r.category ? `<span>${r.category}</span>` : ''}
           ${r.receipt_number ? `<span>Ref ${r.receipt_number}</span>` : ''}
+          ${r.identification_id ? `<a href="/valuation/${r.identification_id}" style="color:var(--gi-sage);font-size:11px;text-decoration:none;border-bottom:1px solid rgba(124,144,130,0.3);">View vault item</a>` : ''}
         </div>
       </div>
       <div class="qv-section">
@@ -606,7 +608,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
     const { data, error } = await supabase
       .from('receipts')
-      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, result_json, created_at')
+      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, result_json, identification_id, created_at')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
@@ -645,6 +647,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       rj_merchant_gst: r.result_json?.merchant_gst_no   || null,
       rj_time:         r.result_json?.time          || null,
       rj_payment:      r.result_json?.payment_method || null,
+      identification_id: r.identification_id || null,
     }))
 
     document.getElementById('receipt-count')!.textContent =

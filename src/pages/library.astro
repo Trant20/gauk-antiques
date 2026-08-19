@@ -323,6 +323,7 @@ import AppBottomNav from '../components/AppBottomNav.astro'
       <div class="drawer-meta-row"><span class="drawer-meta-key">Category</span><span class="drawer-meta-val" id="drawer-cat"></span></div>
       <div class="drawer-meta-row"><span class="drawer-meta-key">Scanned</span><span class="drawer-meta-val" id="drawer-date"></span></div>
       <div class="drawer-meta-row"><span class="drawer-meta-key">Property</span><span class="drawer-meta-val" id="drawer-property"></span></div>
+      <div class="drawer-meta-row" id="drawer-receipt-row" style="display:none;"><span class="drawer-meta-key">Receipt</span><a class="drawer-meta-val" id="drawer-receipt-link" style="color:var(--gr-violet);text-decoration:none;" href="/receipts">View attached receipt</a></div>
     </div>
     <div class="drawer-notes-label">Notes</div>
     <textarea class="drawer-notes" id="drawer-notes" placeholder="No notes added. Click to add a note to this item."></textarea>
@@ -547,6 +548,17 @@ import AppBottomNav from '../components/AppBottomNav.astro'
     drawerViewBtn.href = `/valuation/${item.id}`
     const drawerAttachBtn = document.getElementById('drawer-attach-receipt-btn') as HTMLAnchorElement
     if (drawerAttachBtn) drawerAttachBtn.href = `/receipts/scan?identification_id=${item.id}`
+
+    // Check for attached receipt
+    const drawerReceiptRow = document.getElementById('drawer-receipt-row')!
+    drawerReceiptRow.style.display = 'none'
+    supabase.from('receipts').select('id, merchant, date').eq('identification_id', item.id).limit(1)
+      .then(({ data: receipts }) => {
+        if (receipts && receipts.length) {
+          const r = receipts[0]
+          drawerReceiptRow.style.display = 'flex'
+        }
+      })
     drawerViewBtn.style.background = gi ? 'var(--gi-sage)' : 'var(--ga-gold)'
     drawerViewBtn.style.color = '#fff'
 
