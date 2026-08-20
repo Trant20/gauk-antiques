@@ -344,7 +344,7 @@ const retailSources = hasRetail ? [...new Set(retailPrices.map((r: any) => r.sou
   .gi-enrich-progress { height: 2px; background: var(--border-hi); margin: 16px 0; overflow: hidden; }
   .gi-enrich-progress-bar { height: 100%; background: var(--gi-sage); width: 0%; transition: width 0.6s ease; }
   .gi-edit-row { display: flex; gap: 8px; align-items: center; }
-  .gi-edit-input {
+  .gi-edit-input { min-width: 0;
     flex: 1;
     padding: 10px 12px;
     background: var(--shell);
