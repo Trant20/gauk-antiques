@@ -115,6 +115,12 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   .qv-total-row { display: flex; justify-content: space-between; padding: 10px 0 0; font-family: var(--font-ui); font-size: 15px; font-weight: 700; color: var(--text); border-top: 1px solid var(--border-hi); margin-top: 4px; }
 
   .qv-warranty { background: var(--gr-violet-a08); border: 1px solid var(--gr-violet-a20); padding: 12px 16px; margin: 20px; }
+  .qv-warranty-edit-btn { background: none; border: 1px solid var(--gr-violet-a30); color: var(--gr-violet); font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; padding: 3px 10px; cursor: pointer; transition: border-color 0.15s; }
+  .qv-warranty-edit-btn:hover { border-color: var(--gr-violet); }
+  .qv-warranty-edit-row { display: flex; align-items: center; gap: 8px; }
+  .qv-warranty-select { flex: 1; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border-hi); color: var(--text); font-family: var(--font-ui); font-size: 13px; cursor: pointer; }
+  .qv-warranty-save-btn { padding: 8px 16px; background: var(--gr-violet); border: none; color: #fff; font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+  .qv-warranty-save-btn:hover { opacity: 0.85; }
   .qv-warranty-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gr-violet); font-weight: 600; margin-bottom: 4px; display: block; }
   .qv-warranty-text { font-family: var(--font-ui); font-size: 13px; color: var(--text-dim); }
 
@@ -501,12 +507,33 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
       : ''
 
     // Warranty
-    const warrantyHtml = r.warranty_expiry
-      ? `<div class="qv-warranty">
-           <span class="qv-warranty-label">Warranty</span>
-           <span class="qv-warranty-text">${r.warranty_years ? r.warranty_years + ' year warranty' : ''} — expires ${formatDate(r.warranty_expiry)}</span>
-         </div>`
-      : ''
+    const warrantyConfirmed = !!r.warranty_confirmed
+    const aiBadge = warrantyConfirmed ? '' : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-right:4px;" title="AI estimate"><circle cx="12" cy="12" r="10" stroke="var(--gr-violet)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" font-family="sans-serif" fill="var(--gr-violet)" font-weight="700">AI</text></svg>`
+    const warrantyLabel = warrantyConfirmed ? 'Warranty' : 'Suggested warranty'
+    const warrantyDisplay = r.warranty_expiry
+      ? `${r.warranty_years ? r.warranty_years + ' year warranty' : ''} — expires ${formatDate(r.warranty_expiry)}`
+      : 'No warranty recorded'
+    const warrantyHtml = `<div class="qv-warranty" id="qv-warranty-block">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;">
+          ${aiBadge}
+          <span class="qv-warranty-label" style="margin-bottom:0;">${warrantyLabel}</span>
+        </div>
+        <button class="qv-warranty-edit-btn" id="qv-warranty-edit-btn">Edit</button>
+      </div>
+      <span class="qv-warranty-text" id="qv-warranty-text">${warrantyDisplay}</span>
+      <div class="qv-warranty-edit-row" id="qv-warranty-edit-row" style="display:none;margin-top:10px;gap:8px;">
+        <select class="qv-warranty-select" id="qv-warranty-select">
+          <option value="">No warranty</option>
+          <option value="0.5" ${r.warranty_years === 0.5 ? 'selected' : ''}>6 months</option>
+          <option value="1" ${r.warranty_years === 1 ? 'selected' : ''}>1 year</option>
+          <option value="2" ${r.warranty_years === 2 ? 'selected' : ''}>2 years</option>
+          <option value="3" ${r.warranty_years === 3 ? 'selected' : ''}>3 years</option>
+          <option value="5" ${r.warranty_years === 5 ? 'selected' : ''}>5 years</option>
+        </select>
+        <button class="qv-warranty-save-btn" id="qv-warranty-save-btn">Confirm</button>
+      </div>
+    </div>`
 
     const notesHtml = r.notes
       ? `<div class="qv-notes">${r.notes}</div>`
@@ -545,6 +572,60 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     `
 
     currentReceiptId = r.id
+
+    // Wire warranty edit
+    const warrantyEditBtn = document.getElementById('qv-warranty-edit-btn')
+    const warrantyEditRow = document.getElementById('qv-warranty-edit-row')
+    const warrantySaveBtn = document.getElementById('qv-warranty-save-btn')
+    const warrantyTextEl  = document.getElementById('qv-warranty-text')
+
+    if (warrantyEditBtn && warrantyEditRow) {
+      warrantyEditBtn.addEventListener('click', () => {
+        warrantyEditRow.style.display = warrantyEditRow.style.display === 'none' ? 'flex' : 'none'
+      })
+    }
+
+    if (warrantySaveBtn) {
+      warrantySaveBtn.addEventListener('click', async () => {
+        const select = document.getElementById('qv-warranty-select') as HTMLSelectElement
+        const years = select.value ? parseFloat(select.value) : null
+        const receiptDate = r.date
+        let expiry: string | null = null
+        if (years && receiptDate) {
+          const d = new Date(receiptDate)
+          if (years === 0.5) { d.setMonth(d.getMonth() + 6) }
+          else { d.setFullYear(d.getFullYear() + years) }
+          expiry = d.toISOString().split('T')[0]
+        }
+        const { error } = await supabase
+          .from('receipts')
+          .update({ warranty_years: years, warranty_expiry: expiry, warranty_confirmed: true })
+          .eq('id', currentReceiptId)
+        if (!error) {
+          const ri = allReceipts.findIndex((rec: any) => rec.id === currentReceiptId)
+          if (ri > -1) {
+            allReceipts[ri].warranty_years = years
+            allReceipts[ri].warranty_expiry = expiry
+            allReceipts[ri].warranty_confirmed = true
+          }
+          if (warrantyTextEl) {
+            warrantyTextEl.textContent = expiry
+              ? `${years === 0.5 ? '6 month' : years + ' year'} warranty — expires ${formatDate(expiry)}`
+              : 'No warranty recorded'
+          }
+          if (warrantyEditRow) warrantyEditRow.style.display = 'none'
+          // Remove AI badge and update label
+          const block = document.getElementById('qv-warranty-block')
+          if (block) {
+            const svg = block.querySelector('svg')
+            if (svg) svg.remove()
+            const label = block.querySelector('.qv-warranty-label') as HTMLElement
+            if (label) label.textContent = 'Warranty'
+          }
+        }
+      })
+    }
+
     document.getElementById('qv-delete-zone')!.style.display = 'block'
     document.getElementById('qv-delete-btn')!.style.display = 'block'
     document.getElementById('qv-delete-confirm')!.classList.remove('visible')
@@ -736,7 +817,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
 
     const { data, error } = await supabase
       .from('receipts')
-      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, receipt_number, notes, image_key, result_json, identification_id, created_at')
+      .select('id, merchant, date, total, currency, category, confidence, warranty_years, warranty_expiry, warranty_confirmed, receipt_number, notes, image_key, result_json, identification_id, created_at')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
