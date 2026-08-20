@@ -112,6 +112,18 @@
       try { localStorage.removeItem('gi_pending_scan') } catch(e) {}
     }
 
+    // Claim pending GR guest scan if exists
+    var grPendingScan = ''
+    try { grPendingScan = localStorage.getItem('gr_pending_scan') || '' } catch(e) {}
+    if (grPendingScan) {
+      await fetch('/api/claim-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + result.data.session.access_token },
+        body: JSON.stringify({ receipt_id: grPendingScan })
+      })
+      try { localStorage.removeItem('gr_pending_scan') } catch(e) {}
+    }
+
     window.location.href = next
   }
 
