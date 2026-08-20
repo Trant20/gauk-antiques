@@ -344,9 +344,9 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
   }
 
   function confNote(c: string): string {
-    if (c === 'High') return 'Strong match — the AI is highly confident in this receipt extraction.'
-    if (c === 'Medium') return 'Good match — most data extracted accurately. Review line items for any errors.'
-    return 'Low confidence — the receipt may be unclear. Verify the details manually.'
+    if (c === 'High') return 'Strong match. The AI is highly confident in this receipt extraction.'
+    if (c === 'Medium') return 'Good match. Most data extracted accurately. Review line items for any errors.'
+    return 'Low confidence. The receipt may be unclear. Verify the details manually.'
   }
 
   function buildCard(r: any) {
@@ -511,7 +511,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
     const aiBadge = warrantyConfirmed ? '' : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-right:4px;" title="AI estimate"><circle cx="12" cy="12" r="10" stroke="var(--gr-violet)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" font-family="sans-serif" fill="var(--gr-violet)" font-weight="700">AI</text></svg>`
     const warrantyLabel = warrantyConfirmed ? 'Warranty' : 'Suggested warranty'
     const warrantyDisplay = r.warranty_expiry
-      ? `${r.warranty_years ? r.warranty_years + ' year warranty' : ''} — expires ${formatDate(r.warranty_expiry)}`
+      ? `${r.warranty_years ? r.warranty_years + ' year warranty' : ''} expires ${formatDate(r.warranty_expiry)}`
       : 'No warranty recorded'
     const warrantyHtml = `<div class="qv-warranty" id="qv-warranty-block">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -610,7 +610,7 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
           }
           if (warrantyTextEl) {
             warrantyTextEl.textContent = expiry
-              ? `${years === 0.5 ? '6 month' : years + ' year'} warranty — expires ${formatDate(expiry)}`
+              ? `${years === 0.5 ? '6 month' : years + ' year'} warranty expires ${formatDate(expiry)}`
               : 'No warranty recorded'
           }
           if (warrantyEditRow) warrantyEditRow.style.display = 'none'
