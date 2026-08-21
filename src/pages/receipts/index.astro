@@ -616,12 +616,10 @@ import AppBottomNav from '../../components/AppBottomNav.astro'
           .eq('id', currentReceiptId)
         if (!error) {
           const ri = allReceipts.findIndex((rec: any) => rec.id === currentReceiptId)
-          if (ri > -1) allReceipts[ri].currency = newCurrency
-          const totalEl = document.getElementById('qv-total-display')
-          if (totalEl) totalEl.textContent = formatTotal(r.total, newCurrency)
-          if (currencyEditWrap) currencyEditWrap.style.display = 'none'
-          const prompt = document.querySelector('.qv-currency-prompt') as HTMLElement
-          if (prompt) prompt.remove()
+          if (ri > -1) {
+            allReceipts[ri].currency = newCurrency
+            openDrawer(allReceipts[ri])
+          }
         }
       })
     }
