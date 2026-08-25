@@ -1,0 +1,63 @@
+---
+interface Props {
+  fromDomain: string
+  signInNext?: string
+  activePage?: string
+}
+const { fromDomain, signInNext = '/', activePage } = Astro.props
+---
+
+<div class="sa-wrap">
+  <div class="sb-credits" id="sb-credits">
+    <div class="sb-credits-inner">
+      <div>
+        <div class="sb-credits-label">Credits</div>
+        <div class="sb-credits-value" id="sb-credits-val">—</div>
+      </div>
+      <a href="/account" class="sb-credits-topup">Top Up</a>
+    </div>
+  </div>
+  <div class="sb-divider" style="margin:0"></div>
+  <a href="/account" class={`sb-link${activePage === 'account' ? ' active' : ''}`} style="flex-shrink:0;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Account</span>
+  </a>
+  <div class="sb-foot">
+    <button class="sb-signout" id="sb-signout">Sign Out</button>
+    <a href={`https://gaukauth.com?from=${fromDomain}&next=${encodeURIComponent(signInNext)}`} class="sb-signin" id="sb-signin">Sign In</a>
+  </div>
+</div>
+
+<script define:vars={{ fromDomain }}>
+  window.__sidebarDomain = fromDomain
+</script>
+
+<script>
+  import { supabase } from '../lib/supabase-browser'
+
+  const { data: { session } } = await supabase.auth.getSession()
+  const sbSignout    = document.getElementById('sb-signout')!
+  const sbSignin     = document.getElementById('sb-signin')!
+  const sbCredits    = document.getElementById('sb-credits')!
+  const sbCreditsVal = document.getElementById('sb-credits-val')!
+
+  if (session) {
+    sbSignout.style.display = 'block'
+    sbSignin.style.display  = 'none'
+
+    const { data: creditsData } = await supabase
+      .from('credits').select('balance')
+      .eq('user_id', session.user.id)
+      .single()
+    const balance = creditsData?.balance ?? 0
+    sbCreditsVal.textContent = String(balance)
+    if (balance <= 5) sbCredits.classList.add('visible')
+
+    sbSignout.addEventListener('click', () => {
+      const domain = (window as any).__sidebarDomain || 'gaukantiques.com'
+      window.location.href = `https://gaukauth.com/api/logout?from=${domain}`
+    })
+  } else {
+    sbSignin.style.display = 'block'
+  }
+</script>

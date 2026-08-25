@@ -3,14 +3,15 @@ interface Props {
   activePage?: 'vault' | 'identify' | 'audit' | 'receipts' | 'ebay-search' | 'search-history' | 'videos' | 'articles' | 'account'
 }
 const { activePage = 'vault' } = Astro.props
-import { ANTIQUES_SITE_ID } from '../lib/constants'
+import PropertySwitcher from './PropertySwitcher.astro'
+import SidebarAccount from './SidebarAccount.astro'
 ---
 
 <aside class="sidebar" id="sidebar">
 
-  <!-- ── LOGO / PROPERTY SWITCHER ── -->
+  <!-- ── PROPERTY SWITCHER ── -->
   <div class="sb-logo-wrap">
-    <img src="/gauk-logo.png" alt="GAUK Antiques" style="width:140px;display:block;" />
+    <PropertySwitcher currentProperty="ga" />
   </div>
 
   <!-- ── PROPERTY NAV ── -->
@@ -29,7 +30,7 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     </a>
     <a href="/receipts" class={`sb-link${activePage === 'receipts' ? ' active' : ''}`}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
-      Receipts
+      <span>Receipts</span>
     </a>
     <a href="/search/ebay" class={`sb-link${activePage === 'ebay-search' ? ' active' : ''}`}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
@@ -54,39 +55,25 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     <slot />
   </nav>
 
-  <!-- ── BOTTOM STATIC ── -->
+  <!-- ── ACCOUNT SECTION ── -->
   <div class="sb-bottom">
-    <div class="sb-credits" id="sb-credits">
-      <div class="sb-credits-inner">
-        <div>
-          <div class="sb-credits-label">Credits</div>
-          <div class="sb-credits-value" id="sb-credits-val">—</div>
-        </div>
-        <a href="/account" class="sb-credits-topup">Top Up</a>
-      </div>
-    </div>
-    <div class="sb-divider" style="margin:0"></div>
-    <a href="/account" class={`sb-link${activePage === 'account' ? ' active' : ''}`} style="flex-shrink:0;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span>Account</span>
-    </a>
-    <div class="sb-foot">
-      <button class="sb-signout" id="sb-signout">Sign Out</button>
-      <a href="https://gaukauth.com?from=gaukantiques.com&next=/library" class="sb-signin" id="sb-signin">Sign In</a>
-    </div>
+    <SidebarAccount
+      fromDomain="gaukantiques.com"
+      signInNext="/library"
+      activePage={activePage}
+    />
   </div>
 
 </aside>
 
 <style is:global>
-  /* ── SIDEBAR ── */
   .sidebar {
     width: 220px; min-width: 220px; height: 100vh;
     background: var(--surface); border-right: 1px solid var(--border);
     display: flex; flex-direction: column;
     position: fixed; left: 0; top: 0; z-index: 50;
   }
-  .sb-logo-wrap { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .sb-logo-wrap { padding: 16px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .sb-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
   .sb-link {
     padding: 9px 22px; display: flex; align-items: center; gap: 11px;
@@ -95,11 +82,10 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
     text-decoration: none;
   }
   .sb-link:hover { color: var(--text); }
-  .sb-link.active { color: var(--text); background: rgba(255,255,255,0.025); border-left-color: var(--text); }
+  .sb-link.active { color: var(--text); background: rgba(255,255,255,0.025); border-left-color: var(--ga-gold-hi); }
   .sb-divider { height: 1px; background: var(--border); margin: 10px 14px; }
   .sb-link-sub { padding-left: 42px; font-size: 12px; }
 
-  /* ── BOTTOM ── */
   .sb-bottom { flex-shrink: 0; border-top: 1px solid var(--border); }
   .sb-credits { padding: 12px 14px; display: none; border-bottom: 1px solid var(--border); }
   .sb-credits.visible { display: block; }
@@ -114,34 +100,3 @@ import { ANTIQUES_SITE_ID } from '../lib/constants'
 
   @media (max-width: 768px) { .sidebar { display: none; } }
 </style>
-
-<script>
-  import { supabase } from '../lib/supabase-browser'
-
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (session) {
-    const sbSignout = document.getElementById('sb-signout')!
-    const sbSignin  = document.getElementById('sb-signin')!
-    const sbCredits = document.getElementById('sb-credits')!
-    const sbCreditsVal = document.getElementById('sb-credits-val')!
-
-    sbSignout.style.display = 'block'
-    sbSignin.style.display  = 'none'
-
-    const { data: creditsData } = await supabase
-      .from('credits').select('balance')
-      .eq('user_id', session.user.id)
-      .single()
-    const balance = creditsData?.balance ?? 0
-    sbCreditsVal.textContent = String(balance)
-    if (balance <= 5) { sbCredits.classList.add('visible') }
-
-    sbSignout.addEventListener('click', () => {
-      window.location.href = 'https://gaukauth.com/api/logout?from=gaukantiques.com'
-    })
-  } else {
-    const sbSignin = document.getElementById('sb-signin')!
-    if (sbSignin) sbSignin.style.display = 'block'
-  }
-</script>
