@@ -55,6 +55,8 @@ const { fromDomain, signInNext = '/', activePage } = Astro.props
 
     sbSignout.addEventListener('click', () => {
       const domain = (window as any).__sidebarDomain || 'gaukantiques.com'
+      // Clear local gauk-token before network logout
+      document.cookie = 'gauk-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
       window.location.href = `https://gaukauth.com/api/logout?from=${domain}`
     })
   } else {
