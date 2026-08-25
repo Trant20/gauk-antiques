@@ -1,6 +1,6 @@
 ---
 interface Props {
-  currentProperty: 'ga' | 'mb' | 'gr'
+  currentProperty: 'ga' | 'gi' | 'mb' | 'gr'
 }
 const { currentProperty } = Astro.props
 
@@ -11,6 +11,20 @@ const properties = [
     domain: 'gaukantiques.com',
     next: '/library',
     color: '#c8952e',
+  },
+  {
+    id: 'gi',
+    name: 'GAUK Insurance',
+    domain: 'gaukantiques.com',
+    next: '/audit',
+    color: '#7c9082',
+  },
+  {
+    id: 'gr',
+    name: 'GAUK Receipts',
+    domain: 'gaukantiques.com',
+    next: '/receipts',
+    color: '#3a8197',
   },
   {
     id: 'mb',
@@ -93,7 +107,6 @@ const current = properties.find(p => p.id === currentProperty)!
     if (chevron) chevron.style.transform = open ? 'rotate(180deg)' : ''
   })
 
-  // Close on outside click
   document.addEventListener('click', (e) => {
     if (!toggle?.contains(e.target as Node) && !panel?.contains(e.target as Node)) {
       panel?.classList.remove('open')
