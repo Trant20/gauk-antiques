@@ -3,6 +3,11 @@ import AppLayout from '../../layouts/AppLayout.astro'
 import AppSidebar from '../../components/AppSidebar.astro'
 import AppBottomNav from '../../components/AppBottomNav.astro'
 import { R2_CDN } from '../../lib/constants'
+// Server-side auth guard — redirect before any HTML is sent
+if (!Astro.locals.userId) {
+  return Astro.redirect('https://gaukauth.com?from=gaukantiques.com&next=/search/history')
+}
+
 ---
 
 <AppLayout title="Search History — GAUK">

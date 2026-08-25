@@ -35,6 +35,11 @@ if (identificationId) {
     suggestedQuery = parts.join(' ')
   }
 }
+// Server-side auth guard — redirect before any HTML is sent
+if (!Astro.locals.userId) {
+  return Astro.redirect('https://gaukauth.com?from=gaukantiques.com&next=/search/ebay')
+}
+
 ---
 
 <AppLayout title="eBay Sold Search — GAUK">

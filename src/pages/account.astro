@@ -4,6 +4,11 @@ import AppSidebar from '../components/AppSidebar.astro'
 import AppBottomNav from '../components/AppBottomNav.astro'
 import AccountPlans2 from '../components/AccountPlans2.astro'
 import { ANTIQUES_SITE_ID } from '../lib/constants'
+// Server-side auth guard — redirect before any HTML is sent
+if (!Astro.locals.userId) {
+  return Astro.redirect('https://gaukauth.com?from=gaukantiques.com&next=/account')
+}
+
 ---
 <AppLayout title="Account — GAUK">
 <style is:global>

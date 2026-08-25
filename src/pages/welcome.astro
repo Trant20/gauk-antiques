@@ -20,6 +20,11 @@ const creditCostEnrich = parseInt(enrichCost?.value ?? '5', 10)
 // Detect most recent scan to determine CTA
 // We check via cookie/session — done client-side since we don't have user context server-side here
 const isGIUser = false // overridden client-side
+// Server-side auth guard — redirect before any HTML is sent
+if (!Astro.locals.userId) {
+  return Astro.redirect('https://gaukauth.com?from=gaukantiques.com&next=/welcome')
+}
+
 ---
 
 <AppLayout title="Welcome to GAUK">

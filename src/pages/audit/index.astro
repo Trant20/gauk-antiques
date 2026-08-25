@@ -6,6 +6,11 @@ import { R2_CDN, GI_SITE_ID } from '../../lib/constants'
 import { formatPrice, formatPriceRange } from '../../lib/currency'
 
 const currency = Astro.locals.currency || 'GBP'
+// Server-side auth guard — redirect before any HTML is sent
+if (!Astro.locals.userId) {
+  return Astro.redirect('https://gaukauth.com?from=gaukantiques.com&next=/audit')
+}
+
 ---
 
 <AppLayout title="Room Audit — GAUK Insurance">

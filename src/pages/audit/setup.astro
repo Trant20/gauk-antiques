@@ -25,6 +25,11 @@ const DEFAULT_SELECTED = [
   'Master Bedroom',
   'Bathroom',
 ]
+// Server-side auth guard — redirect before any HTML is sent
+if (!Astro.locals.userId) {
+  return Astro.redirect('https://gaukauth.com?from=gaukantiques.com&next=/audit/setup')
+}
+
 ---
 
 <AppLayout title="Set Up Your Room Audit — GAUK Insurance">

@@ -3,6 +3,11 @@ import { R2_CDN, GI_SITE_ID, ANTIQUES_SITE_ID } from '../lib/constants'
 import AppLayout from '../layouts/AppLayout.astro'
 import AppSidebar from '../components/AppSidebar.astro'
 import AppBottomNav from '../components/AppBottomNav.astro'
+// Server-side auth guard — redirect before any HTML is sent
+if (!Astro.locals.userId) {
+  return Astro.redirect('https://gaukauth.com?from=gaukantiques.com&next=/library')
+}
+
 ---
 <AppLayout title="The Vault — GAUK">
 <style is:global>
