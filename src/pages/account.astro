@@ -300,6 +300,13 @@ if (!Astro.locals.userId) {
 
     // Payment notice
     const params = new URLSearchParams(window.location.search)
+    const tabParam = params.get('tab')
+    if (tabParam === 'feedback') {
+      document.querySelectorAll('.account-tab').forEach(b => b.classList.remove('active'))
+      document.querySelector('.account-tab[data-tab="feedback"]')?.classList.add('active')
+      document.getElementById('tab-account')!.style.display = 'none'
+      document.getElementById('tab-feedback')!.style.display = 'block'
+    }
     if (params.get('payment') === 'success') {
       const n = document.getElementById('payment-notice')!
       n.innerHTML = '<div class="account-notice success">Payment successful — credits added to your account.</div>'
