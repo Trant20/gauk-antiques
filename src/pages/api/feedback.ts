@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import { env } from 'cloudflare:workers'
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -25,24 +26,28 @@ export const POST: APIRoute = async ({ request }) => {
       message,
     ].join('\n')
 
-    // Send via Resend (or fallback to console log if not configured)
-    const resendKey = import.meta.env.RESEND_API_KEY
+    const e = env as any
+    const resendKey = e.RESEND_API_KEY
+
     if (resendKey) {
-      await fetch('https://api.resend.com/emails', {
+      const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type':  'application/json',
           'Authorization': `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
-          from:    'feedback@gaukmedia.com',
+          from:    'noreply@gaukmedia.com',
           to:      ['support@gaukmedia.com'],
           subject,
           text:    body,
         }),
       })
+      if (!res.ok) {
+        const err = await res.text()
+        console.error('[feedback] Resend error:', err)
+      }
     } else {
-      // Fallback — log to console (Vercel will capture it)
       console.log('[FEEDBACK]', subject, '\n', body)
     }
 
