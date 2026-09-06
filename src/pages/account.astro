@@ -68,9 +68,12 @@ if (!Astro.locals.userId) {
   <div class="app-main" style="overflow:hidden; display:flex; flex-direction:column;">
     <div class="account-topbar">
       <span class="account-topbar-title">Account</span>
+      <button class="account-tab active" data-tab="account">Account</button>
+      <button class="account-tab" data-tab="feedback">Feedback</button>
     </div>
 
     <div class="account-scroll" id="account-scroll">
+      <div id="tab-account">
 
       <!-- Auth gate -->
       <div class="account-auth-gate hidden" id="auth-gate">
@@ -132,7 +135,44 @@ if (!Astro.locals.userId) {
         </div>
 
       </div>
-    </div>
+      </div><!-- /tab-account -->
+
+      <div id="tab-feedback" style="display:none;">
+        <div class="fb-wrap">
+          <div class="fb-hero">
+            <div class="fb-hero-label">Beta Programme</div>
+            <h2 class="fb-hero-title">Fantastic to have you on board.</h2>
+            <p class="fb-hero-body">
+              GAUK Network is changing how people buy, sell, and own cars. You are one of the first to experience it. We are building fast and your feedback shapes what we build next. If something is broken, confusing, or could be better — tell us. We read everything.
+            </p>
+          </div>
+
+          <div class="fb-form" id="fb-form">
+            <div class="fb-field">
+              <label class="fb-label" for="fb-type">Type of feedback</label>
+              <select class="fb-select" id="fb-type">
+                <option value="">Select type...</option>
+                <option value="bug">Bug or error</option>
+                <option value="feature">Feature request</option>
+                <option value="content">Content issue</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="fb-field">
+              <label class="fb-label" for="fb-url">Page URL (optional)</label>
+              <input class="fb-input" id="fb-url" type="text" placeholder="https://..." />
+            </div>
+            <div class="fb-field">
+              <label class="fb-label" for="fb-message">What happened?</label>
+              <textarea class="fb-textarea" id="fb-message" placeholder="Tell us what you saw, what you expected, and anything else that helps..."></textarea>
+            </div>
+            <button class="fb-submit" id="fb-submit">Send Feedback</button>
+            <div class="fb-success" id="fb-success">Thanks — we have got it. We will be in touch if we need more detail.</div>
+          </div>
+        </div>
+      </div><!-- /tab-feedback -->
+
+    </div><!-- /account-scroll -->
   </div>
 </div>
 
@@ -291,6 +331,51 @@ if (!Astro.locals.userId) {
       setTimeout(() => { if (currencySaved) currencySaved.style.display = 'none' }, 4000)
     }
   })
-</script>
 
-</AppLayout>
+  // ── Tab switching ────────────────────────────────────────────────────────────
+  document.querySelectorAll('.account-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.account-tab').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      const tab = btn.getAttribute('data-tab')
+      document.getElementById('tab-account')!.style.display = tab === 'account' ? 'block' : 'none'
+      document.getElementById('tab-feedback')!.style.display = tab === 'feedback' ? 'block' : 'none'
+    })
+  })
+
+  // ── Feedback form ─────────────────────────────────────────────────────────────
+  const fbSubmit = document.getElementById('fb-submit') as HTMLButtonElement
+  if (fbSubmit) {
+    fbSubmit.addEventListener('click', async () => {
+      const type    = (document.getElementById('fb-type') as HTMLSelectElement).value
+      const url     = (document.getElementById('fb-url') as HTMLInputElement).value.trim()
+      const message = (document.getElementById('fb-message') as HTMLTextAreaElement).value.trim()
+
+      if (!type || !message) {
+        alert('Please select a feedback type and add a message.')
+        return
+      }
+
+      fbSubmit.disabled = true
+      fbSubmit.textContent = 'Sending...'
+
+      const { data: { session } } = await supabase.auth.getSession()
+      const email = session?.user?.email || 'unknown'
+
+      try {
+        await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, url, message, email }),
+        })
+        document.getElementById('fb-success')!.style.display = 'block'
+        fbSubmit.style.display = 'none'
+      } catch {
+        fbSubmit.disabled = false
+        fbSubmit.textContent = 'Send Feedback'
+        alert('Something went wrong. Please try again.')
+      }
+    })
+  }
+</script>
+</script>
