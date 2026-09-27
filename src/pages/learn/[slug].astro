@@ -41,7 +41,7 @@ const catSlug = article.category
 >
 <script type="application/ld+json" slot="head" set:html={JSON.stringify({
   "@context": "https://schema.org",
-  "@type": "Article",
+  "@type": "NewsArticle",
   "headline": article.title,
   "description": article.excerpt || article.title,
   "image": article.image_url || undefined,
